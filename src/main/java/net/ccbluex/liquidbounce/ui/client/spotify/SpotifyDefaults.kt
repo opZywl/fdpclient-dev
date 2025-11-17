@@ -19,6 +19,11 @@ object SpotifyDefaults {
     val clientId: String = read("spotify.clientId", "SPOTIFY_CLIENT_ID")
     val clientSecret: String = read("spotify.clientSecret", "SPOTIFY_CLIENT_SECRET")
     val refreshToken: String = read("spotify.refreshToken", "SPOTIFY_REFRESH_TOKEN")
+    val quickConnectClientId: String = read(
+        "spotify.quickClientId",
+        "SPOTIFY_QUICK_CLIENT_ID",
+        clientId,
+    )
     val pollIntervalSeconds: Int = read("spotify.pollIntervalSeconds", "SPOTIFY_POLL_INTERVAL", "5").toIntOrNull() ?: 5
     val httpTimeoutMillis: Long = read("spotify.httpTimeoutMs", "SPOTIFY_HTTP_TIMEOUT_MS", "12000").toLongOrNull() ?: 12_000L
     val dashboardUrl: String = read(
