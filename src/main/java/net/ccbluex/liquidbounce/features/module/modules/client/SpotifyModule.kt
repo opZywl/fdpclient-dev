@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.ui.client.gui.GuiSpotify
+import net.ccbluex.liquidbounce.ui.client.gui.GuiSpotifyPlayer
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyAccessToken
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyConnectionChangedEvent
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyConnectionState
@@ -63,6 +64,14 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     private val quickRefreshTokenValue = text("QuickRefreshToken", "").apply { hide() }
     private val pollIntervalValue = int("PollInterval", SpotifyDefaults.pollIntervalSeconds, 3..60, suffix = "s")
     private val autoReconnectValue = boolean("AutoReconnect", true)
+    private val openPlayerValue = boolean("OpenUI", false).apply {
+        onChange { _, newValue ->
+            if (newValue) {
+                mc.addScheduledTask { openPlayerScreen() }
+            }
+            false
+        }
+    }
     private val cachedTokens = EnumMap<SpotifyAuthMode, SpotifyAccessToken?>(SpotifyAuthMode::class.java)
 
     init {
@@ -128,6 +137,11 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         mc.displayGuiScreen(GuiSpotify(mc.currentScreen))
     }
 
+    fun openPlayerScreen() {
+        reloadCredentialsFromDisk()
+        mc.displayGuiScreen(GuiSpotifyPlayer(mc.currentScreen))
+    }
+
     fun updateCredentials(clientId: String, clientSecret: String, refreshToken: String): Boolean {
         val sanitized = SpotifyCredentials(
             clientId.trim(),
@@ -187,6 +201,12 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
             startWorker()
         }
         return next
+    }
+
+    suspend fun acquireAccessToken(forceRefresh: Boolean = false): SpotifyAccessToken? {
+        val mode = authMode
+        val credentials = resolveCredentials(mode) ?: return null
+        return ensureAccessToken(credentials, mode, forceRefresh)
     }
 
     fun authModeLabel(): String = "Mode: ${authMode.displayName}"
@@ -329,12 +349,28 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         }
     }
 
+    fun requestPlaybackRefresh() {
+        moduleScope.launch {
+            val mode = authMode
+            val credentials = resolveCredentials(mode) ?: return@launch
+            val token = ensureAccessToken(credentials, mode) ?: return@launch
+            runCatching { service.fetchCurrentlyPlaying(token.value) }
+                .onSuccess { state ->
+                    currentState = state
+                    EventManager.call(SpotifyStateChangedEvent(state))
+                    updateConnection(SpotifyConnectionState.CONNECTED, null)
+                }
+                .onFailure { handleError("Failed to fetch playback: ${it.message}") }
+        }
+    }
+
     private suspend fun ensureAccessToken(
         credentials: SpotifyCredentials,
         mode: SpotifyAuthMode,
+        forceRefresh: Boolean = false,
     ): SpotifyAccessToken? {
         val cached = cachedTokens[mode]
-        if (cached != null && cached.expiresAtMillis > System.currentTimeMillis() + TOKEN_EXPIRY_GRACE_MS) {
+        if (!forceRefresh && cached != null && cached.expiresAtMillis > System.currentTimeMillis() + TOKEN_EXPIRY_GRACE_MS) {
             return cached
         }
 
