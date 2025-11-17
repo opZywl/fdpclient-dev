@@ -21,4 +21,29 @@ object SpotifyDefaults {
     val refreshToken: String = read("spotify.refreshToken", "SPOTIFY_REFRESH_TOKEN")
     val pollIntervalSeconds: Int = read("spotify.pollIntervalSeconds", "SPOTIFY_POLL_INTERVAL", "5").toIntOrNull() ?: 5
     val httpTimeoutMillis: Long = read("spotify.httpTimeoutMs", "SPOTIFY_HTTP_TIMEOUT_MS", "12000").toLongOrNull() ?: 12_000L
+    val dashboardUrl: String = read(
+        "spotify.dashboardUrl",
+        "SPOTIFY_DASHBOARD_URL",
+        "https://developer.spotify.com/dashboard",
+    )
+    val authorizationGuideUrl: String = read(
+        "spotify.authorizationGuideUrl",
+        "SPOTIFY_AUTH_GUIDE_URL",
+        "https://developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens",
+    )
+    val authorizationScopes: String = read(
+        "spotify.authorizationScopes",
+        "SPOTIFY_AUTH_SCOPES",
+        "user-read-currently-playing user-read-playback-state",
+    )
+    val authorizationRedirectPort: Int = read(
+        "spotify.authorizationRedirectPort",
+        "SPOTIFY_AUTH_REDIRECT_PORT",
+        "43791",
+    ).toIntOrNull() ?: 43_791
+    val authorizationRedirectPath: String = read(
+        "spotify.authorizationRedirectPath",
+        "SPOTIFY_AUTH_REDIRECT_PATH",
+        "/spotify-oauth-callback",
+    ).ifBlank { "/spotify-oauth-callback" }
 }
