@@ -39,23 +39,25 @@ import kotlin.math.max
 
 class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), Listenable {
 
-    private val iconDefaultPlaylist = ResourceLocation("minecraft", "fdpclient/spotify/default_playlist_image.png")
-    private val iconGoForward = ResourceLocation("minecraft", "fdpclient/spotify/go_forward.png")
-    private val iconLiked = ResourceLocation("minecraft", "fdpclient/spotify/liked_icon.png")
-    private val iconPause = ResourceLocation("minecraft", "fdpclient/spotify/pause.png")
-    private val iconRepeatOff = ResourceLocation("minecraft", "fdpclient/spotify/repeat.png")
-    private val iconShuffleOff = ResourceLocation("minecraft", "fdpclient/spotify/shuffle.png")
-    private val iconEmpty = ResourceLocation("minecraft", "fdpclient/spotify/empty.png")
-    private val iconHome = ResourceLocation("minecraft", "fdpclient/spotify/home.png")
-    private val iconLikedSongs = ResourceLocation("minecraft", "fdpclient/spotify/liked_songs.png")
-    private val iconPlay = ResourceLocation("minecraft", "fdpclient/spotify/play.png")
-    private val iconRepeatOne = ResourceLocation("minecraft", "fdpclient/spotify/repeat_1.png")
-    private val iconRepeatAll = ResourceLocation("minecraft", "fdpclient/spotify/repeat_enable.png")
-    private val iconShuffleOn = ResourceLocation("minecraft", "fdpclient/spotify/shuffle_enable.png")
-    private val iconBack = ResourceLocation("minecraft", "fdpclient/spotify/go_back.png")
-    private val iconLike = ResourceLocation("minecraft", "fdpclient/spotify/like_icon.png")
-    private val iconNext = ResourceLocation("minecraft", "fdpclient/spotify/next.png")
-    private val iconPrevious = ResourceLocation("minecraft", "fdpclient/spotify/previous.png")
+    private fun spotifyIcon(fileName: String) = ResourceLocation("minecraft", "textures/fdpclient/spotify/$fileName")
+
+    private val iconDefaultPlaylist = spotifyIcon("default_playlist_image.png")
+    private val iconGoForward = spotifyIcon("go_forward.png")
+    private val iconLiked = spotifyIcon("liked_icon.png")
+    private val iconPause = spotifyIcon("pause.png")
+    private val iconRepeatOff = spotifyIcon("repeat.png")
+    private val iconShuffleOff = spotifyIcon("shuffle.png")
+    private val iconEmpty = spotifyIcon("empty.png")
+    private val iconHome = spotifyIcon("home.png")
+    private val iconLikedSongs = spotifyIcon("liked_songs.png")
+    private val iconPlay = spotifyIcon("play.png")
+    private val iconRepeatOne = spotifyIcon("repeat_1.png")
+    private val iconRepeatAll = spotifyIcon("repeat_enable.png")
+    private val iconShuffleOn = spotifyIcon("shuffle_enable.png")
+    private val iconBack = spotifyIcon("go_back.png")
+    private val iconLike = spotifyIcon("like_icon.png")
+    private val iconNext = spotifyIcon("next.png")
+    private val iconPrevious = spotifyIcon("previous.png")
 
     private lateinit var searchField: GuiTextField
     private lateinit var homeButton: SpotifyIconButton
