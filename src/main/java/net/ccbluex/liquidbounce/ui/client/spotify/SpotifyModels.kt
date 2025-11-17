@@ -26,6 +26,7 @@ data class SpotifyState(
     val progressMs: Int,
     val shuffleEnabled: Boolean,
     val repeatMode: SpotifyRepeatMode,
+    val volumePercent: Int? = null,
     val updatedAt: Long = System.currentTimeMillis(),
 )
 

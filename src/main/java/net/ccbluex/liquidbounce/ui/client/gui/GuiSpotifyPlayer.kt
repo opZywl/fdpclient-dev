@@ -39,23 +39,23 @@ import kotlin.math.max
 
 class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), Listenable {
 
-    private val iconDefaultPlaylist = ResourceLocation("fdpclient/spotify/default_playlist_image.png")
-    private val iconGoForward = ResourceLocation("fdpclient/spotify/go_forward.png")
-    private val iconLiked = ResourceLocation("fdpclient/spotify/liked_icon.png")
-    private val iconPause = ResourceLocation("fdpclient/spotify/pause.png")
-    private val iconRepeatOff = ResourceLocation("fdpclient/spotify/repeat.png")
-    private val iconShuffleOff = ResourceLocation("fdpclient/spotify/shuffle.png")
-    private val iconEmpty = ResourceLocation("fdpclient/spotify/empty.png")
-    private val iconHome = ResourceLocation("fdpclient/spotify/home.png")
-    private val iconLikedSongs = ResourceLocation("fdpclient/spotify/liked_songs.png")
-    private val iconPlay = ResourceLocation("fdpclient/spotify/play.png")
-    private val iconRepeatOne = ResourceLocation("fdpclient/spotify/repeat_1.png")
-    private val iconRepeatAll = ResourceLocation("fdpclient/spotify/repeat_enable.png")
-    private val iconShuffleOn = ResourceLocation("fdpclient/spotify/shuffle_enable.png")
-    private val iconBack = ResourceLocation("fdpclient/spotify/go_back.png")
-    private val iconLike = ResourceLocation("fdpclient/spotify/like_icon.png")
-    private val iconNext = ResourceLocation("fdpclient/spotify/next.png")
-    private val iconPrevious = ResourceLocation("fdpclient/spotify/previous.png")
+    private val iconDefaultPlaylist = ResourceLocation("minecraft", "fdpclient/spotify/default_playlist_image.png")
+    private val iconGoForward = ResourceLocation("minecraft", "fdpclient/spotify/go_forward.png")
+    private val iconLiked = ResourceLocation("minecraft", "fdpclient/spotify/liked_icon.png")
+    private val iconPause = ResourceLocation("minecraft", "fdpclient/spotify/pause.png")
+    private val iconRepeatOff = ResourceLocation("minecraft", "fdpclient/spotify/repeat.png")
+    private val iconShuffleOff = ResourceLocation("minecraft", "fdpclient/spotify/shuffle.png")
+    private val iconEmpty = ResourceLocation("minecraft", "fdpclient/spotify/empty.png")
+    private val iconHome = ResourceLocation("minecraft", "fdpclient/spotify/home.png")
+    private val iconLikedSongs = ResourceLocation("minecraft", "fdpclient/spotify/liked_songs.png")
+    private val iconPlay = ResourceLocation("minecraft", "fdpclient/spotify/play.png")
+    private val iconRepeatOne = ResourceLocation("minecraft", "fdpclient/spotify/repeat_1.png")
+    private val iconRepeatAll = ResourceLocation("minecraft", "fdpclient/spotify/repeat_enable.png")
+    private val iconShuffleOn = ResourceLocation("minecraft", "fdpclient/spotify/shuffle_enable.png")
+    private val iconBack = ResourceLocation("minecraft", "fdpclient/spotify/go_back.png")
+    private val iconLike = ResourceLocation("minecraft", "fdpclient/spotify/like_icon.png")
+    private val iconNext = ResourceLocation("minecraft", "fdpclient/spotify/next.png")
+    private val iconPrevious = ResourceLocation("minecraft", "fdpclient/spotify/previous.png")
 
     private lateinit var searchField: GuiTextField
     private lateinit var homeButton: SpotifyIconButton
@@ -91,19 +91,23 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
     private var shuffleEnabled = SpotifyModule.currentState?.shuffleEnabled ?: false
     private var repeatMode: SpotifyRepeatMode = SpotifyModule.currentState?.repeatMode ?: SpotifyRepeatMode.OFF
 
-    private var coverTexture: ResourceLocation? = null
-    private var coverUrl: String? = null
     private val coverCache = mutableMapOf<String, ResourceLocation>()
+    private val coverLoading = mutableSetOf<String>()
     private val trackSavedState = mutableMapOf<String, Boolean>()
 
     private var bannerMessage: String? = null
     private var bannerExpiry = 0L
 
+    private var volumePercent = SpotifyModule.currentState?.volumePercent ?: 50
+    private var adjustingVolume = false
+    private var volumeDirty = false
+    private var volumeSliderRect: PanelArea? = null
+
     private val stateHandler = handler<SpotifyStateChangedEvent>(always = true) { event ->
         playbackState = event.state
         shuffleEnabled = event.state?.shuffleEnabled ?: false
         repeatMode = event.state?.repeatMode ?: SpotifyRepeatMode.OFF
-        updateCoverTexture(event.state)
+        event.state?.volumePercent?.let { volumePercent = it }
     }
 
     private val connectionHandler = handler<SpotifyConnectionChangedEvent>(always = true) { event ->
@@ -194,7 +198,6 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         } else {
             updateTrackFilters()
         }
-        updateCoverTexture(playbackState)
         SpotifyModule.requestPlaybackRefresh()
     }
 
@@ -273,7 +276,7 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
                             Gui.drawRect(area.left + 1, y.toInt(), area.right - 1, (y + rowHeight).toInt(), bgColor)
                         }
                         val trackLabel = if (playlist.trackCount == 1) "1 track" else "${playlist.trackCount} tracks"
-                        drawIcon(playlistIconFor(playlist), area.left + 4, y.toInt() + 4, 24, 24)
+                        drawPlaylistArtwork(playlist, area.left + 4, y.toInt() + 4)
                         val textX = area.left + 34
                         mc.fontRendererObj.drawString(playlist.name, textX, y.toInt() + 4, 0xFFF8F8F8.toInt())
                         mc.fontRendererObj.drawString(trackLabel, textX, y.toInt() + 16, 0xFFBEBEBE.toInt())
@@ -282,10 +285,6 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
                 }
             }
         }
-    }
-
-    private fun playlistIconFor(playlist: SpotifyPlaylistSummary): ResourceLocation {
-        return if (playlist.isLikedSongs) iconLikedSongs else iconDefaultPlaylist
     }
 
     private fun drawTracks(mouseX: Int, mouseY: Int) {
@@ -318,10 +317,12 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         val maxScroll = max(0f, filteredTracks.size * rowHeight - viewHeight + 8f)
         trackScroll = trackScroll.coerceIn(0f, maxScroll)
 
-        val titleColumnWidth = (area.width() * 0.5f).toInt()
+        val artSize = 20
+        val numberColumnWidth = 18
+        val titleColumnWidth = (area.width() * 0.45f).toInt()
         val artistColumnWidth = (area.width() * 0.28f).toInt()
         val likeColumnLeft = area.right - (LIKE_ICON_SIZE + 8)
-        val durationColumnX = likeColumnLeft - 50
+        val durationColumnX = likeColumnLeft - 60
 
         var y = area.top + 4 - trackScroll
         filteredTracks.forEachIndexed { index, track ->
@@ -341,13 +342,23 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
                 if (bgColor != 0) {
                     Gui.drawRect(area.left + 1, y.toInt(), area.right - 1, (y + rowHeight).toInt(), bgColor)
                 }
-                val baseY = y.toInt() + 4
-                mc.fontRendererObj.drawString((index + 1).toString(), area.left + 6, baseY, 0xFFAAAAAA.toInt())
-                mc.fontRendererObj.drawString(trimToWidth(track.title, titleColumnWidth - 20), area.left + 24, baseY, 0xFFF0F0F0.toInt())
-                mc.fontRendererObj.drawString(trimToWidth(track.artists, artistColumnWidth - 10), area.left + 24 + titleColumnWidth, baseY, 0xFFB0B0B0.toInt())
+                val rowTop = y.toInt()
+                val baseY = rowTop + 6
+                val numberX = area.left + 6
+                mc.fontRendererObj.drawString((index + 1).toString(), numberX, baseY, 0xFFAAAAAA.toInt())
+                val artX = numberX + numberColumnWidth
+                drawTrackArtwork(track, artX, rowTop + 2, artSize)
+                val textX = artX + artSize + 6
+                mc.fontRendererObj.drawString(trimToWidth(track.title, titleColumnWidth - 20), textX, baseY, 0xFFF0F0F0.toInt())
+                mc.fontRendererObj.drawString(
+                    trimToWidth(track.artists, artistColumnWidth - 10),
+                    textX + titleColumnWidth,
+                    baseY,
+                    0xFFB0B0B0.toInt(),
+                )
                 mc.fontRendererObj.drawString(formatDuration(track.durationMs), durationColumnX, baseY, 0xFFB0B0B0.toInt())
                 val saved = isTrackSaved(track)
-                val likeIconY = baseY - 2
+                val likeIconY = rowTop + ((rowHeight - LIKE_ICON_SIZE) / 2f).toInt()
                 val texture = if (saved) iconLiked else iconLike
                 drawIcon(texture, likeColumnLeft, likeIconY, LIKE_ICON_SIZE, LIKE_ICON_SIZE, if (saved) 1f else 0.85f)
             }
@@ -361,17 +372,14 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         Gui.drawRect(0, barTop, width, barBottom, 0xFF0F0F0F.toInt())
         val track = playbackState?.track
         if (track == null) {
+            volumeSliderRect = null
             drawCenteredString(mc.fontRendererObj, "Start playback to see the current track.", width / 2, barTop + 12, 0xFFB0B0B0.toInt())
             return
         }
         val artSize = 64
         val artX = 25
         val artY = barTop + 6
-        coverTexture?.let { texture ->
-            GlStateManager.color(1f, 1f, 1f, 1f)
-            mc.textureManager.bindTexture(texture)
-            Gui.drawScaledCustomSizeModalRect(artX, artY, 0f, 0f, 256, 256, artSize, artSize, 256f, 256f)
-        } ?: drawIcon(iconEmpty, artX, artY, artSize, artSize, 0.7f)
+        drawRemoteArtwork(track.coverUrl, iconEmpty, artX, artY, artSize, artSize, 0.95f)
 
         val textX = artX + artSize + 10
         mc.fontRendererObj.drawString(track.title, textX, artY + 4, 0xFFFFFFFF.toInt())
@@ -382,7 +390,7 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         val progress = playbackState?.progressMs ?: 0
         val ratio = progress.toFloat() / duration
         val progressLeft = textX
-        val progressRight = width - 40
+        val progressRight = max(progressLeft + 80, width - 220)
         val progressTop = artY + artSize + 6
         val progressBottom = progressTop + 6
         Gui.drawRect(progressLeft, progressTop, progressRight, progressBottom, 0xFF1E1E1E.toInt())
@@ -392,6 +400,54 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         mc.fontRendererObj.drawString(elapsedText, progressLeft, progressBottom + 4, 0xFFB0B0B0.toInt())
         val remainingWidth = mc.fontRendererObj.getStringWidth(remainingText)
         mc.fontRendererObj.drawString(remainingText, progressRight - remainingWidth, progressBottom + 4, 0xFFB0B0B0.toInt())
+        drawVolumeSlider(artY)
+    }
+
+    private fun drawVolumeSlider(artY: Int) {
+        val sliderWidth = 140
+        val sliderHeight = 6
+        val sliderLeft = width - sliderWidth - 40
+        val sliderRight = sliderLeft + sliderWidth
+        val sliderTop = artY + 10
+        val sliderBottom = sliderTop + sliderHeight
+        mc.fontRendererObj.drawString("Volume", sliderLeft, sliderTop - 10, 0xFFBEBEBE.toInt())
+        Gui.drawRect(sliderLeft, sliderTop, sliderRight, sliderBottom, 0xFF1E1E1E.toInt())
+        val ratio = volumePercent.coerceIn(0, 100) / 100f
+        val fillRight = sliderLeft + (sliderWidth * ratio).toInt()
+        Gui.drawRect(sliderLeft, sliderTop, fillRight, sliderBottom, 0xFF1DB954.toInt())
+        val knobX = fillRight.coerceIn(sliderLeft, sliderRight)
+        Gui.drawRect(knobX - 3, sliderTop - 3, knobX + 3, sliderBottom + 3, 0xFFFFFFFF.toInt())
+        val percentText = "${volumePercent.coerceIn(0, 100)}%"
+        val percentWidth = mc.fontRendererObj.getStringWidth(percentText)
+        mc.fontRendererObj.drawString(percentText, sliderRight - percentWidth, sliderBottom + 4, 0xFFB0B0B0.toInt())
+        volumeSliderRect = PanelArea(sliderLeft, sliderTop - 6, sliderRight, sliderBottom + 10)
+    }
+
+    private fun updateVolumeFromMouse(mouseX: Int) {
+        val slider = volumeSliderRect ?: return
+        val width = (slider.right - slider.left).coerceAtLeast(1)
+        val ratio = ((mouseX - slider.left).toFloat() / width).coerceIn(0f, 1f)
+        val newVolume = (ratio * 100f).toInt()
+        if (newVolume != volumePercent) {
+            volumePercent = newVolume
+        }
+    }
+
+    private fun commitVolumeChange(target: Int) {
+        val desired = target.coerceIn(0, 100)
+        screenScope.launch {
+            val token = SpotifyModule.acquireAccessToken()
+            if (token == null) {
+                showBanner("Authorize Spotify before controlling playback")
+                return@launch
+            }
+            val result = runCatching { SpotifyIntegration.service.setVolume(token.value, desired) }
+            result.onSuccess {
+                SpotifyModule.requestPlaybackRefresh()
+            }.onFailure {
+                showBanner(it.message ?: "Failed to change volume")
+            }
+        }
     }
 
     private fun drawBanner() {
@@ -445,13 +501,94 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
         searchField.mouseClicked(mouseX, mouseY, mouseButton)
+        var sliderHandled = false
+        if (mouseButton == 0 && volumeSliderRect?.contains(mouseX, mouseY) == true) {
+            adjustingVolume = true
+            updateVolumeFromMouse(mouseX)
+            volumeDirty = true
+            sliderHandled = true
+        }
         if (mouseButton == 0) {
             when {
-                playlistArea().contains(mouseX, mouseY) -> handlePlaylistClick(mouseY)
-                trackArea().contains(mouseX, mouseY) -> handleTrackClick(mouseX, mouseY)
+                !sliderHandled && playlistArea().contains(mouseX, mouseY) -> handlePlaylistClick(mouseY)
+                !sliderHandled && trackArea().contains(mouseX, mouseY) -> handleTrackClick(mouseX, mouseY)
             }
         }
         super.mouseClicked(mouseX, mouseY, mouseButton)
+    }
+
+    override fun mouseClickMove(mouseX: Int, mouseY: Int, clickedMouseButton: Int, timeSinceLastClick: Long) {
+        if (adjustingVolume && clickedMouseButton == 0) {
+            updateVolumeFromMouse(mouseX)
+            volumeDirty = true
+        }
+        super.mouseClickMove(mouseX, mouseY, clickedMouseButton, timeSinceLastClick)
+    }
+
+    override fun mouseReleased(mouseX: Int, mouseY: Int, state: Int) {
+        if (state == 0 && adjustingVolume) {
+            adjustingVolume = false
+            if (volumeDirty) {
+                volumeDirty = false
+                commitVolumeChange(volumePercent)
+            }
+        }
+        super.mouseReleased(mouseX, mouseY, state)
+    }
+
+    private fun drawPlaylistArtwork(playlist: SpotifyPlaylistSummary, x: Int, y: Int) {
+        val size = 24
+        if (playlist.isLikedSongs) {
+            drawIcon(iconLikedSongs, x, y, size, size)
+        } else {
+            drawRemoteArtwork(playlist.imageUrl, iconDefaultPlaylist, x, y, size, size, 0.95f)
+        }
+    }
+
+    private fun drawTrackArtwork(track: SpotifyTrack, x: Int, y: Int, size: Int) {
+        drawRemoteArtwork(track.coverUrl, iconEmpty, x, y, size, size, 0.95f)
+    }
+
+    private fun drawRemoteArtwork(
+        url: String?,
+        fallback: ResourceLocation,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        alpha: Float = 1f,
+    ) {
+        val texture = url?.let { coverCache[it] }
+        if (texture != null) {
+            drawIcon(texture, x, y, width, height, alpha)
+            return
+        }
+        drawIcon(fallback, x, y, width, height, alpha * 0.85f)
+        if (!url.isNullOrBlank()) {
+            requestTexture(url)
+        }
+    }
+
+    private fun requestTexture(url: String) {
+        if (coverCache.containsKey(url) || !coverLoading.add(url)) {
+            return
+        }
+        SharedScopes.IO.launch {
+            runCatching {
+                HttpClient.get(url).use { response ->
+                    ensureSuccess(response)
+                    response.body.byteStream().use { stream ->
+                        val image = javax.imageio.ImageIO.read(stream) ?: throw IOException("Cover art missing")
+                        val texture = DynamicTexture(image)
+                        val location = mc.textureManager.getDynamicTextureLocation("spotify/" + UUID.randomUUID(), texture)
+                        coverCache[url] = location
+                    }
+                }
+            }.onFailure {
+                LOGGER.warn("[Spotify][GUI] Failed to load cover art from $url", it)
+            }
+            mc.addScheduledTask { coverLoading.remove(url) }
+        }
     }
 
     private fun handlePlaylistClick(mouseY: Int) {
@@ -489,7 +626,7 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         val rowTop = (area.top + 4 - trackScroll + index * TRACK_ROW_HEIGHT).toInt()
         val likeLeft = area.right - (LIKE_ICON_SIZE + 8)
         val likeRight = likeLeft + LIKE_ICON_SIZE + 4
-        val likeTop = rowTop
+        val likeTop = rowTop + ((TRACK_ROW_HEIGHT - LIKE_ICON_SIZE) / 2f).toInt()
         val likeBottom = likeTop + LIKE_ICON_SIZE + 2
         if (mouseX in likeLeft..likeRight && mouseY in likeTop..likeBottom) {
             toggleTrackSave(filteredTracks[index])
@@ -867,45 +1004,6 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
 
     private fun buildTrackUri(id: String): String = if (id.startsWith("spotify:")) id else "spotify:track:$id"
 
-    private fun updateCoverTexture(state: SpotifyState?) {
-        val url = state?.track?.coverUrl
-        if (url.isNullOrBlank()) {
-            coverTexture = null
-            coverUrl = null
-            return
-        }
-        if (url == coverUrl && coverTexture != null) {
-            return
-        }
-        coverUrl = url
-        val cached = coverCache[url]
-        if (cached != null) {
-            coverTexture = cached
-            return
-        }
-
-        SharedScopes.IO.launch {
-            runCatching {
-                HttpClient.get(url).use { response ->
-                    ensureSuccess(response)
-                    response.body.byteStream().use { stream ->
-                        val image = javax.imageio.ImageIO.read(stream) ?: throw IOException("Cover art missing")
-                        val texture = DynamicTexture(image)
-                        val location = mc.textureManager.getDynamicTextureLocation("spotify/" + UUID.randomUUID(), texture)
-                        coverCache[url] = location
-                        mc.addScheduledTask {
-                            if (coverUrl == url) {
-                                coverTexture = location
-                            }
-                        }
-                    }
-                }
-            }.onFailure {
-                LOGGER.warn("[Spotify][GUI] Failed to load cover art from $url", it)
-            }
-        }
-    }
-
     private fun ensureSuccess(response: Response) {
         if (!response.isSuccessful) {
             throw IOException("HTTP ${response.code} while loading cover art")
@@ -967,7 +1065,7 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         private const val PLAYLIST_TRACK_LIMIT = 100
         private const val SAVED_TRACK_LIMIT = 50
         private const val PLAYLIST_ROW_HEIGHT = 32f
-        private const val TRACK_ROW_HEIGHT = 22f
+        private const val TRACK_ROW_HEIGHT = 28f
         private const val LIKE_ICON_SIZE = 16
     }
 }

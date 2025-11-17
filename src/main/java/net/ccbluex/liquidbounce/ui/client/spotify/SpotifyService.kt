@@ -324,6 +324,18 @@ class SpotifyService(
         executeControlRequest(request)
     }
 
+    suspend fun setVolume(accessToken: String, volumePercent: Int) {
+        val clamped = volumePercent.coerceIn(0, 100)
+        val url = "$PLAYER_URL/volume?volume_percent=$clamped"
+        LOGGER.info("[Spotify][HTTP] PUT $url")
+        val request = Request.Builder()
+            .url(url)
+            .header("Authorization", "Bearer $accessToken")
+            .put("".toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        executeControlRequest(request)
+    }
+
     suspend fun setSavedTracksState(accessToken: String, trackIds: List<String>, save: Boolean) {
         if (trackIds.isEmpty()) {
             return
@@ -457,12 +469,15 @@ class SpotifyService(
         val repeatMode = SpotifyRepeatMode.fromApi(json.getString("repeat_state"))
         val item = json.get("item")?.takeIf { it.isJsonObject }?.asJsonObject
         val track = parseTrack(item)
+        val device = json.get("device")?.takeIf { it.isJsonObject }?.asJsonObject
+        val volumePercent = device?.getInt("volume_percent")
         return SpotifyState(
             track = track,
             isPlaying = isPlaying,
             progressMs = progress,
             shuffleEnabled = shuffle,
             repeatMode = repeatMode,
+            volumePercent = volumePercent,
         )
     }
 
