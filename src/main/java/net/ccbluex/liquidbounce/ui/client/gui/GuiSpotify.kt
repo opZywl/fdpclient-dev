@@ -3,322 +3,228 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/SkidderMC/FDPClient/
  */
-package net.ccbluex.liquidbounce.ui.client.gui
+package net.ccbluex.liquidbounce.handler.spotify
 
-import net.ccbluex.liquidbounce.features.module.modules.client.SpotifyModule
-import net.ccbluex.liquidbounce.features.module.modules.client.SpotifyModule.SpotifyAuthMode
-import net.ccbluex.liquidbounce.handler.spotify.SpotifyIntegration
-import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyState
-import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.client.MinecraftInstance.Companion.mc
+import com.sun.net.httpserver.HttpExchange
+import com.sun.net.httpserver.HttpHandler
+import com.sun.net.httpserver.HttpServer
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.future.future
+import kotlinx.coroutines.suspendCancellableCoroutine
+import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyAccessToken
+import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyAuthFlow
+import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyDefaults
+import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyService
+import net.ccbluex.liquidbounce.utils.client.ClientUtils.LOGGER
+import net.ccbluex.liquidbounce.utils.client.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
-import net.ccbluex.liquidbounce.utils.ui.AbstractScreen
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.gui.GuiTextField
-import net.minecraftforge.fml.client.config.GuiSlider
-import org.lwjgl.input.Keyboard
-import java.awt.Color
-import kotlin.math.max
+import net.ccbluex.liquidbounce.utils.kotlin.SharedScopes
+import java.awt.Desktop
+import java.io.OutputStream
+import java.net.InetSocketAddress
+import java.net.URI
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.security.SecureRandom
+import java.util.Base64
+import java.util.UUID
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
-class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
+/**
+ * Centralizes the Spotify Web API access so the service can be shared across
+ * modules and provides helpers to complete the OAuth flow through the browser.
+ */
+object SpotifyIntegration : MinecraftInstance {
 
-    private lateinit var clientIdField: GuiTextField
-    private lateinit var clientSecretField: GuiTextField
-    private lateinit var refreshTokenField: GuiTextField
-    private lateinit var reconnectButton: GuiButton
-    private lateinit var modeButton: GuiButton
-    private lateinit var saveButton: GuiButton
-    private lateinit var pollSlider: GuiSlider
-    private val fieldDecorations = mutableMapOf<GuiTextField, FieldDecoration>()
-    private var browserAuthStatus: Pair<SpotifyModule.BrowserAuthStatus, String>? = null
+    private val authorizationScopes = SpotifyDefaults.authorizationScopes
+    private val callbackPath = ensureLeadingSlash(SpotifyDefaults.authorizationRedirectPath)
+    private val callbackPort = SpotifyDefaults.authorizationRedirectPort
+    private val redirectUri = "http://127.0.0.1:$callbackPort$callbackPath"
 
-    private val inputBackgroundColor = Color(9, 9, 9, 185).rgb
-    private val inputBorderColor = Color(255, 255, 255, 60).rgb
-    private val labelColor = 0xFFE3E3E3.toInt()
-    private val helperColor = 0xFFB6B6B6.toInt()
+    val service: SpotifyService = SpotifyService()
 
-    override fun initGui() {
-        Keyboard.enableRepeatEvents(true)
-        buttonList.clear()
-        textFields.clear()
-        fieldDecorations.clear()
-
-        val fieldWidth = 260
-        val startX = width / 2 - fieldWidth / 2
-        var currentY = height / 4
-
-        clientIdField = textField(0, Fonts.fontSemibold35, startX, currentY, fieldWidth, 20) {
-            maxStringLength = 128
-            text = SpotifyModule.clientId
-            setEnableBackgroundDrawing(false)
-        }
-        fieldDecorations[clientIdField] = FieldDecoration("Client ID", "Use the Spotify app identifier from your dashboard.")
-        currentY += 44
-
-        clientSecretField = textField(1, Fonts.fontSemibold35, startX, currentY, fieldWidth, 20) {
-            maxStringLength = 128
-            text = SpotifyModule.clientSecret
-            setEnableBackgroundDrawing(false)
-        }
-        fieldDecorations[clientSecretField] = FieldDecoration("Client secret", "Generated with the same app as the client ID.")
-        currentY += 44
-
-        refreshTokenField = textField(2, Fonts.fontSemibold35, startX, currentY, fieldWidth, 20) {
-            maxStringLength = 256
-            text = SpotifyModule.refreshToken
-            setEnableBackgroundDrawing(false)
-        }
-        fieldDecorations[refreshTokenField] = FieldDecoration("Refresh token", "Paste the long-lived token from your Spotify app setup.")
-        currentY += 44
-
-        pollSlider = GuiSlider(
-            3,
-            startX,
-            currentY,
-            fieldWidth,
-            20,
-            "Poll interval (",
-            "s)",
-            3.0,
-            60.0,
-            SpotifyModule.pollIntervalSeconds.toDouble(),
-            false,
-            true,
-        ) { slider ->
-            SpotifyModule.setPollInterval(slider.valueInt)
-        }
-        +pollSlider
-        currentY += 26
-
-        modeButton = GuiButton(10, startX, currentY, fieldWidth, 20, SpotifyModule.authModeLabel())
-        +modeButton
-        currentY += 24
-
-        reconnectButton = +GuiButton(4, startX, currentY, fieldWidth, 20, reconnectLabel())
-        currentY += 24
-
-        saveButton = GuiButton(5, startX, currentY, fieldWidth, 20, "Save credentials")
-        +saveButton
-        currentY += 24
-
-        +GuiButton(6, startX, currentY, fieldWidth, 20, "Authorize via Browser")
-        currentY += 24
-
-        +GuiButton(7, startX, currentY, fieldWidth, 20, "Open Spotify Dashboard")
-        currentY += 24
-
-        +GuiButton(8, startX, currentY, fieldWidth, 20, "Authorization Guide")
-        currentY += 24
-
-        +GuiButton(9, startX, currentY, fieldWidth, 20, "Back")
-
-        refreshAuthModeUi()
+    init {
+        LOGGER.info("[Spotify] Spotify integration handler initialized (redirectUri=$redirectUri)")
     }
 
-    override fun actionPerformed(button: GuiButton) {
-        when (button.id) {
-            4 -> {
-                SpotifyModule.toggleAutoReconnect()
-                button.displayString = reconnectLabel()
-            }
-
-            5 -> {
-                val saved = SpotifyModule.updateCredentials(
-                    clientIdField.text.trim(),
-                    clientSecretField.text.trim(),
-                    refreshTokenField.text.trim(),
-                )
-                if (saved) {
-                    chat("§aSaved Spotify credentials to ${SpotifyModule.credentialsFilePath()}.")
-                } else {
-                    chat("§cFailed to save Spotify credentials. Check the log for details.")
-                }
-            }
-            6 -> {
-                SpotifyModule.beginBrowserAuthorization { status, message ->
-                    browserAuthStatus = status to message
-                    if (status == SpotifyModule.BrowserAuthStatus.SUCCESS && SpotifyModule.authMode == SpotifyAuthMode.MANUAL) {
-                        refreshTokenField.text = SpotifyModule.refreshToken
-                    }
-                    val prefix = when (status) {
-                        SpotifyModule.BrowserAuthStatus.INFO -> "§e"
-                        SpotifyModule.BrowserAuthStatus.SUCCESS -> "§a"
-                        SpotifyModule.BrowserAuthStatus.ERROR -> "§c"
-                    }
-                    chat(prefix + message)
-                }
-            }
-
-            7 -> SpotifyIntegration.openDashboard()
-            8 -> SpotifyIntegration.openGuide()
-            9 -> mc.displayGuiScreen(previousScreen)
-            10 -> {
-                val previousMode = SpotifyModule.authMode
-                val newMode = SpotifyModule.cycleAuthMode()
-                if (newMode != previousMode) {
-                    chat("§eSwitched Spotify mode to ${newMode.displayName}.")
-                }
-                refreshAuthModeUi()
-            }
+    fun authorizeInBrowser(clientId: String, clientSecret: String?, flow: SpotifyAuthFlow): CompletableFuture<SpotifyAccessToken> {
+        LOGGER.info("[Spotify][Browser] Beginning OAuth flow (clientId=${mask(clientId)}, flow=$flow)")
+        return SharedScopes.IO.future {
+            val state = UUID.randomUUID().toString()
+            val pkce = if (flow == SpotifyAuthFlow.PKCE) generatePkceChallenge() else null
+            val authorizationUrl = buildAuthorizeUrl(clientId, redirectUri, state, pkce?.challenge)
+            openBrowser(authorizationUrl)
+            val code = awaitAuthorizationCode(state)
+            LOGGER.info("[Spotify][Browser] Authorization code received, exchanging for tokens")
+            service.exchangeAuthorizationCode(clientId, clientSecret, code, redirectUri, pkce?.verifier)
         }
     }
 
-    override fun onGuiClosed() {
-        super.onGuiClosed()
-        Keyboard.enableRepeatEvents(false)
+    fun openDashboard() {
+        openLink(SpotifyDefaults.dashboardUrl, "Spotify dashboard")
     }
 
-    override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        drawDefaultBackground()
+    fun openGuide() {
+        openLink(SpotifyDefaults.authorizationGuideUrl, "Spotify authorization guide")
+    }
 
-        val titleFont = Fonts.fontBold40
-        val smallFont = Fonts.fontSemibold35
-        titleFont.drawCenteredString("Spotify Integration", width / 2f, height / 4f - 40f, -1, true)
-
-        val connectionText = "State: ${SpotifyModule.connectionState.displayName}"
-        smallFont.drawCenteredString(connectionText, width / 2f, height / 4f - 20f, -1, true)
-        drawModeInfo(smallFont)
-
-        val currentState = SpotifyModule.currentState
-        drawPlaybackInfo(currentState)
-
-        val error = SpotifyModule.lastErrorMessage
-        if (!error.isNullOrBlank()) {
-            smallFont.drawCenteredString("Last error: $error", width / 2f, height - 48f, 0xFF5555, true)
-        }
-
-        val configPathText = "Config file: ${SpotifyModule.credentialsFilePath()}"
-        smallFont.drawCenteredString(configPathText, width / 2f, height - 32f, 0xFFB0B0B0.toInt(), true)
-        browserAuthStatus?.let { (status, message) ->
-            val color = when (status) {
-                SpotifyModule.BrowserAuthStatus.INFO -> 0xFFE0B45A.toInt()
-                SpotifyModule.BrowserAuthStatus.SUCCESS -> 0xFF6DE37B.toInt()
-                SpotifyModule.BrowserAuthStatus.ERROR -> 0xFFE05757.toInt()
+    private fun openLink(url: String, label: String) {
+        runCatching {
+            if (url.isBlank()) {
+                throw IllegalStateException("$label URL is empty")
             }
-            smallFont.drawCenteredString("Browser auth: $message", width / 2f, height - 16f, color, true)
-        }
-
-        drawInputField(clientIdField)
-        drawInputField(clientSecretField)
-        drawInputField(refreshTokenField)
-
-        super.drawScreen(mouseX, mouseY, partialTicks)
-    }
-
-    override fun keyTyped(typedChar: Char, keyCode: Int) {
-        if (keyCode == Keyboard.KEY_ESCAPE) {
-            mc.displayGuiScreen(previousScreen)
-            return
-        }
-
-        if ((clientIdField.isEnabled && clientIdField.textboxKeyTyped(typedChar, keyCode)) ||
-            (clientSecretField.isEnabled && clientSecretField.textboxKeyTyped(typedChar, keyCode)) ||
-            (refreshTokenField.isEnabled && refreshTokenField.textboxKeyTyped(typedChar, keyCode))
-        ) {
-            return
-        }
-
-        super.keyTyped(typedChar, keyCode)
-    }
-
-    private fun drawPlaybackInfo(state: SpotifyState?) {
-        val infoFont = Fonts.fontSemibold35
-        val lines = mutableListOf<String>()
-        val trackState = state
-        if (trackState != null && trackState.track != null) {
-            val track = trackState.track
-            lines += "Track: ${track.title}"
-            lines += "Artists: ${track.artists}"
-            if (track.album.isNotBlank()) {
-                lines += "Album: ${track.album}"
-            }
-            val progressText = if (track.durationMs > 0) {
-                val total = formatMillis(track.durationMs)
-                "Progress: ${formatMillis(trackState.progressMs)} / $total"
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().browse(URI(url))
             } else {
-                "Progress: ${formatMillis(trackState.progressMs)}"
+                chat("§eCopy this $label URL into your browser: $url")
             }
-            lines += progressText
-            lines += if (trackState.isPlaying) "Status: Playing" else "Status: Paused"
+        }.onFailure {
+            LOGGER.warn("[Spotify] Failed to open $label URL", it)
+            chat("§cUnable to open $label: ${it.message}")
+        }
+    }
+
+    private fun openBrowser(url: String) {
+        LOGGER.info("[Spotify][Browser] Opening authorization page: $url")
+        runCatching {
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().browse(URI(url))
+            } else {
+                chat("§eOpen the following Spotify authorization URL manually: $url")
+            }
+        }.onFailure {
+            LOGGER.warn("[Spotify][Browser] Failed to open default browser", it)
+            chat("§cUnable to open browser: ${it.message}. Open this URL manually: $url")
+        }
+    }
+
+    private fun buildAuthorizeUrl(clientId: String, redirectUri: String, state: String, pkceChallenge: String?): String {
+        val encodedRedirect = URLEncoder.encode(redirectUri, StandardCharsets.UTF_8.name())
+        val scopeParam = URLEncoder.encode(authorizationScopes.trim().replace(ONE_OR_MORE_SPACES, " "), StandardCharsets.UTF_8.name())
+        val builder = StringBuilder("https://accounts.spotify.com/authorize?")
+        builder.append("response_type=code")
+        builder.append("&client_id=").append(URLEncoder.encode(clientId, StandardCharsets.UTF_8.name()))
+        builder.append("&redirect_uri=").append(encodedRedirect)
+        builder.append("&scope=").append(scopeParam)
+        builder.append("&state=").append(state)
+        builder.append("&show_dialog=true")
+        if (!pkceChallenge.isNullOrBlank()) {
+            builder.append("&code_challenge=")
+                .append(URLEncoder.encode(pkceChallenge, StandardCharsets.UTF_8.name()))
+            builder.append("&code_challenge_method=S256")
+        }
+        return builder.toString()
+    }
+
+    private suspend fun awaitAuthorizationCode(expectedState: String): String = suspendCancellableCoroutine { cont ->
+        val completed = AtomicBoolean(false)
+        val server = HttpServer.create(InetSocketAddress("127.0.0.1", callbackPort), 0)
+        val handler = HttpHandler { exchange ->
+            handleExchange(exchange, expectedState, completed, cont)
+        }
+        server.createContext(callbackPath, handler)
+        server.start()
+        cont.invokeOnCancellation {
+            runCatching { server.stop(0) }
+        }
+    }
+
+    private fun handleExchange(
+        exchange: HttpExchange,
+        expectedState: String,
+        completed: AtomicBoolean,
+        cont: kotlin.coroutines.Continuation<String>,
+    ) {
+        try {
+            val params = parseQuery(exchange.requestURI.rawQuery.orEmpty())
+            val state = params["state"]
+            val code = params["code"]
+            val error = params["error"]
+            val response = buildBrowserResponse(error == null && !code.isNullOrBlank())
+            exchange.sendResponseHeaders(200, response.size.toLong())
+            exchange.responseBody.use { out: OutputStream ->
+                out.write(response)
+            }
+            if (!completed.compareAndSet(false, true)) {
+                return
+            }
+            when {
+                error != null -> cont.resumeWithException(IllegalStateException("Spotify authorization failed: $error"))
+                state != expectedState -> cont.resumeWithException(IllegalStateException("Spotify authorization state mismatch"))
+                code.isNullOrBlank() -> cont.resumeWithException(IllegalStateException("Spotify authorization did not include a code"))
+                else -> cont.resume(code)
+            }
+        } catch (ex: CancellationException) {
+            cont.resumeWithException(ex)
+        } catch (ex: Throwable) {
+            if (completed.compareAndSet(false, true)) {
+                cont.resumeWithException(ex)
+            }
+        } finally {
+            runCatching { exchange.httpContext.server.stop(0) }
+        }
+    }
+
+    private fun parseQuery(query: String): Map<String, String> {
+        if (query.isBlank()) return emptyMap()
+        return query.split('&').mapNotNull { segment ->
+            if (segment.isBlank()) return@mapNotNull null
+            val parts = segment.split('=', limit = 2)
+            val key = URLDecoder.decode(parts[0], StandardCharsets.UTF_8.name())
+            val value = if (parts.size > 1) URLDecoder.decode(parts[1], StandardCharsets.UTF_8.name()) else ""
+            key to value
+        }.toMap()
+    }
+
+    private fun buildBrowserResponse(success: Boolean): ByteArray {
+        val title = if (success) "Authorization complete" else "Authorization failed"
+        val body = if (success) {
+            "<p>You can return to Minecraft. The Spotify authorization was successful.</p>"
         } else {
-            lines += "No playback detected."
-            lines += "Start Spotify on any device to see the track information."
+            "<p>The Spotify authorization token could not be captured. Please try again.</p>"
         }
+        val response = """
+            <html>
+              <head><title>$title</title></head>
+              <body style=\"font-family:sans-serif;background:#0d1117;color:#f0f6fc;text-align:center;\">
+                <h2>$title</h2>
+                $body
+              </body>
+            </html>
+        """.trimIndent()
+        return response.toByteArray(StandardCharsets.UTF_8)
+    }
 
-        val startY = height / 2 + 30
-        lines.forEachIndexed { index, line ->
-            infoFont.drawCenteredString(line, width / 2f, (startY + index * 12).toFloat(), -1, true)
+    private fun ensureLeadingSlash(path: String): String = if (path.startsWith("/")) path else "/$path"
+
+    private fun mask(value: String): String = when {
+        value.isEmpty() -> "<empty>"
+        value.length <= 4 -> "***"
+        value.length <= 8 -> value.take(2) + "***"
+        else -> value.take(4) + "***" + value.takeLast(2)
+    }
+
+    private fun generatePkceChallenge(): PkceChallenge {
+        val verifier = buildString(PKCE_VERIFIER_LENGTH) {
+            repeat(PKCE_VERIFIER_LENGTH) {
+                append(PKCE_CHARSET[secureRandom.nextInt(PKCE_CHARSET.size)])
+            }
         }
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(verifier.toByteArray(StandardCharsets.US_ASCII))
+        val challenge = Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
+        return PkceChallenge(verifier, challenge)
     }
 
-    private fun drawInputField(field: GuiTextField) {
-        val info = fieldDecorations[field] ?: return
-        val labelFont = Fonts.fontSemibold35
-        val helperFont = Fonts.fontSemibold35
-        val padding = 4f
-        val x = field.xPosition - padding
-        val y = field.yPosition - padding
-        val width = field.width + padding * 2
-        val height = field.height + padding * 2
-        val enabled = field.isEnabled
-        val background = if (enabled) inputBackgroundColor else Color(20, 20, 20, 120).rgb
-        val border = if (enabled) inputBorderColor else Color(255, 255, 255, 50).rgb
-        val labelTint = if (enabled) labelColor else helperColor
-        val helperTint = if (enabled) helperColor else helperColor
+    private data class PkceChallenge(val verifier: String, val challenge: String)
 
-        RenderUtils.drawRoundedRect(
-            x.toFloat(),
-            y.toFloat(),
-            width.toFloat(),
-            height.toFloat(),
-            4f,
-            background,
-            1.2f,
-            border,
-        )
-
-        labelFont.drawString(info.label, field.xPosition.toFloat(), (field.yPosition - 12).toFloat(), labelTint)
-        helperFont.drawString(info.helper, field.xPosition.toFloat(), (field.yPosition + field.height + 6).toFloat(), helperTint)
-
-        field.drawTextBox()
-    }
-
-    private fun drawModeInfo(font: net.ccbluex.liquidbounce.ui.font.FontRenderer) {
-        val modeText = SpotifyModule.authModeLabel()
-        font.drawCenteredString(modeText, width / 2f, height / 4f - 4f, -1, true)
-        val helperText = if (SpotifyModule.authMode == SpotifyAuthMode.QUICK) {
-            "Quick connect uses FDP's built-in Spotify app. Just authorize via browser."
-        } else {
-            "Manual mode uses your own Spotify app credentials."
-        }
-        font.drawCenteredString(helperText, width / 2f, height / 4f + 10f, helperColor, true)
-    }
-
-    private fun formatMillis(position: Int): String {
-        val safePosition = max(0, position)
-        val minutes = safePosition / 1000 / 60
-        val seconds = (safePosition / 1000) % 60
-        return String.format("%d:%02d", minutes, seconds)
-    }
-
-    private fun reconnectLabel(): String = "Auto reconnect: ${if (SpotifyModule.autoReconnect) "On" else "Off"}"
-
-    private fun refreshAuthModeUi() {
-        val manualMode = SpotifyModule.authMode == SpotifyAuthMode.MANUAL
-        clientIdField.setEnabled(manualMode)
-        clientSecretField.setEnabled(manualMode)
-        refreshTokenField.setEnabled(manualMode)
-        saveButton.enabled = manualMode
-        modeButton.displayString = SpotifyModule.authModeLabel()
-        modeButton.enabled = SpotifyModule.supportsQuickConnect()
-        if (manualMode) {
-            clientIdField.text = SpotifyModule.clientId
-            clientSecretField.text = SpotifyModule.clientSecret
-            refreshTokenField.text = SpotifyModule.refreshToken
-        }
-    }
-
-    private data class FieldDecoration(val label: String, val helper: String)
+    private val ONE_OR_MORE_SPACES = Regex("\\s+")
+    private val secureRandom = SecureRandom()
+    private const val PKCE_VERIFIER_LENGTH = 64
+    private val PKCE_CHARSET = (('a'..'z') + ('A'..'Z') + ('0'..'9') + listOf('-', '.', '_', '~')).toCharArray()
 }

@@ -486,8 +486,8 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         }
     }
 
-    private fun mask(value: String): String = when {
-        value.isEmpty() -> "<empty>"
+    private fun mask(value: String?): String = when {
+        value.isNullOrEmpty() -> if (value == null) "<null>" else "<empty>"
         value.length <= 4 -> "***"
         value.length <= 8 -> value.take(2) + "***"
         else -> value.take(4) + "***" + value.takeLast(2)

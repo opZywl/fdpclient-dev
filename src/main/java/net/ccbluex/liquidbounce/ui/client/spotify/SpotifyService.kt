@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.spotify
 
+import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,8 +36,12 @@ class SpotifyService(
             "[Spotify][HTTP] POST ${TOKEN_URL} (clientId=${mask(credentials.clientId)}, refreshToken=${mask(credentials.refreshToken)}, flow=${credentials.flow})"
         )
 
-        val encodedRefresh = URLEncoder.encode(credentials.refreshToken, StandardCharsets.UTF_8.name())
-        val encodedClientId = URLEncoder.encode(credentials.clientId, StandardCharsets.UTF_8.name())
+        val refreshToken = credentials.refreshToken
+            ?: throw IOException("Spotify refresh token was null")
+        val clientId = credentials.clientId
+            ?: throw IOException("Spotify client ID was null")
+        val encodedRefresh = URLEncoder.encode(refreshToken, StandardCharsets.UTF_8.name())
+        val encodedClientId = URLEncoder.encode(clientId, StandardCharsets.UTF_8.name())
         val payloadBuilder = StringBuilder("grant_type=refresh_token&refresh_token=$encodedRefresh&client_id=$encodedClientId")
 
         val requestBuilder = Request.Builder()
@@ -44,8 +49,10 @@ class SpotifyService(
             .header("Content-Type", "application/x-www-form-urlencoded")
 
         if (credentials.flow == SpotifyAuthFlow.CONFIDENTIAL_CLIENT) {
+            val clientSecret = credentials.clientSecret
+                ?: throw IOException("Spotify client secret was null for confidential flow")
             val basicAuth = Base64.getEncoder()
-                .encodeToString("${credentials.clientId}:${credentials.clientSecret}".toByteArray(StandardCharsets.UTF_8))
+                .encodeToString("${clientId}:${clientSecret}".toByteArray(StandardCharsets.UTF_8))
             requestBuilder.header("Authorization", "Basic $basicAuth")
         }
 
@@ -223,11 +230,16 @@ class SpotifyService(
 
     private fun parseJson(body: String) = JsonParser().parse(body).asJsonObject
 
-    private fun logTokenResponse(json: com.google.gson.JsonObject, token: String) {
-        val copy = json.deepCopy()
-        copy.addProperty("access_token", mask(token))
-        json.get("refresh_token")?.asString?.let { copy.addProperty("refresh_token", mask(it)) }
-        LOGGER.info("[Spotify][HTTP] Token response body=$copy")
+    private fun logTokenResponse(json: JsonObject, token: String) {
+        val sanitized = JsonObject()
+        for ((key, value) in json.entrySet()) {
+            when (key) {
+                "access_token" -> sanitized.addProperty(key, mask(token))
+                "refresh_token" -> sanitized.addProperty(key, mask(value.asString))
+                else -> sanitized.add(key, value)
+            }
+        }
+        LOGGER.info("[Spotify][HTTP] Token response body=$sanitized")
         val expiresIn = json.get("expires_in")?.asLong ?: DEFAULT_TOKEN_EXPIRY
         LOGGER.info("[Spotify] Access token refreshed (expires in ${expiresIn}s)")
     }
@@ -257,7 +269,8 @@ class SpotifyService(
         const val DEFAULT_TOKEN_EXPIRY = 3600L
         val FORM_MEDIA_TYPE = "application/x-www-form-urlencoded".toMediaType()
 
-        fun mask(value: String): String = when {
+        fun mask(value: String?): String = when {
+            value == null -> "<null>"
             value.isEmpty() -> "<empty>"
             value.length <= 4 -> "***"
             else -> value.take(4) + "***"
