@@ -97,20 +97,22 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     }
 
     fun openConfigScreen() {
+        reloadCredentialsFromDisk()
         mc.displayGuiScreen(GuiSpotify(mc.currentScreen))
     }
 
-    fun updateCredentials(clientId: String, clientSecret: String, refreshToken: String) {
+    fun updateCredentials(clientId: String, clientSecret: String, refreshToken: String): Boolean {
         clientIdValue.set(clientId)
         clientSecretValue.set(clientSecret)
         refreshTokenValue.set(refreshToken)
-        persistCredentials()
+        val saved = persistCredentials()
         cachedToken = null
         if (state) {
             workerJob?.cancel()
             workerJob = null
             startWorker()
         }
+        return saved
     }
 
     fun setPollInterval(seconds: Int) {
@@ -193,33 +195,46 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         EventManager.call(SpotifyConnectionChangedEvent(state, error))
     }
 
-    private fun loadSavedCredentials() {
+    fun reloadCredentialsFromDisk(): Boolean = loadSavedCredentials()
+
+    fun credentialsFilePath(): String = credentialsFile.absolutePath
+
+    private fun loadSavedCredentials(): Boolean {
         if (!credentialsFile.exists()) {
-            return
+            LOGGER.info("[Spotify] No saved credentials found at ${credentialsFile.absolutePath}")
+            return false
         }
 
-        runCatching {
+        return runCatching {
             val json = credentialsFile.readText(StandardCharsets.UTF_8)
             if (json.isBlank()) {
-                return@runCatching
+                return@runCatching false
             }
 
             val element = JsonParser().parse(json)
             if (!element.isJsonObject) {
-                return@runCatching
+                return@runCatching false
             }
 
             val obj = element.asJsonObject
             clientIdValue.set(obj.get("clientId")?.asString ?: "")
             clientSecretValue.set(obj.get("clientSecret")?.asString ?: "")
             refreshTokenValue.set(obj.get("refreshToken")?.asString ?: "")
+            LOGGER.info("[Spotify] Loaded credentials from ${credentialsFile.absolutePath}")
+            true
         }.onFailure {
-            LOGGER.warn("[Spotify] Failed to load saved credentials: ${it.message}")
-        }
+            LOGGER.warn("[Spotify] Failed to load saved credentials", it)
+        }.getOrDefault(false)
     }
 
-    private fun persistCredentials() {
-        runCatching {
+    private fun persistCredentials(): Boolean {
+        return runCatching {
+            credentialsFile.parentFile?.let {
+                if (!it.exists() && !it.mkdirs()) {
+                    throw IllegalStateException("Unable to create directory: ${it.absolutePath}")
+                }
+            }
+
             val payload = JsonObject().apply {
                 addProperty("clientId", clientIdValue.get())
                 addProperty("clientSecret", clientSecretValue.get())
@@ -227,9 +242,10 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
             }
 
             FileManager.writeFile(credentialsFile, FileManager.PRETTY_GSON.toJson(payload))
+            LOGGER.info("[Spotify] Saved credentials to ${credentialsFile.absolutePath}")
         }.onFailure {
-            LOGGER.warn("[Spotify] Failed to save credentials: ${it.message}")
-        }
+            LOGGER.warn("[Spotify] Failed to save credentials", it)
+        }.isSuccess
     }
 
     private const val RETRY_DELAY_MS = 5_000L

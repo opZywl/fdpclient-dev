@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.ui.client.spotify
 import com.google.gson.JsonParser
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.utils.client.ClientUtils.LOGGER
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -30,6 +31,8 @@ class SpotifyService(
 ) {
 
     suspend fun refreshAccessToken(credentials: SpotifyCredentials): SpotifyAccessToken = withContext(Dispatchers.IO) {
+        LOGGER.info("[Spotify] Refreshing access token for client ${mask(credentials.clientId)}")
+
         val encodedRefresh = URLEncoder.encode(credentials.refreshToken, StandardCharsets.UTF_8.name())
         val payload = "grant_type=refresh_token&refresh_token=$encodedRefresh"
         val basicAuth = Base64.getEncoder()
@@ -55,6 +58,8 @@ class SpotifyService(
                 ?: throw IOException("Spotify token response did not contain an access token")
             val expiresIn = json.get("expires_in")?.asLong ?: DEFAULT_TOKEN_EXPIRY
 
+            LOGGER.info("[Spotify] Access token refreshed (expires in ${expiresIn}s)")
+
             SpotifyAccessToken(
                 token,
                 System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(expiresIn - 5)
@@ -63,6 +68,8 @@ class SpotifyService(
     }
 
     suspend fun fetchCurrentlyPlaying(accessToken: String): SpotifyState? = withContext(Dispatchers.IO) {
+        LOGGER.info("[Spotify] Fetching current playback state from Web API")
+
         val request = Request.Builder()
             .url(NOW_PLAYING_URL)
             .header("Authorization", "Bearer $accessToken")
@@ -71,6 +78,7 @@ class SpotifyService(
 
         httpClient.newCall(request).execute().use { response ->
             if (response.code == 204) {
+                LOGGER.info("[Spotify] Spotify API returned 204 - no active playback")
                 return@use null
             }
 
@@ -79,7 +87,9 @@ class SpotifyService(
             }
 
             val body = response.body?.string()?.takeIf { it.isNotBlank() } ?: return@use null
-            parseState(body)
+            val state = parseState(body)
+            logPlaybackState(state)
+            state
         }
     }
 
@@ -122,10 +132,35 @@ class SpotifyService(
 
     private fun parseJson(body: String) = JsonParser().parse(body).asJsonObject
 
+    private fun logPlaybackState(state: SpotifyState?) {
+        if (state == null) {
+            LOGGER.info("[Spotify] No playback data returned by the API")
+            return
+        }
+
+        val track = state.track
+        if (track == null) {
+            LOGGER.info("[Spotify] Playback status ${if (state.isPlaying) "is playing" else "paused"} but no track metadata provided")
+            return
+        }
+
+        val elapsedSeconds = state.progressMs / 1000
+        val durationSeconds = track.durationMs.coerceAtLeast(1) / 1000
+        LOGGER.info(
+            "[Spotify] ${if (state.isPlaying) "Playing" else "Paused"}: ${track.title} - ${track.artists} (${elapsedSeconds}s/${durationSeconds}s)"
+        )
+    }
+
     private companion object {
         const val TOKEN_URL = "https://accounts.spotify.com/api/token"
         const val NOW_PLAYING_URL = "https://api.spotify.com/v1/me/player/currently-playing"
         const val DEFAULT_TOKEN_EXPIRY = 3600L
         val FORM_MEDIA_TYPE = "application/x-www-form-urlencoded".toMediaType()
+
+        fun mask(value: String): String = when {
+            value.isEmpty() -> "<empty>"
+            value.length <= 4 -> "***"
+            else -> value.take(4) + "***"
+        }
     }
 }

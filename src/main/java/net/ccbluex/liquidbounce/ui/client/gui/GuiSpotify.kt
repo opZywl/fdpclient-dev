@@ -109,12 +109,16 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
             }
 
             5 -> {
-                SpotifyModule.updateCredentials(
+                val saved = SpotifyModule.updateCredentials(
                     clientIdField.text.trim(),
                     clientSecretField.text.trim(),
                     refreshTokenField.text.trim(),
                 )
-                chat("§aSaved Spotify credentials.")
+                if (saved) {
+                    chat("§aSaved Spotify credentials to ${SpotifyModule.credentialsFilePath()}.")
+                } else {
+                    chat("§cFailed to save Spotify credentials. Check the log for details.")
+                }
             }
 
             6 -> openDashboard()
@@ -142,8 +146,11 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
 
         val error = SpotifyModule.lastErrorMessage
         if (!error.isNullOrBlank()) {
-            smallFont.drawCenteredString("Last error: $error", width / 2f, height - 35f, 0xFF5555, true)
+            smallFont.drawCenteredString("Last error: $error", width / 2f, height - 48f, 0xFF5555, true)
         }
+
+        val configPathText = "Config file: ${SpotifyModule.credentialsFilePath()}"
+        smallFont.drawCenteredString(configPathText, width / 2f, height - 32f, 0xFFB0B0B0.toInt(), true)
 
         drawInputField(clientIdField)
         drawInputField(clientSecretField)
