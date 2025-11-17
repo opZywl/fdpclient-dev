@@ -50,7 +50,7 @@ class SpotifyService(
             val body = response.body?.string()?.takeIf { it.isNotBlank() }
                 ?: throw IOException("Spotify token response was empty")
 
-            val json = JsonParser.parseString(body).asJsonObject
+            val json = parseJson(body)
             val token = json.get("access_token")?.asString
                 ?: throw IOException("Spotify token response did not contain an access token")
             val expiresIn = json.get("expires_in")?.asLong ?: DEFAULT_TOKEN_EXPIRY
@@ -84,11 +84,12 @@ class SpotifyService(
     }
 
     private fun parseState(body: String): SpotifyState? {
-        val json = JsonParser.parseString(body).asJsonObject
+        val json = parseJson(body)
         val isPlaying = json.get("is_playing")?.asBoolean ?: false
         val progress = json.get("progress_ms")?.asInt ?: 0
 
-        val item = json.get("item")?.takeIf { it.isJsonObject }?.asJsonObject ?: return SpotifyState(null, isPlaying, progress)
+        val item = json.get("item")?.takeIf { it.isJsonObject }?.asJsonObject
+            ?: return SpotifyState(null, isPlaying, progress)
         val id = item.get("id")?.asString ?: ""
         val title = item.get("name")?.asString ?: "Unknown"
 
@@ -116,6 +117,8 @@ class SpotifyService(
             progress,
         )
     }
+
+    private fun parseJson(body: String) = JsonParser().parse(body).asJsonObject
 
     private companion object {
         const val TOKEN_URL = "https://accounts.spotify.com/api/token"

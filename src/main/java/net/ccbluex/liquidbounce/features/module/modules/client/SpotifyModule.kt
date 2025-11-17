@@ -127,7 +127,8 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
                     continue
                 }
 
-                val token = ensureAccessToken(credentials) ?: run {
+                val token = ensureAccessToken(credentials)
+                if (token == null) {
                     delay(RETRY_DELAY_MS)
                     continue
                 }
@@ -181,8 +182,6 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         EventManager.call(SpotifyConnectionChangedEvent(state, error))
     }
 
-    companion object {
-        private const val RETRY_DELAY_MS = 5_000L
-        private val TOKEN_EXPIRY_GRACE_MS = TimeUnit.SECONDS.toMillis(5)
-    }
+    private const val RETRY_DELAY_MS = 5_000L
+    private val TOKEN_EXPIRY_GRACE_MS = TimeUnit.SECONDS.toMillis(5)
 }
