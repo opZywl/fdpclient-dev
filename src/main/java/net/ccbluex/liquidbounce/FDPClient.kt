@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.handler.discord.DiscordRPC
 import net.ccbluex.liquidbounce.handler.lang.LanguageManager.loadLanguages
 import net.ccbluex.liquidbounce.handler.macro.MacroManager
 import net.ccbluex.liquidbounce.handler.payload.ClientFixes
+import net.ccbluex.liquidbounce.handler.spotify.SpotifyIntegration
 import net.ccbluex.liquidbounce.handler.tabs.BlocksTab
 import net.ccbluex.liquidbounce.handler.tabs.ExploitsTab
 import net.ccbluex.liquidbounce.handler.tabs.HeadsTab
@@ -193,6 +194,7 @@ object FDPClient {
             SilentHotbar
             BlinkUtils
             KeyBindManager
+            SpotifyIntegration
 
             // Load settings
             loadSettings(false) {
