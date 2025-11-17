@@ -64,6 +64,14 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     private val quickRefreshTokenValue = text("QuickRefreshToken", "").apply { hide() }
     private val pollIntervalValue = int("PollInterval", SpotifyDefaults.pollIntervalSeconds, 3..60, suffix = "s")
     private val autoReconnectValue = boolean("AutoReconnect", true)
+    private val openPlayerValue = boolean("OpenUI", false).apply {
+        onChange { _, newValue ->
+            if (newValue) {
+                mc.addScheduledTask { openPlayerScreen() }
+            }
+            false
+        }
+    }
     private val cachedTokens = EnumMap<SpotifyAuthMode, SpotifyAccessToken?>(SpotifyAuthMode::class.java)
 
     init {
