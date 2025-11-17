@@ -119,19 +119,75 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         buttonList.clear()
         textFields.clear()
 
-        homeButton = +SpotifyIconButton(BUTTON_HOME, 20, 28, 24, 24) { iconHome }
+        homeButton = +SpotifyIconButton(
+            BUTTON_HOME,
+            20,
+            28,
+            24,
+            24,
+            iconProvider = { iconHome },
+        )
         val searchLeft = homeButton.xPosition + homeButton.width + 6
         val searchWidth = (width - searchLeft - 80).coerceAtLeast(120)
         searchField = textField(401, mc.fontRendererObj, searchLeft, 30, searchWidth, 18)
         searchField.maxStringLength = 80
 
-        backButton = +SpotifyIconButton(BUTTON_BACK, 20, height - 42, 28, 28) { iconBack }
-        refreshButton = +SpotifyIconButton(BUTTON_REFRESH, width - 44, 28, 24, 24) { iconGoForward }
-        previousButton = +SpotifyIconButton(BUTTON_PREVIOUS, width / 2 - 90, height - 64, 32, 32) { iconPrevious }
-        playPauseButton = +SpotifyIconButton(BUTTON_PLAY_PAUSE, width / 2 - 32, height - 72, 64, 44) { resolvePlayPauseIcon() }
-        nextButton = +SpotifyIconButton(BUTTON_NEXT, width / 2 + 58, height - 64, 32, 32) { iconNext }
-        shuffleButton = +SpotifyIconButton(BUTTON_SHUFFLE, width / 2 - 150, height - 58, 28, 28) { resolveShuffleIcon() }
-        repeatButton = +SpotifyIconButton(BUTTON_REPEAT, width / 2 + 110, height - 58, 28, 28) { resolveRepeatIcon() }
+        backButton = +SpotifyIconButton(
+            BUTTON_BACK,
+            20,
+            height - 42,
+            28,
+            28,
+            iconProvider = { iconBack },
+        )
+        refreshButton = +SpotifyIconButton(
+            BUTTON_REFRESH,
+            width - 44,
+            28,
+            24,
+            24,
+            iconProvider = { iconGoForward },
+        )
+        previousButton = +SpotifyIconButton(
+            BUTTON_PREVIOUS,
+            width / 2 - 90,
+            height - 64,
+            32,
+            32,
+            iconProvider = { iconPrevious },
+        )
+        playPauseButton = +SpotifyIconButton(
+            BUTTON_PLAY_PAUSE,
+            width / 2 - 32,
+            height - 72,
+            64,
+            44,
+            iconProvider = { resolvePlayPauseIcon() },
+        )
+        nextButton = +SpotifyIconButton(
+            BUTTON_NEXT,
+            width / 2 + 58,
+            height - 64,
+            32,
+            32,
+            iconProvider = { iconNext },
+        )
+        shuffleButton = +SpotifyIconButton(
+            BUTTON_SHUFFLE,
+            width / 2 - 150,
+            height - 58,
+            28,
+            28,
+            iconProvider = { resolveShuffleIcon() },
+        )
+        repeatButton = +SpotifyIconButton(
+            BUTTON_REPEAT,
+            width / 2 + 110,
+            height - 58,
+            28,
+            28,
+            iconProvider = { resolveRepeatIcon() },
+        )
 
         if (playlists.isEmpty()) {
             reloadPlaylists(force = true)

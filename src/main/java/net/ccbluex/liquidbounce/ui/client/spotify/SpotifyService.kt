@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.ui.client.spotify
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.google.gson.JsonPrimitive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyRepeatMode
@@ -36,7 +37,7 @@ class SpotifyService(
 
     suspend fun refreshAccessToken(credentials: SpotifyCredentials): SpotifyAccessToken = withContext(Dispatchers.IO) {
         LOGGER.info(
-            "[Spotify][HTTP] POST ${TOKEN_URL} (clientId=${mask(credentials.clientId)}, refreshToken=${mask(credentials.refreshToken)}, flow=${credentials.flow})"
+            "[Spotify][HTTP] POST $TOKEN_URL (clientId=${mask(credentials.clientId)}, refreshToken=${mask(credentials.refreshToken)}, flow=${credentials.flow})"
         )
 
         val refreshToken = credentials.refreshToken
@@ -55,7 +56,7 @@ class SpotifyService(
             val clientSecret = credentials.clientSecret
                 ?: throw IOException("Spotify client secret was null for confidential flow")
             val basicAuth = Base64.getEncoder()
-                .encodeToString("${clientId}:${clientSecret}".toByteArray(StandardCharsets.UTF_8))
+                .encodeToString("$clientId:$clientSecret".toByteArray(StandardCharsets.UTF_8))
             requestBuilder.header("Authorization", "Basic $basicAuth")
         }
 
@@ -66,11 +67,11 @@ class SpotifyService(
         httpClient.newCall(request).execute().use { response ->
             LOGGER.info("[Spotify][HTTP] Token response status=${response.code} message=${response.message}")
 
-            val body = response.body?.string() ?: ""
+            val body = response.body.string()
             if (!response.isSuccessful) {
                 val message = body.ifBlank { "<empty>" }
                 LOGGER.warn("[Spotify][HTTP] Token refresh failed body=$message")
-                throw IOException("Spotify token refresh failed with HTTP ${'$'}{response.code}: $message")
+                throw IOException("Spotify token refresh failed with HTTP ${response.code}: $message")
             }
 
             if (body.isBlank()) {
@@ -101,7 +102,7 @@ class SpotifyService(
         codeVerifier: String?,
     ): SpotifyAccessToken = withContext(Dispatchers.IO) {
         LOGGER.info(
-            "[Spotify][HTTP] POST ${TOKEN_URL} (clientId=${mask(clientId)}, grant_type=authorization_code)"
+            "[Spotify][HTTP] POST $TOKEN_URL (clientId=${mask(clientId)}, grant_type=authorization_code)"
         )
 
         val encodedCode = URLEncoder.encode(code, StandardCharsets.UTF_8.name())
@@ -132,11 +133,11 @@ class SpotifyService(
         httpClient.newCall(request).execute().use { response ->
             LOGGER.info("[Spotify][HTTP] Authorization response status=${response.code} message=${response.message}")
 
-            val body = response.body?.string() ?: ""
+            val body = response.body.string()
             if (!response.isSuccessful) {
                 val message = body.ifBlank { "<empty>" }
                 LOGGER.warn("[Spotify][HTTP] Authorization exchange failed body=$message")
-                throw IOException("Spotify authorization failed with HTTP ${'$'}{response.code}: $message")
+                throw IOException("Spotify authorization failed with HTTP ${response.code}: $message")
             }
 
             if (body.isBlank()) {
@@ -161,7 +162,7 @@ class SpotifyService(
     }
 
     suspend fun fetchCurrentlyPlaying(accessToken: String): SpotifyState? = withContext(Dispatchers.IO) {
-        LOGGER.info("[Spotify][HTTP] GET ${NOW_PLAYING_URL} (token=${mask(accessToken)})")
+        LOGGER.info("[Spotify][HTTP] GET $NOW_PLAYING_URL (token=${mask(accessToken)})")
 
         val request = Request.Builder()
             .url(NOW_PLAYING_URL)
@@ -176,12 +177,12 @@ class SpotifyService(
                 return@use null
             }
 
-            val body = response.body?.string() ?: ""
+            val body = response.body.string()
             LOGGER.info("[Spotify][HTTP] Playback response body=${body.ifBlank { "<empty>" }}")
 
             if (!response.isSuccessful) {
                 val message = body.ifBlank { "<empty>" }
-                throw IOException("Spotify now playing request failed with HTTP ${'$'}{response.code}: $message")
+                throw IOException("Spotify now playing request failed with HTTP ${response.code}: $message")
             }
 
             if (body.isBlank()) {
@@ -207,7 +208,7 @@ class SpotifyService(
                 .build()
 
             httpClient.newCall(request).execute().use { response ->
-                val body = response.body?.string() ?: ""
+                val body = response.body.string()
                 if (!response.isSuccessful) {
                     val message = body.ifBlank { "<empty>" }
                     throw IOException("Spotify playlist request failed with HTTP ${response.code}: $message")
@@ -254,7 +255,7 @@ class SpotifyService(
             val offset = JsonObject().apply { addProperty("uri", offsetUri) }
             payload.add("offset", offset)
         } else if (!trackUri.isNullOrBlank() && contextUri.isNullOrBlank()) {
-            val uris = JsonArray().apply { add(trackUri) }
+            val uris = JsonArray().apply { add(JsonPrimitive(trackUri)) }
             payload.add("uris", uris)
         }
         if (positionMs > 0) {
@@ -353,22 +354,22 @@ class SpotifyService(
                 .get()
                 .build()
             httpClient.newCall(request).execute().use { response ->
-                val body = response.body?.string() ?: ""
+                val body = response.body.string()
                 if (!response.isSuccessful) {
                     val message = body.ifBlank { "<empty>" }
                     throw IOException("Spotify saved-tracks request failed with HTTP ${response.code}: $message")
                 }
                 if (body.isBlank()) {
-                    return@use emptyMap<String, Boolean>()
+                    return@use emptyMap()
                 }
                 val element = try {
                     JsonParser().parse(body)
                 } catch (exception: Exception) {
                     LOGGER.warn("[Spotify][HTTP] Failed to parse saved-tracks response", exception)
-                    return@use emptyMap<String, Boolean>()
+                    return@use emptyMap()
                 }
                 if (!element.isJsonArray) {
-                    return@use emptyMap<String, Boolean>()
+                    return@use emptyMap()
                 }
                 val jsonArray = element.asJsonArray
                 val map = LinkedHashMap<String, Boolean>(limited.size)
@@ -397,7 +398,7 @@ class SpotifyService(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
-            val body = response.body?.string() ?: ""
+            val body = response.body.string()
             if (!response.isSuccessful) {
                 val message = body.ifBlank { "<empty>" }
                 throw IOException("Spotify track request failed with HTTP ${response.code}: $message")
@@ -437,7 +438,7 @@ class SpotifyService(
 
     private suspend fun executeControlRequest(request: Request) = withContext(Dispatchers.IO) {
         httpClient.newCall(request).execute().use { response ->
-            val body = response.body?.string() ?: ""
+            val body = response.body.string()
             if (!response.isSuccessful && response.code != 204) {
                 val message = body.ifBlank { "<empty>" }
                 throw IOException("Spotify control request failed with HTTP ${response.code}: $message")
