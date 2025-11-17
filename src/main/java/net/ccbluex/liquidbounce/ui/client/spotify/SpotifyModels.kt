@@ -44,6 +44,7 @@ data class SpotifyCredentials(
 data class SpotifyAccessToken(
     val value: String,
     val expiresAtMillis: Long,
+    val refreshToken: String? = null,
 )
 
 /**

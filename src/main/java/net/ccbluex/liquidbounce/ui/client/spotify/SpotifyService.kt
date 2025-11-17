@@ -67,9 +67,64 @@ class SpotifyService(
 
             logTokenResponse(json, token)
 
+            val refreshToken = json.get("refresh_token")?.asString
             SpotifyAccessToken(
-                token,
-                System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(expiresIn - 5)
+                value = token,
+                expiresAtMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(expiresIn - 5),
+                refreshToken = refreshToken,
+            )
+        }
+    }
+
+    suspend fun exchangeAuthorizationCode(
+        clientId: String,
+        clientSecret: String,
+        code: String,
+        redirectUri: String,
+    ): SpotifyAccessToken = withContext(Dispatchers.IO) {
+        LOGGER.info(
+            "[Spotify][HTTP] POST ${TOKEN_URL} (clientId=${mask(clientId)}, grant_type=authorization_code)"
+        )
+
+        val encodedCode = URLEncoder.encode(code, StandardCharsets.UTF_8.name())
+        val encodedRedirect = URLEncoder.encode(redirectUri, StandardCharsets.UTF_8.name())
+        val payload = "grant_type=authorization_code&code=$encodedCode&redirect_uri=$encodedRedirect"
+        val basicAuth = Base64.getEncoder()
+            .encodeToString("$clientId:$clientSecret".toByteArray(StandardCharsets.UTF_8))
+
+        val request = Request.Builder()
+            .url(TOKEN_URL)
+            .header("Authorization", "Basic $basicAuth")
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .post(payload.toRequestBody(FORM_MEDIA_TYPE))
+            .build()
+
+        httpClient.newCall(request).execute().use { response ->
+            LOGGER.info("[Spotify][HTTP] Authorization response status=${response.code} message=${response.message}")
+
+            val body = response.body?.string()?.orEmpty()
+            if (!response.isSuccessful) {
+                LOGGER.warn("[Spotify][HTTP] Authorization exchange failed body=${body.ifBlank { "<empty>" }}")
+                throw IOException("Spotify authorization failed with HTTP ${'$'}{response.code}")
+            }
+
+            if (body.isBlank()) {
+                throw IOException("Spotify authorization response was empty")
+            }
+
+            val json = parseJson(body)
+            val token = json.get("access_token")?.asString
+                ?: throw IOException("Spotify authorization response missing access token")
+            val refreshToken = json.get("refresh_token")?.asString
+                ?: throw IOException("Spotify authorization response missing refresh token")
+            val expiresIn = json.get("expires_in")?.asLong ?: DEFAULT_TOKEN_EXPIRY
+
+            logTokenResponse(json, token)
+
+            SpotifyAccessToken(
+                value = token,
+                expiresAtMillis = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(expiresIn - 5),
+                refreshToken = refreshToken,
             )
         }
     }

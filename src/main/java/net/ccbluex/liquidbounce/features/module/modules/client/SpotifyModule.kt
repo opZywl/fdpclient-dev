@@ -14,6 +14,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.handler.spotify.SpotifyIntegration
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.file.FileManager
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.client.chat
 import java.io.File
 import java.nio.charset.StandardCharsets
+import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
 /**
@@ -38,8 +40,10 @@ import java.util.concurrent.TimeUnit
 object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) {
 
     private val moduleScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val service = SpotifyService()
+    private val service: SpotifyService
+        get() = SpotifyIntegration.service
     private var workerJob: Job? = null
+    private var browserAuthFuture: CompletableFuture<SpotifyAccessToken>? = null
     private var cachedToken: SpotifyAccessToken? = null
     private val credentialsFile = File(FileManager.dir, "spotify.json")
 
@@ -94,6 +98,8 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         workerJob?.cancel()
         workerJob = null
         cachedToken = null
+        browserAuthFuture?.cancel(true)
+        browserAuthFuture = null
         updateConnection(SpotifyConnectionState.DISCONNECTED, null)
     }
 
@@ -138,6 +144,56 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     fun toggleAutoReconnect(): Boolean {
         autoReconnectValue.toggle()
         return autoReconnectValue.get()
+    }
+
+    fun beginBrowserAuthorization(callback: (BrowserAuthStatus, String) -> Unit): Boolean {
+        val clientId = clientIdValue.get().trim()
+        val clientSecret = clientSecretValue.get().trim()
+        if (clientId.isBlank() || clientSecret.isBlank()) {
+            callback(BrowserAuthStatus.ERROR, "Enter the client ID and secret before authorizing.")
+            return false
+        }
+
+        val ongoing = browserAuthFuture
+        if (ongoing != null && !ongoing.isDone) {
+            callback(BrowserAuthStatus.INFO, "Browser authorization is already running.")
+            return false
+        }
+
+        callback(BrowserAuthStatus.INFO, "Opening Spotify authorization flow in your browser...")
+        val future = SpotifyIntegration.authorizeInBrowser(clientId, clientSecret)
+        browserAuthFuture = future
+        future.whenComplete { token, throwable ->
+            mc.addScheduledTask {
+                browserAuthFuture = null
+                if (throwable != null) {
+                    callback(BrowserAuthStatus.ERROR, "Authorization failed: ${throwable.message}")
+                    return@addScheduledTask
+                }
+
+                if (token == null || token.refreshToken.isNullOrBlank()) {
+                    callback(BrowserAuthStatus.ERROR, "Spotify did not return a refresh token.")
+                    return@addScheduledTask
+                }
+
+                refreshTokenValue.set(token.refreshToken)
+                cachedToken = token
+                val saved = persistCredentials()
+                if (saved) {
+                    callback(BrowserAuthStatus.SUCCESS, "Authorization completed. Credentials saved.")
+                } else {
+                    callback(BrowserAuthStatus.ERROR, "Authorization succeeded but saving failed. Check the logs.")
+                }
+
+                if (state) {
+                    workerJob?.cancel()
+                    workerJob = null
+                    startWorker()
+                }
+            }
+        }
+
+        return true
     }
 
     private fun hasCredentials(): Boolean = SpotifyCredentials(clientId, clientSecret, refreshToken).isValid()
@@ -326,4 +382,10 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     private const val CONFIG_KEY_REFRESH_TOKEN = "refreshToken"
     private const val CONFIG_KEY_ACCESS_TOKEN = "accessToken"
     private const val CONFIG_KEY_ACCESS_TOKEN_EXPIRY = "accessTokenExpiryMillis"
+
+    enum class BrowserAuthStatus {
+        INFO,
+        SUCCESS,
+        ERROR,
+    }
 }

@@ -40,6 +40,11 @@ minecraft {
     def spotifyRefreshToken = (project.findProperty("spotify_refresh_token") ?: "").toString()
     def spotifyPollInterval = (project.findProperty("spotify_poll_interval_seconds") ?: "5").toString()
     def spotifyHttpTimeout = (project.findProperty("spotify_http_timeout_ms") ?: "12000").toString()
+    def spotifyDashboardUrl = (project.findProperty("spotify_dashboard_url") ?: "https://developer.spotify.com/dashboard").toString()
+    def spotifyAuthGuideUrl = (project.findProperty("spotify_authorization_guide_url") ?: "https://fdpclient.app/spotify").toString()
+    def spotifyAuthScopes = (project.findProperty("spotify_authorization_scopes") ?: "user-read-currently-playing user-read-playback-state").toString()
+    def spotifyAuthRedirectPort = (project.findProperty("spotify_authorization_redirect_port") ?: "43791").toString()
+    def spotifyAuthRedirectPath = (project.findProperty("spotify_authorization_redirect_path") ?: "/fdpclient-callback").toString()
 
     clientJvmArgs += [
             "-Dspotify.clientId=${spotifyClientId}",
@@ -47,6 +52,11 @@ minecraft {
             "-Dspotify.refreshToken=${spotifyRefreshToken}",
             "-Dspotify.pollIntervalSeconds=${spotifyPollInterval}",
             "-Dspotify.httpTimeoutMs=${spotifyHttpTimeout}",
+            "-Dspotify.dashboardUrl=${spotifyDashboardUrl}",
+            "-Dspotify.authorizationGuideUrl=${spotifyAuthGuideUrl}",
+            "-Dspotify.authorizationScopes=${spotifyAuthScopes}",
+            "-Dspotify.authorizationRedirectPort=${spotifyAuthRedirectPort}",
+            "-Dspotify.authorizationRedirectPath=${spotifyAuthRedirectPath}",
     ]
 }
 

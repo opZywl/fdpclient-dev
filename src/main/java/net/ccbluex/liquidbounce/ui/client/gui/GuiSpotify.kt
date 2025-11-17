@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.gui
 
 import net.ccbluex.liquidbounce.features.module.modules.client.SpotifyModule
+import net.ccbluex.liquidbounce.handler.spotify.SpotifyIntegration
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyState
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.client.MinecraftInstance.Companion.mc
@@ -17,9 +18,7 @@ import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
 import net.minecraftforge.fml.client.config.GuiSlider
 import org.lwjgl.input.Keyboard
-import java.awt.Desktop
 import java.awt.Color
-import java.net.URI
 import kotlin.math.max
 
 class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
@@ -30,6 +29,7 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
     private lateinit var reconnectButton: GuiButton
     private lateinit var pollSlider: GuiSlider
     private val fieldDecorations = mutableMapOf<GuiTextField, FieldDecoration>()
+    private var browserAuthStatus: Pair<SpotifyModule.BrowserAuthStatus, String>? = null
 
     private val inputBackgroundColor = Color(9, 9, 9, 185).rgb
     private val inputBorderColor = Color(255, 255, 255, 60).rgb
@@ -95,10 +95,16 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
         +GuiButton(5, startX, currentY, fieldWidth, 20, "Save credentials")
         currentY += 24
 
-        +GuiButton(6, startX, currentY, fieldWidth, 20, "Open Spotify Dashboard")
+        +GuiButton(6, startX, currentY, fieldWidth, 20, "Authorize via Browser")
         currentY += 24
 
-        +GuiButton(7, startX, currentY, fieldWidth, 20, "Back")
+        +GuiButton(7, startX, currentY, fieldWidth, 20, "Open Spotify Dashboard")
+        currentY += 24
+
+        +GuiButton(8, startX, currentY, fieldWidth, 20, "Authorization Guide")
+        currentY += 24
+
+        +GuiButton(9, startX, currentY, fieldWidth, 20, "Back")
     }
 
     override fun actionPerformed(button: GuiButton) {
@@ -120,9 +126,24 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
                     chat("§cFailed to save Spotify credentials. Check the log for details.")
                 }
             }
+            6 -> {
+                SpotifyModule.beginBrowserAuthorization { status, message ->
+                    browserAuthStatus = status to message
+                    if (status == SpotifyModule.BrowserAuthStatus.SUCCESS) {
+                        refreshTokenField.text = SpotifyModule.refreshToken
+                    }
+                    val prefix = when (status) {
+                        SpotifyModule.BrowserAuthStatus.INFO -> "§e"
+                        SpotifyModule.BrowserAuthStatus.SUCCESS -> "§a"
+                        SpotifyModule.BrowserAuthStatus.ERROR -> "§c"
+                    }
+                    chat(prefix + message)
+                }
+            }
 
-            6 -> openDashboard()
-            7 -> mc.displayGuiScreen(previousScreen)
+            7 -> SpotifyIntegration.openDashboard()
+            8 -> SpotifyIntegration.openGuide()
+            9 -> mc.displayGuiScreen(previousScreen)
         }
     }
 
@@ -151,6 +172,14 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
 
         val configPathText = "Config file: ${SpotifyModule.credentialsFilePath()}"
         smallFont.drawCenteredString(configPathText, width / 2f, height - 32f, 0xFFB0B0B0.toInt(), true)
+        browserAuthStatus?.let { (status, message) ->
+            val color = when (status) {
+                SpotifyModule.BrowserAuthStatus.INFO -> 0xFFE0B45A.toInt()
+                SpotifyModule.BrowserAuthStatus.SUCCESS -> 0xFF6DE37B.toInt()
+                SpotifyModule.BrowserAuthStatus.ERROR -> 0xFFE05757.toInt()
+            }
+            smallFont.drawCenteredString("Browser auth: $message", width / 2f, height - 16f, color, true)
+        }
 
         drawInputField(clientIdField)
         drawInputField(clientSecretField)
@@ -240,16 +269,6 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
     }
 
     private fun reconnectLabel(): String = "Auto reconnect: ${if (SpotifyModule.autoReconnect) "On" else "Off"}"
-
-    private fun openDashboard() {
-        try {
-            if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().browse(URI("https://developer.spotify.com/dashboard"))
-            }
-        } catch (ex: Exception) {
-            chat("§cFailed to open browser: ${ex.message}")
-        }
-    }
 
     private data class FieldDecoration(val label: String, val helper: String)
 }
