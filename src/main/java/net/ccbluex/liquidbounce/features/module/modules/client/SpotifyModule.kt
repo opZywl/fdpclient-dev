@@ -81,6 +81,7 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         get() = refreshTokenValue.get()
 
     override fun onEnable() {
+        reloadCredentialsFromDisk()
         updateConnection(SpotifyConnectionState.CONNECTING, null)
         startWorker()
         if (!hasCredentials()) {
@@ -102,12 +103,24 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     }
 
     fun updateCredentials(clientId: String, clientSecret: String, refreshToken: String): Boolean {
-        LOGGER.info(
-            "[Spotify] Received credential update (clientId=${mask(clientId)}, refreshToken=${mask(refreshToken)})"
+        val sanitized = SpotifyCredentials(
+            clientId.trim(),
+            clientSecret.trim(),
+            refreshToken.trim(),
         )
-        clientIdValue.set(clientId)
-        clientSecretValue.set(clientSecret)
-        refreshTokenValue.set(refreshToken)
+
+        LOGGER.info(
+            "[Spotify] Received credential update (clientId=${mask(sanitized.clientId)}, refreshToken=${mask(sanitized.refreshToken)})"
+        )
+
+        if (!sanitized.isValid()) {
+            LOGGER.warn("[Spotify] Ignoring credential update because at least one field is blank")
+            return false
+        }
+
+        clientIdValue.set(sanitized.clientId)
+        clientSecretValue.set(sanitized.clientSecret)
+        refreshTokenValue.set(sanitized.refreshToken)
         val saved = persistCredentials()
         cachedToken = null
         if (state) {
@@ -181,6 +194,7 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
 
     private fun handleError(message: String) {
         LOGGER.warn("[Spotify] $message")
+        currentState = null
         updateConnection(SpotifyConnectionState.ERROR, message)
         if (!autoReconnect) {
             chat("§cSpotify module disabled: $message")
@@ -203,8 +217,10 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     fun credentialsFilePath(): String = credentialsFile.absolutePath
 
     private fun loadSavedCredentials(): Boolean {
+        ensureCredentialsDirectory()
         LOGGER.info("[Spotify] Loading credentials from ${credentialsFile.absolutePath}")
         if (!credentialsFile.exists()) {
+            cachedToken = null
             LOGGER.info("[Spotify] No saved credentials found at ${credentialsFile.absolutePath}")
             return false
         }
@@ -212,40 +228,69 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         return runCatching {
             val json = credentialsFile.readText(StandardCharsets.UTF_8)
             if (json.isBlank()) {
+                cachedToken = null
                 return@runCatching false
             }
 
             val element = JsonParser().parse(json)
             if (!element.isJsonObject) {
+                cachedToken = null
                 return@runCatching false
             }
 
             val obj = element.asJsonObject
-            clientIdValue.set(obj.get("clientId")?.asString ?: "")
-            clientSecretValue.set(obj.get("clientSecret")?.asString ?: "")
-            refreshTokenValue.set(obj.get("refreshToken")?.asString ?: "")
-            LOGGER.info("[Spotify] Loaded credentials from ${credentialsFile.absolutePath}")
+            obj.get(CONFIG_KEY_CLIENT_ID)?.takeIf { it.isJsonPrimitive }?.asString?.let { clientIdValue.set(it) }
+            obj.get(CONFIG_KEY_CLIENT_SECRET)?.takeIf { it.isJsonPrimitive }?.asString?.let { clientSecretValue.set(it) }
+            obj.get(CONFIG_KEY_REFRESH_TOKEN)?.takeIf { it.isJsonPrimitive }?.asString?.let { refreshTokenValue.set(it) }
+
+            val restoredToken = obj.get(CONFIG_KEY_ACCESS_TOKEN)?.takeIf { it.isJsonPrimitive }?.asString
+            val restoredExpiry = obj.get(CONFIG_KEY_ACCESS_TOKEN_EXPIRY)?.takeIf { it.isJsonPrimitive }?.asLong ?: 0L
+            cachedToken = if (!restoredToken.isNullOrBlank() && restoredExpiry > System.currentTimeMillis()) {
+                LOGGER.info(
+                    "[Spotify] Restored cached access token from disk (expires in ${(restoredExpiry - System.currentTimeMillis()) / 1000}s)"
+                )
+                SpotifyAccessToken(restoredToken, restoredExpiry)
+            } else {
+                if (!restoredToken.isNullOrBlank()) {
+                    LOGGER.info("[Spotify] Ignoring expired cached access token from disk")
+                }
+                null
+            }
+
+            LOGGER.info(
+                "[Spotify] Loaded credentials from ${credentialsFile.absolutePath} (clientId=${mask(clientIdValue.get())}, refreshToken=${mask(refreshTokenValue.get())})"
+            )
             true
         }.onFailure {
+            cachedToken = null
             LOGGER.warn("[Spotify] Failed to load saved credentials", it)
         }.getOrDefault(false)
     }
 
     private fun persistCredentials(): Boolean {
+        val credentials = SpotifyCredentials(clientIdValue.get(), clientSecretValue.get(), refreshTokenValue.get())
+        if (!credentials.isValid()) {
+            LOGGER.warn("[Spotify] Refusing to persist invalid credentials")
+            return false
+        }
+
         return runCatching {
             val directory = credentialsFile.parentFile ?: FileManager.dir
             if (!directory.exists() && !directory.mkdirs()) {
                 throw IllegalStateException("Unable to create directory: ${directory.absolutePath}")
             }
 
+            val tokenSnapshot = cachedToken
             LOGGER.info(
-                "[Spotify] Persisting credentials to ${credentialsFile.absolutePath} (clientId=${mask(clientIdValue.get())}, refreshToken=${mask(refreshTokenValue.get())})"
+                "[Spotify] Persisting credentials to ${credentialsFile.absolutePath} (clientId=${mask(credentials.clientId)}, refreshToken=${mask(credentials.refreshToken)}, accessToken=${maskToken(tokenSnapshot)})"
             )
 
             val payload = JsonObject().apply {
-                addProperty("clientId", clientIdValue.get())
-                addProperty("clientSecret", clientSecretValue.get())
-                addProperty("refreshToken", refreshTokenValue.get())
+                addProperty(CONFIG_KEY_CLIENT_ID, credentials.clientId)
+                addProperty(CONFIG_KEY_CLIENT_SECRET, credentials.clientSecret)
+                addProperty(CONFIG_KEY_REFRESH_TOKEN, credentials.refreshToken)
+                addProperty(CONFIG_KEY_ACCESS_TOKEN, tokenSnapshot?.value ?: "")
+                addProperty(CONFIG_KEY_ACCESS_TOKEN_EXPIRY, tokenSnapshot?.expiresAtMillis ?: 0L)
             }
 
             FileManager.writeFile(credentialsFile, FileManager.PRETTY_GSON.toJson(payload))
@@ -257,6 +302,13 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         }.isSuccess
     }
 
+    private fun ensureCredentialsDirectory() {
+        val directory = credentialsFile.parentFile ?: FileManager.dir
+        if (!directory.exists() && directory.mkdirs()) {
+            LOGGER.info("[Spotify] Created credentials directory at ${directory.absolutePath}")
+        }
+    }
+
     private fun mask(value: String): String = when {
         value.isEmpty() -> "<empty>"
         value.length <= 4 -> "***"
@@ -264,6 +316,14 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         else -> value.take(4) + "***" + value.takeLast(2)
     }
 
+    private fun maskToken(token: SpotifyAccessToken?): String = token?.value?.let(::mask) ?: "<none>"
+
     private const val RETRY_DELAY_MS = 5_000L
     private val TOKEN_EXPIRY_GRACE_MS = TimeUnit.SECONDS.toMillis(5)
+
+    private const val CONFIG_KEY_CLIENT_ID = "clientId"
+    private const val CONFIG_KEY_CLIENT_SECRET = "clientSecret"
+    private const val CONFIG_KEY_REFRESH_TOKEN = "refreshToken"
+    private const val CONFIG_KEY_ACCESS_TOKEN = "accessToken"
+    private const val CONFIG_KEY_ACCESS_TOKEN_EXPIRY = "accessTokenExpiryMillis"
 }
