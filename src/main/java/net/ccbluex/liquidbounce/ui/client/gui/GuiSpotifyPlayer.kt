@@ -574,20 +574,32 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
             return
         }
         SharedScopes.IO.launch {
-            runCatching {
+            val imageResult = runCatching {
                 HttpClient.get(url).use { response ->
                     ensureSuccess(response)
                     response.body.byteStream().use { stream ->
-                        val image = javax.imageio.ImageIO.read(stream) ?: throw IOException("Cover art missing")
-                        val texture = DynamicTexture(image)
-                        val location = mc.textureManager.getDynamicTextureLocation("spotify/" + UUID.randomUUID(), texture)
-                        coverCache[url] = location
+                        javax.imageio.ImageIO.read(stream) ?: throw IOException("Cover art missing")
                     }
+                }
+            }
+            imageResult.onSuccess { image ->
+                mc.addScheduledTask {
+                    runCatching {
+                        val texture = DynamicTexture(image)
+                        val location = mc.textureManager.getDynamicTextureLocation(
+                            "spotify/" + UUID.randomUUID(),
+                            texture,
+                        )
+                        coverCache[url] = location
+                    }.onFailure {
+                        LOGGER.warn("[Spotify][GUI] Failed to upload cover art from $url", it)
+                    }
+                    coverLoading.remove(url)
                 }
             }.onFailure {
                 LOGGER.warn("[Spotify][GUI] Failed to load cover art from $url", it)
+                mc.addScheduledTask { coverLoading.remove(url) }
             }
-            mc.addScheduledTask { coverLoading.remove(url) }
         }
     }
 

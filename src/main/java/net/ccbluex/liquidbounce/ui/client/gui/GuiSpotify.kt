@@ -514,22 +514,28 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
         }
 
         SharedScopes.IO.launch {
-            runCatching {
+            val imageResult = runCatching {
                 HttpClient.get(url).use { response ->
                     ensureSuccess(response)
                     response.body.byteStream().use { stream ->
-                        val image = ImageIO.read(stream) ?: throw IOException("Cover art was empty")
+                        ImageIO.read(stream) ?: throw IOException("Cover art was empty")
+                    }
+                }
+            }
+            imageResult.onSuccess { image ->
+                mc.addScheduledTask {
+                    runCatching {
                         val texture = DynamicTexture(image)
                         val location = mc.textureManager.getDynamicTextureLocation(
                             "spotify/" + UUID.randomUUID(),
-                            texture
+                            texture,
                         )
                         coverCache[url] = location
-                        mc.addScheduledTask {
-                            if (coverUrl == url) {
-                                coverTexture = location
-                            }
+                        if (coverUrl == url) {
+                            coverTexture = location
                         }
+                    }.onFailure {
+                        LOGGER.warn("[Spotify][GUI] Failed to upload album art from $url", it)
                     }
                 }
             }.onFailure {
