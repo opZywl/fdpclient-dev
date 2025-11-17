@@ -31,7 +31,9 @@ class SpotifyService(
 ) {
 
     suspend fun refreshAccessToken(credentials: SpotifyCredentials): SpotifyAccessToken = withContext(Dispatchers.IO) {
-        LOGGER.info("[Spotify] Refreshing access token for client ${mask(credentials.clientId)}")
+        LOGGER.info(
+            "[Spotify][HTTP] POST ${TOKEN_URL} (clientId=${mask(credentials.clientId)}, refreshToken=${mask(credentials.refreshToken)})"
+        )
 
         val encodedRefresh = URLEncoder.encode(credentials.refreshToken, StandardCharsets.UTF_8.name())
         val payload = "grant_type=refresh_token&refresh_token=$encodedRefresh"
@@ -46,19 +48,24 @@ class SpotifyService(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
+            LOGGER.info("[Spotify][HTTP] Token response status=${response.code} message=${response.message}")
+
+            val body = response.body?.string()?.orEmpty()
             if (!response.isSuccessful) {
+                LOGGER.warn("[Spotify][HTTP] Token refresh failed body=${body.ifBlank { "<empty>" }}")
                 throw IOException("Spotify token refresh failed with HTTP ${'$'}{response.code}")
             }
 
-            val body = response.body?.string()?.takeIf { it.isNotBlank() }
-                ?: throw IOException("Spotify token response was empty")
+            if (body.isBlank()) {
+                throw IOException("Spotify token response was empty")
+            }
 
             val json = parseJson(body)
             val token = json.get("access_token")?.asString
                 ?: throw IOException("Spotify token response did not contain an access token")
             val expiresIn = json.get("expires_in")?.asLong ?: DEFAULT_TOKEN_EXPIRY
 
-            LOGGER.info("[Spotify] Access token refreshed (expires in ${expiresIn}s)")
+            logTokenResponse(json, token)
 
             SpotifyAccessToken(
                 token,
@@ -68,7 +75,7 @@ class SpotifyService(
     }
 
     suspend fun fetchCurrentlyPlaying(accessToken: String): SpotifyState? = withContext(Dispatchers.IO) {
-        LOGGER.info("[Spotify] Fetching current playback state from Web API")
+        LOGGER.info("[Spotify][HTTP] GET ${NOW_PLAYING_URL} (token=${mask(accessToken)})")
 
         val request = Request.Builder()
             .url(NOW_PLAYING_URL)
@@ -77,16 +84,23 @@ class SpotifyService(
             .build()
 
         httpClient.newCall(request).execute().use { response ->
+            LOGGER.info("[Spotify][HTTP] Playback response status=${response.code} message=${response.message}")
             if (response.code == 204) {
                 LOGGER.info("[Spotify] Spotify API returned 204 - no active playback")
                 return@use null
             }
 
+            val body = response.body?.string()?.orEmpty()
+            LOGGER.info("[Spotify][HTTP] Playback response body=${body.ifBlank { "<empty>" }}")
+
             if (!response.isSuccessful) {
                 throw IOException("Spotify now playing request failed with HTTP ${'$'}{response.code}")
             }
 
-            val body = response.body?.string()?.takeIf { it.isNotBlank() } ?: return@use null
+            if (body.isBlank()) {
+                LOGGER.info("[Spotify] Playback response was empty")
+                return@use null
+            }
             val state = parseState(body)
             logPlaybackState(state)
             state
@@ -131,6 +145,15 @@ class SpotifyService(
     }
 
     private fun parseJson(body: String) = JsonParser().parse(body).asJsonObject
+
+    private fun logTokenResponse(json: com.google.gson.JsonObject, token: String) {
+        val copy = json.deepCopy()
+        copy.addProperty("access_token", mask(token))
+        json.get("refresh_token")?.asString?.let { copy.addProperty("refresh_token", mask(it)) }
+        LOGGER.info("[Spotify][HTTP] Token response body=$copy")
+        val expiresIn = json.get("expires_in")?.asLong ?: DEFAULT_TOKEN_EXPIRY
+        LOGGER.info("[Spotify] Access token refreshed (expires in ${expiresIn}s)")
+    }
 
     private fun logPlaybackState(state: SpotifyState?) {
         if (state == null) {

@@ -102,6 +102,9 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     }
 
     fun updateCredentials(clientId: String, clientSecret: String, refreshToken: String): Boolean {
+        LOGGER.info(
+            "[Spotify] Received credential update (clientId=${mask(clientId)}, refreshToken=${mask(refreshToken)})"
+        )
         clientIdValue.set(clientId)
         clientSecretValue.set(clientSecret)
         refreshTokenValue.set(refreshToken)
@@ -200,6 +203,7 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     fun credentialsFilePath(): String = credentialsFile.absolutePath
 
     private fun loadSavedCredentials(): Boolean {
+        LOGGER.info("[Spotify] Loading credentials from ${credentialsFile.absolutePath}")
         if (!credentialsFile.exists()) {
             LOGGER.info("[Spotify] No saved credentials found at ${credentialsFile.absolutePath}")
             return false
@@ -229,11 +233,14 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
 
     private fun persistCredentials(): Boolean {
         return runCatching {
-            credentialsFile.parentFile?.let {
-                if (!it.exists() && !it.mkdirs()) {
-                    throw IllegalStateException("Unable to create directory: ${it.absolutePath}")
-                }
+            val directory = credentialsFile.parentFile ?: FileManager.dir
+            if (!directory.exists() && !directory.mkdirs()) {
+                throw IllegalStateException("Unable to create directory: ${directory.absolutePath}")
             }
+
+            LOGGER.info(
+                "[Spotify] Persisting credentials to ${credentialsFile.absolutePath} (clientId=${mask(clientIdValue.get())}, refreshToken=${mask(refreshTokenValue.get())})"
+            )
 
             val payload = JsonObject().apply {
                 addProperty("clientId", clientIdValue.get())
@@ -242,10 +249,19 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
             }
 
             FileManager.writeFile(credentialsFile, FileManager.PRETTY_GSON.toJson(payload))
-            LOGGER.info("[Spotify] Saved credentials to ${credentialsFile.absolutePath}")
+            LOGGER.info(
+                "[Spotify] Saved credentials to ${credentialsFile.absolutePath} (${credentialsFile.length()} bytes written)"
+            )
         }.onFailure {
             LOGGER.warn("[Spotify] Failed to save credentials", it)
         }.isSuccess
+    }
+
+    private fun mask(value: String): String = when {
+        value.isEmpty() -> "<empty>"
+        value.length <= 4 -> "***"
+        value.length <= 8 -> value.take(2) + "***"
+        else -> value.take(4) + "***" + value.takeLast(2)
     }
 
     private const val RETRY_DELAY_MS = 5_000L
