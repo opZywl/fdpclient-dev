@@ -34,6 +34,20 @@ minecraft {
     mappings = "stable_22"
     makeObfSourceJar = false
     clientJvmArgs += ["-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader", "-Xmx4096m", "-Xms1024m", "-Ddev-mode"]
+
+    def spotifyClientId = (project.findProperty("spotify_client_id") ?: "").toString()
+    def spotifyClientSecret = (project.findProperty("spotify_client_secret") ?: "").toString()
+    def spotifyRefreshToken = (project.findProperty("spotify_refresh_token") ?: "").toString()
+    def spotifyPollInterval = (project.findProperty("spotify_poll_interval_seconds") ?: "5").toString()
+    def spotifyHttpTimeout = (project.findProperty("spotify_http_timeout_ms") ?: "12000").toString()
+
+    clientJvmArgs += [
+            "-Dspotify.clientId=${spotifyClientId}",
+            "-Dspotify.clientSecret=${spotifyClientSecret}",
+            "-Dspotify.refreshToken=${spotifyRefreshToken}",
+            "-Dspotify.pollIntervalSeconds=${spotifyPollInterval}",
+            "-Dspotify.httpTimeoutMs=${spotifyHttpTimeout}",
+    ]
 }
 
 configurations {
