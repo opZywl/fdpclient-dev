@@ -29,7 +29,7 @@ object SpotifyDefaults {
     val authorizationGuideUrl: String = read(
         "spotify.authorizationGuideUrl",
         "SPOTIFY_AUTH_GUIDE_URL",
-        "https://fdpclient.app/spotify",
+        "https://developer.spotify.com/documentation/web-api/tutorials/refreshing-tokens",
     )
     val authorizationScopes: String = read(
         "spotify.authorizationScopes",
@@ -44,6 +44,6 @@ object SpotifyDefaults {
     val authorizationRedirectPath: String = read(
         "spotify.authorizationRedirectPath",
         "SPOTIFY_AUTH_REDIRECT_PATH",
-        "/fdpclient-callback",
-    ).ifBlank { "/fdpclient-callback" }
+        "/spotify-oauth-callback",
+    ).ifBlank { "/spotify-oauth-callback" }
 }

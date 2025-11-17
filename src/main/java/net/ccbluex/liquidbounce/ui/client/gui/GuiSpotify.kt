@@ -67,7 +67,7 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
             text = SpotifyModule.refreshToken
             setEnableBackgroundDrawing(false)
         }
-        fieldDecorations[refreshTokenField] = FieldDecoration("Refresh token", "Paste the long-lived token you generated for FDPClient.")
+        fieldDecorations[refreshTokenField] = FieldDecoration("Refresh token", "Paste the long-lived token from your Spotify app setup.")
         currentY += 44
 
         pollSlider = GuiSlider(

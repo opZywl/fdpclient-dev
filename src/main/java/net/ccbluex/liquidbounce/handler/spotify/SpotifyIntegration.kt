@@ -174,9 +174,9 @@ object SpotifyIntegration : MinecraftInstance {
     private fun buildBrowserResponse(success: Boolean): ByteArray {
         val title = if (success) "Authorization complete" else "Authorization failed"
         val body = if (success) {
-            "<p>You can return to FDPClient. The Spotify authorization was successful.</p>"
+            "<p>You can return to Minecraft. The Spotify authorization was successful.</p>"
         } else {
-            "<p>FDPClient could not capture a Spotify authorization token. Please try again.</p>"
+            "<p>The Spotify authorization token could not be captured. Please try again.</p>"
         }
         val response = """
             <html>
