@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.handler.spotify.SpotifyIntegration
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyConnectionChangedEvent
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyConnectionState
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyPlaylistSummary
+import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyRepeatMode
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyState
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyStateChangedEvent
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyTrack
@@ -21,11 +22,11 @@ import net.ccbluex.liquidbounce.utils.client.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.kotlin.SharedScopes
 import net.ccbluex.liquidbounce.utils.ui.AbstractScreen
+import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
-import net.minecraft.client.resources.I18n
 import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.util.ResourceLocation
@@ -38,12 +39,33 @@ import kotlin.math.max
 
 class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), Listenable {
 
+    private val iconDefaultPlaylist = ResourceLocation("fdpclient/spotify/default_playlist_image.png")
+    private val iconGoForward = ResourceLocation("fdpclient/spotify/go_forward.png")
+    private val iconLiked = ResourceLocation("fdpclient/spotify/liked_icon.png")
+    private val iconPause = ResourceLocation("fdpclient/spotify/pause.png")
+    private val iconRepeatOff = ResourceLocation("fdpclient/spotify/repeat.png")
+    private val iconShuffleOff = ResourceLocation("fdpclient/spotify/shuffle.png")
+    private val iconEmpty = ResourceLocation("fdpclient/spotify/empty.png")
+    private val iconHome = ResourceLocation("fdpclient/spotify/home.png")
+    private val iconLikedSongs = ResourceLocation("fdpclient/spotify/liked_songs.png")
+    private val iconPlay = ResourceLocation("fdpclient/spotify/play.png")
+    private val iconRepeatOne = ResourceLocation("fdpclient/spotify/repeat_1.png")
+    private val iconRepeatAll = ResourceLocation("fdpclient/spotify/repeat_enable.png")
+    private val iconShuffleOn = ResourceLocation("fdpclient/spotify/shuffle_enable.png")
+    private val iconBack = ResourceLocation("fdpclient/spotify/go_back.png")
+    private val iconLike = ResourceLocation("fdpclient/spotify/like_icon.png")
+    private val iconNext = ResourceLocation("fdpclient/spotify/next.png")
+    private val iconPrevious = ResourceLocation("fdpclient/spotify/previous.png")
+
     private lateinit var searchField: GuiTextField
-    private lateinit var backButton: GuiButton
-    private lateinit var refreshButton: GuiButton
-    private lateinit var playPauseButton: GuiButton
-    private lateinit var previousButton: GuiButton
-    private lateinit var nextButton: GuiButton
+    private lateinit var homeButton: SpotifyIconButton
+    private lateinit var backButton: SpotifyIconButton
+    private lateinit var refreshButton: SpotifyIconButton
+    private lateinit var playPauseButton: SpotifyIconButton
+    private lateinit var previousButton: SpotifyIconButton
+    private lateinit var nextButton: SpotifyIconButton
+    private lateinit var shuffleButton: SpotifyIconButton
+    private lateinit var repeatButton: SpotifyIconButton
 
     private var playlists: List<SpotifyPlaylistSummary> = emptyList()
     private var playlistsLoading = false
@@ -66,18 +88,22 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
     private var playbackState: SpotifyState? = SpotifyModule.currentState
     private var connectionState: SpotifyConnectionState = SpotifyModule.connectionState
     private var listening = false
+    private var shuffleEnabled = SpotifyModule.currentState?.shuffleEnabled ?: false
+    private var repeatMode: SpotifyRepeatMode = SpotifyModule.currentState?.repeatMode ?: SpotifyRepeatMode.OFF
 
     private var coverTexture: ResourceLocation? = null
     private var coverUrl: String? = null
     private val coverCache = mutableMapOf<String, ResourceLocation>()
+    private val trackSavedState = mutableMapOf<String, Boolean>()
 
     private var bannerMessage: String? = null
     private var bannerExpiry = 0L
 
     private val stateHandler = handler<SpotifyStateChangedEvent>(always = true) { event ->
         playbackState = event.state
+        shuffleEnabled = event.state?.shuffleEnabled ?: false
+        repeatMode = event.state?.repeatMode ?: SpotifyRepeatMode.OFF
         updateCoverTexture(event.state)
-        updatePlayPauseLabel()
     }
 
     private val connectionHandler = handler<SpotifyConnectionChangedEvent>(always = true) { event ->
@@ -93,15 +119,19 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         buttonList.clear()
         textFields.clear()
 
-        val searchWidth = width - 40
-        searchField = textField(401, mc.fontRendererObj, 20, 30, searchWidth, 18)
+        homeButton = +SpotifyIconButton(BUTTON_HOME, 20, 28, 24, 24) { iconHome }
+        val searchLeft = homeButton.xPosition + homeButton.width + 6
+        val searchWidth = (width - searchLeft - 80).coerceAtLeast(120)
+        searchField = textField(401, mc.fontRendererObj, searchLeft, 30, searchWidth, 18)
         searchField.maxStringLength = 80
 
-        backButton = +GuiButton(BUTTON_BACK, 20, height - 28, 80, 20, I18n.format("gui.back"))
-        refreshButton = +GuiButton(BUTTON_REFRESH, width - 100, 30, 80, 20, "Reload")
-        previousButton = +GuiButton(BUTTON_PREVIOUS, width / 2 - 90, height - 60, 40, 20, "⏮")
-        playPauseButton = +GuiButton(BUTTON_PLAY_PAUSE, width / 2 - 40, height - 60, 80, 20, resolvePlayPauseLabel())
-        nextButton = +GuiButton(BUTTON_NEXT, width / 2 + 50, height - 60, 40, 20, "⏭")
+        backButton = +SpotifyIconButton(BUTTON_BACK, 20, height - 42, 28, 28) { iconBack }
+        refreshButton = +SpotifyIconButton(BUTTON_REFRESH, width - 44, 28, 24, 24) { iconGoForward }
+        previousButton = +SpotifyIconButton(BUTTON_PREVIOUS, width / 2 - 90, height - 64, 32, 32) { iconPrevious }
+        playPauseButton = +SpotifyIconButton(BUTTON_PLAY_PAUSE, width / 2 - 32, height - 72, 64, 44) { resolvePlayPauseIcon() }
+        nextButton = +SpotifyIconButton(BUTTON_NEXT, width / 2 + 58, height - 64, 32, 32) { iconNext }
+        shuffleButton = +SpotifyIconButton(BUTTON_SHUFFLE, width / 2 - 150, height - 58, 28, 28) { resolveShuffleIcon() }
+        repeatButton = +SpotifyIconButton(BUTTON_REPEAT, width / 2 + 110, height - 58, 28, 28) { resolveRepeatIcon() }
 
         if (playlists.isEmpty()) {
             reloadPlaylists(force = true)
@@ -187,13 +217,19 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
                             Gui.drawRect(area.left + 1, y.toInt(), area.right - 1, (y + rowHeight).toInt(), bgColor)
                         }
                         val trackLabel = if (playlist.trackCount == 1) "1 track" else "${playlist.trackCount} tracks"
-                        mc.fontRendererObj.drawString(playlist.name, area.left + 6, y.toInt() + 4, 0xFFF8F8F8.toInt())
-                        mc.fontRendererObj.drawString(trackLabel, area.left + 6, y.toInt() + 16, 0xFFBEBEBE.toInt())
+                        drawIcon(playlistIconFor(playlist), area.left + 4, y.toInt() + 4, 24, 24)
+                        val textX = area.left + 34
+                        mc.fontRendererObj.drawString(playlist.name, textX, y.toInt() + 4, 0xFFF8F8F8.toInt())
+                        mc.fontRendererObj.drawString(trackLabel, textX, y.toInt() + 16, 0xFFBEBEBE.toInt())
                     }
                     y += rowHeight
                 }
             }
         }
+    }
+
+    private fun playlistIconFor(playlist: SpotifyPlaylistSummary): ResourceLocation {
+        return if (playlist.isLikedSongs) iconLikedSongs else iconDefaultPlaylist
     }
 
     private fun drawTracks(mouseX: Int, mouseY: Int) {
@@ -226,9 +262,10 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         val maxScroll = max(0f, filteredTracks.size * rowHeight - viewHeight + 8f)
         trackScroll = trackScroll.coerceIn(0f, maxScroll)
 
-        val titleColumnWidth = (area.width() * 0.55f).toInt()
-        val artistColumnWidth = (area.width() * 0.30f).toInt()
-        val durationColumnX = area.right - 40
+        val titleColumnWidth = (area.width() * 0.5f).toInt()
+        val artistColumnWidth = (area.width() * 0.28f).toInt()
+        val likeColumnLeft = area.right - (LIKE_ICON_SIZE + 8)
+        val durationColumnX = likeColumnLeft - 50
 
         var y = area.top + 4 - trackScroll
         filteredTracks.forEachIndexed { index, track ->
@@ -253,6 +290,10 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
                 mc.fontRendererObj.drawString(trimToWidth(track.title, titleColumnWidth - 20), area.left + 24, baseY, 0xFFF0F0F0.toInt())
                 mc.fontRendererObj.drawString(trimToWidth(track.artists, artistColumnWidth - 10), area.left + 24 + titleColumnWidth, baseY, 0xFFB0B0B0.toInt())
                 mc.fontRendererObj.drawString(formatDuration(track.durationMs), durationColumnX, baseY, 0xFFB0B0B0.toInt())
+                val saved = isTrackSaved(track)
+                val likeIconY = baseY - 2
+                val texture = if (saved) iconLiked else iconLike
+                drawIcon(texture, likeColumnLeft, likeIconY, LIKE_ICON_SIZE, LIKE_ICON_SIZE, if (saved) 1f else 0.85f)
             }
             y += rowHeight
         }
@@ -274,7 +315,7 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
             GlStateManager.color(1f, 1f, 1f, 1f)
             mc.textureManager.bindTexture(texture)
             Gui.drawScaledCustomSizeModalRect(artX, artY, 0f, 0f, 256, 256, artSize, artSize, 256f, 256f)
-        } ?: Gui.drawRect(artX, artY, artX + artSize, artY + artSize, 0xFF222222.toInt())
+        } ?: drawIcon(iconEmpty, artX, artY, artSize, artSize, 0.7f)
 
         val textX = artX + artSize + 10
         mc.fontRendererObj.drawString(track.title, textX, artY + 4, 0xFFFFFFFF.toInt())
@@ -351,7 +392,7 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         if (mouseButton == 0) {
             when {
                 playlistArea().contains(mouseX, mouseY) -> handlePlaylistClick(mouseY)
-                trackArea().contains(mouseX, mouseY) -> handleTrackClick(mouseY)
+                trackArea().contains(mouseX, mouseY) -> handleTrackClick(mouseX, mouseY)
             }
         }
         super.mouseClicked(mouseX, mouseY, mouseButton)
@@ -376,7 +417,7 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         }
     }
 
-    private fun handleTrackClick(mouseY: Int) {
+    private fun handleTrackClick(mouseX: Int, mouseY: Int) {
         if (filteredTracks.isEmpty()) {
             return
         }
@@ -387,6 +428,15 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         }
         val index = (relativeY / TRACK_ROW_HEIGHT).toInt()
         if (index !in filteredTracks.indices) {
+            return
+        }
+        val rowTop = (area.top + 4 - trackScroll + index * TRACK_ROW_HEIGHT).toInt()
+        val likeLeft = area.right - (LIKE_ICON_SIZE + 8)
+        val likeRight = likeLeft + LIKE_ICON_SIZE + 4
+        val likeTop = rowTop
+        val likeBottom = likeTop + LIKE_ICON_SIZE + 2
+        if (mouseX in likeLeft..likeRight && mouseY in likeTop..likeBottom) {
+            toggleTrackSave(filteredTracks[index])
             return
         }
         if (index == lastTrackClickIndex && System.currentTimeMillis() - lastTrackClickTime < 300L) {
@@ -400,6 +450,10 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
 
     override fun actionPerformed(button: GuiButton) {
         when (button.id) {
+            BUTTON_HOME -> {
+                listening = false
+                mc.displayGuiScreen(GuiSpotify(this))
+            }
             BUTTON_BACK -> {
                 listening = false
                 mc.displayGuiScreen(prevScreen)
@@ -408,6 +462,8 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
             BUTTON_PLAY_PAUSE -> togglePlayback()
             BUTTON_PREVIOUS -> skipTrack(previous = true)
             BUTTON_NEXT -> skipTrack(previous = false)
+            BUTTON_SHUFFLE -> toggleShuffle()
+            BUTTON_REPEAT -> cycleRepeatMode()
         }
     }
 
@@ -415,6 +471,9 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         playlistsLoading = true
         playlistError = null
         playlistScroll = 0f
+        if (force) {
+            trackSavedState.clear()
+        }
         screenScope.launch {
             val token = SpotifyModule.acquireAccessToken(forceRefresh = force)
             if (token == null) {
@@ -476,23 +535,34 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
                 tracksLoading = false
                 return@launch
             }
-            val result = runCatching {
+            val pageResult = runCatching {
                 if (playlist.isLikedSongs) {
                     SpotifyIntegration.service.fetchSavedTracks(token.value, SAVED_TRACK_LIMIT, 0)
                 } else {
                     SpotifyIntegration.service.fetchPlaylistTracks(token.value, playlist.id, PLAYLIST_TRACK_LIMIT, 0)
                 }
             }
-            result.onSuccess { page ->
-                trackCache[cacheKey] = page
-                displayedTracks = page.tracks
-                updateTrackFilters()
-            }.onFailure {
+            val page = pageResult.getOrElse {
                 LOGGER.warn("[Spotify][GUI] Failed to load tracks", it)
                 tracksError = it.message ?: "Unable to load tracks"
                 displayedTracks = emptyList()
                 filteredTracks = emptyList()
+                tracksLoading = false
+                return@launch
             }
+            trackCache[cacheKey] = page
+            displayedTracks = page.tracks
+            if (playlist.isLikedSongs) {
+                page.tracks.forEach { trackSavedState[it.id] = true }
+            } else if (page.tracks.isNotEmpty()) {
+                val savedStates = runCatching {
+                    SpotifyIntegration.service.fetchSavedStatuses(token.value, page.tracks.map { it.id })
+                }.onFailure {
+                    LOGGER.warn("[Spotify][GUI] Failed to resolve saved track states", it)
+                }.getOrNull()
+                savedStates?.forEach { (id, saved) -> trackSavedState[id] = saved }
+            }
+            updateTrackFilters()
             tracksLoading = false
         }
     }
@@ -553,6 +623,53 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         }
     }
 
+    private fun toggleShuffle() {
+        screenScope.launch {
+            val token = SpotifyModule.acquireAccessToken()
+            if (token == null) {
+                showBanner("Authorize Spotify before controlling playback")
+                return@launch
+            }
+            val newState = !shuffleEnabled
+            val result = runCatching { SpotifyIntegration.service.setShuffleState(token.value, newState) }
+            result.onSuccess {
+                shuffleEnabled = newState
+                SpotifyModule.requestPlaybackRefresh()
+                showBanner(if (newState) "Shuffle enabled" else "Shuffle disabled")
+            }.onFailure {
+                showBanner(it.message ?: "Failed to toggle shuffle")
+            }
+        }
+    }
+
+    private fun cycleRepeatMode() {
+        val nextMode = when (repeatMode) {
+            SpotifyRepeatMode.OFF -> SpotifyRepeatMode.ALL
+            SpotifyRepeatMode.ALL -> SpotifyRepeatMode.ONE
+            SpotifyRepeatMode.ONE -> SpotifyRepeatMode.OFF
+        }
+        screenScope.launch {
+            val token = SpotifyModule.acquireAccessToken()
+            if (token == null) {
+                showBanner("Authorize Spotify before controlling playback")
+                return@launch
+            }
+            val result = runCatching { SpotifyIntegration.service.setRepeatMode(token.value, nextMode) }
+            result.onSuccess {
+                repeatMode = nextMode
+                SpotifyModule.requestPlaybackRefresh()
+                val message = when (nextMode) {
+                    SpotifyRepeatMode.ALL -> "Repeat all enabled"
+                    SpotifyRepeatMode.ONE -> "Repeat track enabled"
+                    SpotifyRepeatMode.OFF -> "Repeat disabled"
+                }
+                showBanner(message)
+            }.onFailure {
+                showBanner(it.message ?: "Failed to toggle repeat")
+            }
+        }
+    }
+
     private fun playTrack(track: SpotifyTrack) {
         selectedTrackIndex = filteredTracks.indexOfFirst { it.id == track.id }
         screenScope.launch {
@@ -578,6 +695,33 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         }
     }
 
+    private fun toggleTrackSave(track: SpotifyTrack) {
+        val currentlySaved = isTrackSaved(track)
+        screenScope.launch {
+            val token = SpotifyModule.acquireAccessToken()
+            if (token == null) {
+                showBanner("Authorize Spotify before controlling playback")
+                return@launch
+            }
+            val result = runCatching {
+                SpotifyIntegration.service.setSavedTracksState(token.value, listOf(track.id), !currentlySaved)
+            }
+            result.onSuccess {
+                trackSavedState[track.id] = !currentlySaved
+                if (selectedPlaylist?.isLikedSongs == true && currentlySaved) {
+                    loadTracksFor(selectedPlaylist!!, forceReload = true)
+                } else {
+                    updateTrackFilters()
+                }
+                showBanner(
+                    if (!currentlySaved) "Added ${track.title} to Liked Songs" else "Removed ${track.title} from Liked Songs",
+                )
+            }.onFailure {
+                showBanner(it.message ?: "Failed to update Liked Songs")
+            }
+        }
+    }
+
     private fun updateSearchQuery(query: String) {
         searchQuery = query
         updateTrackFilters()
@@ -597,16 +741,6 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
             selectedTrackIndex = -1
         }
         adjustTrackScroll(0f)
-    }
-
-    private fun resolvePlayPauseLabel(): String {
-        return if (playbackState?.isPlaying == true) "Pause" else "Play"
-    }
-
-    private fun updatePlayPauseLabel() {
-        if (::playPauseButton.isInitialized) {
-            playPauseButton.displayString = resolvePlayPauseLabel()
-        }
     }
 
     private fun showBanner(message: String) {
@@ -636,6 +770,20 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         val minutes = totalSeconds / 60
         val seconds = totalSeconds % 60
         return String.format("%d:%02d", minutes, seconds)
+    }
+
+    private fun isTrackSaved(track: SpotifyTrack): Boolean {
+        return trackSavedState[track.id] ?: (selectedPlaylist?.isLikedSongs == true)
+    }
+
+    private fun resolvePlayPauseIcon(): ResourceLocation = if (playbackState?.isPlaying == true) iconPause else iconPlay
+
+    private fun resolveShuffleIcon(): ResourceLocation = if (shuffleEnabled) iconShuffleOn else iconShuffleOff
+
+    private fun resolveRepeatIcon(): ResourceLocation = when (repeatMode) {
+        SpotifyRepeatMode.ALL -> iconRepeatAll
+        SpotifyRepeatMode.ONE -> iconRepeatOne
+        SpotifyRepeatMode.OFF -> iconRepeatOff
     }
 
     private fun trimToWidth(text: String, width: Int): String {
@@ -714,16 +862,56 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         fun contains(x: Int, y: Int): Boolean = x in left..right && y in top..bottom
     }
 
+    private fun drawIcon(texture: ResourceLocation, x: Int, y: Int, width: Int, height: Int, alpha: Float = 1f) {
+        GlStateManager.enableBlend()
+        GlStateManager.color(1f, 1f, 1f, alpha)
+        mc.textureManager.bindTexture(texture)
+        Gui.drawModalRectWithCustomSizedTexture(x, y, 0f, 0f, width, height, width.toFloat(), height.toFloat())
+        GlStateManager.color(1f, 1f, 1f, 1f)
+        GlStateManager.disableBlend()
+    }
+
+    private inner class SpotifyIconButton(
+        id: Int,
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int,
+        private val iconProvider: () -> ResourceLocation,
+        private val padding: Int = 3,
+    ) : GuiButton(id, x, y, width, height, "") {
+
+        override fun drawButton(mc: Minecraft, mouseX: Int, mouseY: Int) {
+            if (!visible) {
+                return
+            }
+            hovered = mouseX >= xPosition && mouseY >= yPosition && mouseX < xPosition + width && mouseY < yPosition + height
+            Gui.drawRect(xPosition, yPosition, xPosition + width, yPosition + height, 0x44000000)
+            val iconX = xPosition + padding
+            val iconY = yPosition + padding
+            val iconWidth = (width - padding * 2).coerceAtLeast(8)
+            val iconHeight = (height - padding * 2).coerceAtLeast(8)
+            this@GuiSpotifyPlayer.drawIcon(iconProvider(), iconX, iconY, iconWidth, iconHeight, if (enabled) 1f else 0.4f)
+            if (hovered) {
+                Gui.drawRect(xPosition, yPosition, xPosition + width, yPosition + height, 0x22000000)
+            }
+        }
+    }
+
     companion object {
         private const val BUTTON_BACK = 600
         private const val BUTTON_REFRESH = 601
         private const val BUTTON_PLAY_PAUSE = 602
         private const val BUTTON_PREVIOUS = 603
         private const val BUTTON_NEXT = 604
+        private const val BUTTON_HOME = 605
+        private const val BUTTON_SHUFFLE = 606
+        private const val BUTTON_REPEAT = 607
         private const val LIKED_SONGS_ID = "liked_songs"
         private const val PLAYLIST_TRACK_LIMIT = 100
         private const val SAVED_TRACK_LIMIT = 50
         private const val PLAYLIST_ROW_HEIGHT = 32f
         private const val TRACK_ROW_HEIGHT = 22f
+        private const val LIKE_ICON_SIZE = 16
     }
 }
