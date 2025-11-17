@@ -14,7 +14,6 @@ data class SpotifyTrack(
     val artists: String,
     val album: String,
     val coverUrl: String?,
-    val durationMs: Int,
 )
 
 /**

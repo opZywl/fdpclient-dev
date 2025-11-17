@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyState
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.client.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.ui.AbstractScreen
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
@@ -18,7 +17,6 @@ import net.minecraft.client.gui.GuiTextField
 import net.minecraftforge.fml.client.config.GuiSlider
 import org.lwjgl.input.Keyboard
 import java.awt.Desktop
-import java.awt.Color
 import java.net.URI
 import kotlin.math.max
 
@@ -29,18 +27,11 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
     private lateinit var refreshTokenField: GuiTextField
     private lateinit var reconnectButton: GuiButton
     private lateinit var pollSlider: GuiSlider
-    private val fieldDecorations = mutableMapOf<GuiTextField, FieldDecoration>()
-
-    private val inputBackgroundColor = Color(9, 9, 9, 185).rgb
-    private val inputBorderColor = Color(255, 255, 255, 60).rgb
-    private val labelColor = 0xFFE3E3E3.toInt()
-    private val helperColor = 0xFFB6B6B6.toInt()
 
     override fun initGui() {
         Keyboard.enableRepeatEvents(true)
         buttonList.clear()
         textFields.clear()
-        fieldDecorations.clear()
 
         val fieldWidth = 260
         val startX = width / 2 - fieldWidth / 2
@@ -49,26 +40,20 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
         clientIdField = textField(0, Fonts.fontSemibold35, startX, currentY, fieldWidth, 20) {
             maxStringLength = 128
             text = SpotifyModule.clientId
-            setEnableBackgroundDrawing(false)
         }
-        fieldDecorations[clientIdField] = FieldDecoration("Client ID", "Use the Spotify app identifier from your dashboard.")
-        currentY += 44
+        currentY += 26
 
         clientSecretField = textField(1, Fonts.fontSemibold35, startX, currentY, fieldWidth, 20) {
             maxStringLength = 128
             text = SpotifyModule.clientSecret
-            setEnableBackgroundDrawing(false)
         }
-        fieldDecorations[clientSecretField] = FieldDecoration("Client secret", "Generated with the same app as the client ID.")
-        currentY += 44
+        currentY += 26
 
         refreshTokenField = textField(2, Fonts.fontSemibold35, startX, currentY, fieldWidth, 20) {
             maxStringLength = 256
             text = SpotifyModule.refreshToken
-            setEnableBackgroundDrawing(false)
         }
-        fieldDecorations[refreshTokenField] = FieldDecoration("Refresh token", "Paste the long-lived token you generated for FDPClient.")
-        currentY += 44
+        currentY += 32
 
         pollSlider = GuiSlider(
             3,
@@ -145,9 +130,9 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
             smallFont.drawCenteredString("Last error: $error", width / 2f, height - 35f, 0xFF5555, true)
         }
 
-        drawInputField(clientIdField)
-        drawInputField(clientSecretField)
-        drawInputField(refreshTokenField)
+        clientIdField.drawTextBox()
+        clientSecretField.drawTextBox()
+        refreshTokenField.drawTextBox()
 
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
@@ -179,13 +164,8 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
             if (track.album.isNotBlank()) {
                 lines += "Album: ${track.album}"
             }
-            val progressText = if (track.durationMs > 0) {
-                val total = formatMillis(track.durationMs)
-                "Progress: ${formatMillis(trackState.progressMs)} / $total"
-            } else {
-                "Progress: ${formatMillis(trackState.progressMs)}"
-            }
-            lines += progressText
+            val progress = formatProgress(trackState)
+            lines += "Progress: $progress"
             lines += if (trackState.isPlaying) "Status: Playing" else "Status: Paused"
         } else {
             lines += "No playback detected."
@@ -198,37 +178,10 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
         }
     }
 
-    private fun drawInputField(field: GuiTextField) {
-        val info = fieldDecorations[field] ?: return
-        val labelFont = Fonts.fontSemibold35
-        val helperFont = Fonts.fontSemibold35
-        val padding = 4f
-        val x = field.xPosition - padding
-        val y = field.yPosition - padding
-        val width = field.width + padding * 2
-        val height = field.height + padding * 2
-
-        RenderUtils.drawRoundedRect(
-            x.toFloat(),
-            y.toFloat(),
-            width.toFloat(),
-            height.toFloat(),
-            4f,
-            inputBackgroundColor,
-            1.2f,
-            inputBorderColor,
-        )
-
-        labelFont.drawString(info.label, field.xPosition.toFloat(), (field.yPosition - 12).toFloat(), labelColor)
-        helperFont.drawString(info.helper, field.xPosition.toFloat(), (field.yPosition + field.height + 6).toFloat(), helperColor)
-
-        field.drawTextBox()
-    }
-
-    private fun formatMillis(position: Int): String {
-        val safePosition = max(0, position)
-        val minutes = safePosition / 1000 / 60
-        val seconds = (safePosition / 1000) % 60
+    private fun formatProgress(state: SpotifyState): String {
+        val position = max(0, state.progressMs)
+        val minutes = position / 1000 / 60
+        val seconds = (position / 1000) % 60
         return String.format("%d:%02d", minutes, seconds)
     }
 
@@ -243,6 +196,4 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
             chat("§cFailed to open browser: ${ex.message}")
         }
     }
-
-    private data class FieldDecoration(val label: String, val helper: String)
 }

@@ -104,7 +104,6 @@ class SpotifyService(
             ?.asJsonObject
             ?.get("url")
             ?.asString
-        val duration = item.get("duration_ms")?.asInt ?: 0
 
         return SpotifyState(
             SpotifyTrack(
@@ -113,7 +112,6 @@ class SpotifyService(
                 artists = artists,
                 album = albumName,
                 coverUrl = coverUrl,
-                durationMs = duration,
             ),
             isPlaying,
             progress,
