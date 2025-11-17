@@ -12,6 +12,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.suspendCancellableCoroutine
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyAccessToken
+import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyAuthFlow
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyDefaults
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyService
 import net.ccbluex.liquidbounce.utils.client.ClientUtils.LOGGER
@@ -25,6 +26,9 @@ import java.net.URI
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.security.SecureRandom
+import java.util.Base64
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.atomic.AtomicBoolean
@@ -48,15 +52,16 @@ object SpotifyIntegration : MinecraftInstance {
         LOGGER.info("[Spotify] Spotify integration handler initialized (redirectUri=$redirectUri)")
     }
 
-    fun authorizeInBrowser(clientId: String, clientSecret: String): CompletableFuture<SpotifyAccessToken> {
-        LOGGER.info("[Spotify][Browser] Beginning OAuth flow (clientId=${mask(clientId)})")
+    fun authorizeInBrowser(clientId: String, clientSecret: String?, flow: SpotifyAuthFlow): CompletableFuture<SpotifyAccessToken> {
+        LOGGER.info("[Spotify][Browser] Beginning OAuth flow (clientId=${mask(clientId)}, flow=$flow)")
         return SharedScopes.IO.future {
             val state = UUID.randomUUID().toString()
-            val authorizationUrl = buildAuthorizeUrl(clientId, redirectUri, state)
+            val pkce = if (flow == SpotifyAuthFlow.PKCE) generatePkceChallenge() else null
+            val authorizationUrl = buildAuthorizeUrl(clientId, redirectUri, state, pkce?.challenge)
             openBrowser(authorizationUrl)
             val code = awaitAuthorizationCode(state)
             LOGGER.info("[Spotify][Browser] Authorization code received, exchanging for tokens")
-            service.exchangeAuthorizationCode(clientId, clientSecret, code, redirectUri)
+            service.exchangeAuthorizationCode(clientId, clientSecret, code, redirectUri, pkce?.verifier)
         }
     }
 
@@ -98,7 +103,7 @@ object SpotifyIntegration : MinecraftInstance {
         }
     }
 
-    private fun buildAuthorizeUrl(clientId: String, redirectUri: String, state: String): String {
+    private fun buildAuthorizeUrl(clientId: String, redirectUri: String, state: String, pkceChallenge: String?): String {
         val encodedRedirect = URLEncoder.encode(redirectUri, StandardCharsets.UTF_8.name())
         val scopeParam = URLEncoder.encode(authorizationScopes.trim().replace(ONE_OR_MORE_SPACES, " "), StandardCharsets.UTF_8.name())
         val builder = StringBuilder("https://accounts.spotify.com/authorize?")
@@ -108,6 +113,11 @@ object SpotifyIntegration : MinecraftInstance {
         builder.append("&scope=").append(scopeParam)
         builder.append("&state=").append(state)
         builder.append("&show_dialog=true")
+        if (!pkceChallenge.isNullOrBlank()) {
+            builder.append("&code_challenge=")
+                .append(URLEncoder.encode(pkceChallenge, StandardCharsets.UTF_8.name()))
+            builder.append("&code_challenge_method=S256")
+        }
         return builder.toString()
     }
 
@@ -199,5 +209,22 @@ object SpotifyIntegration : MinecraftInstance {
         else -> value.take(4) + "***" + value.takeLast(2)
     }
 
+    private fun generatePkceChallenge(): PkceChallenge {
+        val verifier = buildString(PKCE_VERIFIER_LENGTH) {
+            repeat(PKCE_VERIFIER_LENGTH) {
+                append(PKCE_CHARSET[secureRandom.nextInt(PKCE_CHARSET.size)])
+            }
+        }
+        val digest = MessageDigest.getInstance("SHA-256")
+            .digest(verifier.toByteArray(StandardCharsets.US_ASCII))
+        val challenge = Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
+        return PkceChallenge(verifier, challenge)
+    }
+
+    private data class PkceChallenge(val verifier: String, val challenge: String)
+
     private val ONE_OR_MORE_SPACES = Regex("\\s+")
+    private val secureRandom = SecureRandom()
+    private const val PKCE_VERIFIER_LENGTH = 64
+    private val PKCE_CHARSET = (('a'..'z') + ('A'..'Z') + ('0'..'9') + listOf('-', '.', '_', '~')).toCharArray()
 }

@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.gui
 
 import net.ccbluex.liquidbounce.features.module.modules.client.SpotifyModule
+import net.ccbluex.liquidbounce.features.module.modules.client.SpotifyModule.SpotifyAuthMode
 import net.ccbluex.liquidbounce.handler.spotify.SpotifyIntegration
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyState
 import net.ccbluex.liquidbounce.ui.font.Fonts
@@ -27,6 +28,8 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
     private lateinit var clientSecretField: GuiTextField
     private lateinit var refreshTokenField: GuiTextField
     private lateinit var reconnectButton: GuiButton
+    private lateinit var modeButton: GuiButton
+    private lateinit var saveButton: GuiButton
     private lateinit var pollSlider: GuiSlider
     private val fieldDecorations = mutableMapOf<GuiTextField, FieldDecoration>()
     private var browserAuthStatus: Pair<SpotifyModule.BrowserAuthStatus, String>? = null
@@ -89,10 +92,15 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
         +pollSlider
         currentY += 26
 
+        modeButton = GuiButton(10, startX, currentY, fieldWidth, 20, SpotifyModule.authModeLabel())
+        +modeButton
+        currentY += 24
+
         reconnectButton = +GuiButton(4, startX, currentY, fieldWidth, 20, reconnectLabel())
         currentY += 24
 
-        +GuiButton(5, startX, currentY, fieldWidth, 20, "Save credentials")
+        saveButton = GuiButton(5, startX, currentY, fieldWidth, 20, "Save credentials")
+        +saveButton
         currentY += 24
 
         +GuiButton(6, startX, currentY, fieldWidth, 20, "Authorize via Browser")
@@ -105,6 +113,8 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
         currentY += 24
 
         +GuiButton(9, startX, currentY, fieldWidth, 20, "Back")
+
+        refreshAuthModeUi()
     }
 
     override fun actionPerformed(button: GuiButton) {
@@ -129,7 +139,7 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
             6 -> {
                 SpotifyModule.beginBrowserAuthorization { status, message ->
                     browserAuthStatus = status to message
-                    if (status == SpotifyModule.BrowserAuthStatus.SUCCESS) {
+                    if (status == SpotifyModule.BrowserAuthStatus.SUCCESS && SpotifyModule.authMode == SpotifyAuthMode.MANUAL) {
                         refreshTokenField.text = SpotifyModule.refreshToken
                     }
                     val prefix = when (status) {
@@ -144,6 +154,14 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
             7 -> SpotifyIntegration.openDashboard()
             8 -> SpotifyIntegration.openGuide()
             9 -> mc.displayGuiScreen(previousScreen)
+            10 -> {
+                val previousMode = SpotifyModule.authMode
+                val newMode = SpotifyModule.cycleAuthMode()
+                if (newMode != previousMode) {
+                    chat("§eSwitched Spotify mode to ${newMode.displayName}.")
+                }
+                refreshAuthModeUi()
+            }
         }
     }
 
@@ -161,6 +179,7 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
 
         val connectionText = "State: ${SpotifyModule.connectionState.displayName}"
         smallFont.drawCenteredString(connectionText, width / 2f, height / 4f - 20f, -1, true)
+        drawModeInfo(smallFont)
 
         val currentState = SpotifyModule.currentState
         drawPlaybackInfo(currentState)
@@ -194,9 +213,9 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
             return
         }
 
-        if (clientIdField.textboxKeyTyped(typedChar, keyCode) ||
-            clientSecretField.textboxKeyTyped(typedChar, keyCode) ||
-            refreshTokenField.textboxKeyTyped(typedChar, keyCode)
+        if ((clientIdField.isEnabled && clientIdField.textboxKeyTyped(typedChar, keyCode)) ||
+            (clientSecretField.isEnabled && clientSecretField.textboxKeyTyped(typedChar, keyCode)) ||
+            (refreshTokenField.isEnabled && refreshTokenField.textboxKeyTyped(typedChar, keyCode))
         ) {
             return
         }
@@ -243,6 +262,11 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
         val y = field.yPosition - padding
         val width = field.width + padding * 2
         val height = field.height + padding * 2
+        val enabled = field.isEnabled
+        val background = if (enabled) inputBackgroundColor else Color(20, 20, 20, 120).rgb
+        val border = if (enabled) inputBorderColor else Color(255, 255, 255, 50).rgb
+        val labelTint = if (enabled) labelColor else helperColor
+        val helperTint = if (enabled) helperColor else helperColor
 
         RenderUtils.drawRoundedRect(
             x.toFloat(),
@@ -250,15 +274,26 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
             width.toFloat(),
             height.toFloat(),
             4f,
-            inputBackgroundColor,
+            background,
             1.2f,
-            inputBorderColor,
+            border,
         )
 
-        labelFont.drawString(info.label, field.xPosition.toFloat(), (field.yPosition - 12).toFloat(), labelColor)
-        helperFont.drawString(info.helper, field.xPosition.toFloat(), (field.yPosition + field.height + 6).toFloat(), helperColor)
+        labelFont.drawString(info.label, field.xPosition.toFloat(), (field.yPosition - 12).toFloat(), labelTint)
+        helperFont.drawString(info.helper, field.xPosition.toFloat(), (field.yPosition + field.height + 6).toFloat(), helperTint)
 
         field.drawTextBox()
+    }
+
+    private fun drawModeInfo(font: net.ccbluex.liquidbounce.ui.font.FontRenderer) {
+        val modeText = SpotifyModule.authModeLabel()
+        font.drawCenteredString(modeText, width / 2f, height / 4f - 4f, -1, true)
+        val helperText = if (SpotifyModule.authMode == SpotifyAuthMode.QUICK) {
+            "Quick connect uses FDP's built-in Spotify app. Just authorize via browser."
+        } else {
+            "Manual mode uses your own Spotify app credentials."
+        }
+        font.drawCenteredString(helperText, width / 2f, height / 4f + 10f, helperColor, true)
     }
 
     private fun formatMillis(position: Int): String {
@@ -269,6 +304,21 @@ class GuiSpotify(private val previousScreen: GuiScreen?) : AbstractScreen() {
     }
 
     private fun reconnectLabel(): String = "Auto reconnect: ${if (SpotifyModule.autoReconnect) "On" else "Off"}"
+
+    private fun refreshAuthModeUi() {
+        val manualMode = SpotifyModule.authMode == SpotifyAuthMode.MANUAL
+        clientIdField.setEnabled(manualMode)
+        clientSecretField.setEnabled(manualMode)
+        refreshTokenField.setEnabled(manualMode)
+        saveButton.enabled = manualMode
+        modeButton.displayString = SpotifyModule.authModeLabel()
+        modeButton.enabled = SpotifyModule.supportsQuickConnect()
+        if (manualMode) {
+            clientIdField.text = SpotifyModule.clientId
+            clientSecretField.text = SpotifyModule.clientSecret
+            refreshTokenField.text = SpotifyModule.refreshToken
+        }
+    }
 
     private data class FieldDecoration(val label: String, val helper: String)
 }

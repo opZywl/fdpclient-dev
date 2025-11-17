@@ -34,8 +34,23 @@ data class SpotifyCredentials(
     val clientId: String,
     val clientSecret: String,
     val refreshToken: String,
+    val flow: SpotifyAuthFlow = SpotifyAuthFlow.CONFIDENTIAL_CLIENT,
 ) {
-    fun isValid(): Boolean = clientId.isNotBlank() && clientSecret.isNotBlank() && refreshToken.isNotBlank()
+    fun isValid(): Boolean {
+        if (clientId.isBlank() || refreshToken.isBlank()) {
+            return false
+        }
+        return if (flow == SpotifyAuthFlow.CONFIDENTIAL_CLIENT) {
+            clientSecret.isNotBlank()
+        } else {
+            true
+        }
+    }
+}
+
+enum class SpotifyAuthFlow {
+    CONFIDENTIAL_CLIENT,
+    PKCE,
 }
 
 /**
