@@ -28,6 +28,28 @@ data class SpotifyState(
 )
 
 /**
+ * Summarizes a Spotify playlist entry.
+ */
+data class SpotifyPlaylistSummary(
+    val id: String,
+    val name: String,
+    val description: String?,
+    val owner: String?,
+    val trackCount: Int,
+    val imageUrl: String?,
+    val uri: String?,
+    val isLikedSongs: Boolean = false,
+)
+
+/**
+ * Represents a page of Spotify tracks returned by collection endpoints.
+ */
+data class SpotifyTrackPage(
+    val tracks: List<SpotifyTrack>,
+    val total: Int,
+)
+
+/**
  * OAuth credentials that are required for the Spotify Web API.
  */
 data class SpotifyCredentials(

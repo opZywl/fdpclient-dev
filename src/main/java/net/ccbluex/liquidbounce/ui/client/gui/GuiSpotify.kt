@@ -58,6 +58,7 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
     private lateinit var moduleToggleButton: GuiButton
     private lateinit var dashboardButton: GuiButton
     private lateinit var guideButton: GuiButton
+    private lateinit var playerButton: GuiButton
     private lateinit var backButton: GuiButton
 
     private var playbackState: SpotifyState? = SpotifyModule.currentState
@@ -183,6 +184,15 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
             "Authorization guide"
         )
 
+        playerButton = +GuiButton(
+            BUTTON_PLAYER,
+            rightColumnX + 10,
+            guideButton.yPosition + guideButton.height + 4,
+            fieldWidth,
+            20,
+            "Open music browser"
+        )
+
         backButton = +GuiButton(
             BUTTON_BACK,
             width - 110,
@@ -250,6 +260,10 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
 
             BUTTON_DASHBOARD -> SpotifyIntegration.openDashboard()
             BUTTON_GUIDE -> SpotifyIntegration.openGuide()
+            BUTTON_PLAYER -> {
+                listening = false
+                SpotifyModule.openPlayerScreen()
+            }
         }
     }
 
@@ -542,5 +556,6 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
         private const val BUTTON_TOGGLE = 8
         private const val BUTTON_DASHBOARD = 9
         private const val BUTTON_GUIDE = 10
+        private const val BUTTON_PLAYER = 11
     }
 }
