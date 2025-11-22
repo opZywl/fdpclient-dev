@@ -109,9 +109,11 @@ object FDPClient {
     var isLoadingConfig = true
 
     // Managers
+    @JvmField
     val moduleManager = ModuleManager
     val commandManager = CommandManager
     val eventManager = EventManager
+    @JvmField
     val fileManager = FileManager
     val scriptManager = ScriptManager
     var customFontManager = FontManager()

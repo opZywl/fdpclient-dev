@@ -30,6 +30,20 @@ private val FONT_REGISTRY = LinkedHashMap<FontInfo, FontRenderer>()
 
 object Fonts : MinecraftInstance {
 
+    // Legacy wrappers to support older GUI code that expects nested font holders
+    class LegacyIconFont(val nlfont_20: SimpleFontRenderer, val nlfont_18: SimpleFontRenderer)
+    class LegacyNlFont(val Nl_18: SimpleFontRenderer, val Nl_16: SimpleFontRenderer)
+
+    object NlIcon {
+        lateinit var nlfont_20: LegacyIconFont
+        lateinit var nlfont_18: LegacyIconFont
+    }
+
+    object Nl {
+        lateinit var Nl_18: LegacyNlFont
+        lateinit var Nl_16: LegacyNlFont
+    }
+
     /**
      * Custom Fonts
      */
@@ -288,6 +302,13 @@ object Fonts : MinecraftInstance {
                 getFontFromFile("nlfont.ttf", 16).asSimpleFontRenderer())
             Nl_18 = registerCustomFont(FontInfo(name = "nlfont", size = 18),
                 getFontFromFile("nlfont.ttf", 18).asSimpleFontRenderer())
+
+            // Provide legacy nested holders for nlclickgui
+            NlIcon.nlfont_20 = LegacyIconFont(Nl_18, Nl_18)
+            NlIcon.nlfont_18 = LegacyIconFont(Nl_18, Nl_18)
+
+            Nl.Nl_16 = LegacyNlFont(Nl_18, Nl_16)
+            Nl.Nl_18 = LegacyNlFont(Nl_18, Nl_16)
 
             NLBold_32 = registerCustomFont(FontInfo(name = "Museo", size = 32),
                 getFontFromFile("MuseoSans_900.ttf", 32).asSimpleFontRenderer())
