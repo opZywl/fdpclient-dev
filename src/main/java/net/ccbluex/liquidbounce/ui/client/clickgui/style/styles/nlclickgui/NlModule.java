@@ -131,7 +131,7 @@ public class NlModule {
 
         //value的高度
         int cheigt = 20;
-        for (Downward downward : downwards.stream().filter(s -> s.setting.getDisplayableFunc()).collect(Collectors.toList())){
+        for (Downward downward : downwards.stream().filter(s -> s.setting.shouldRender()).collect(Collectors.toList())){
             downward.setX(posx);
             downward.setY(getY() + cheigt);
             cheigt += 20;
@@ -156,7 +156,7 @@ public class NlModule {
 
         Color accentCircle =  RenderUtil.darker(neverlosecolor, .5f);
 
-        toggleAnimation.setDirection(module.isEnabled()? Direction.FORWARDS : Direction.BACKWARDS);
+        toggleAnimation.setDirection(module.getState()? Direction.FORWARDS : Direction.BACKWARDS);
 
         //背景
         RoundedUtil.drawRound(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,
@@ -171,7 +171,7 @@ public class NlModule {
         //画圆
         RoundedUtil.drawRound((float) (x + 265 - 32 + posx +( (11)* toggleAnimation.getOutput())),
                 y + posy + scrollY + 56 -1, 6.5f,
-                6.5f, 3, module.isEnabled()?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
+                6.5f, 3, module.getState()?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
     }
 
     public void keyTyped(char typedChar,int keyCode){
@@ -179,11 +179,11 @@ public class NlModule {
     }
 
     public void released(int mx ,int my,int mb) {
-        downwards.stream().filter(e -> e.setting.getDisplayableFunc()).forEach(e -> e.mouseReleased(mx,my,mb));
+        downwards.stream().filter(e -> e.setting.shouldRender()).forEach(e -> e.mouseReleased(mx,my,mb));
     }
 
     public void click(int mx ,int my,int mb){
-        downwards.stream().filter(e -> e.setting.getDisplayableFunc()).forEach(e -> e.mouseClicked(mx,my,mb));
+        downwards.stream().filter(e -> e.setting.shouldRender()).forEach(e -> e.mouseClicked(mx,my,mb));
 
         if (RenderUtil.isHovering(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,mx,my) && mb == 0){
             module.toggle();

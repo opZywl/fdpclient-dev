@@ -42,7 +42,8 @@ object Fonts : MinecraftInstance {
         val Nl_16: SimpleFontRenderer,
         val Nl_18: SimpleFontRenderer,
         val Nl_19: SimpleFontRenderer,
-        val Nl_20: SimpleFontRenderer
+        val Nl_20: SimpleFontRenderer,
+        val Nl_22: SimpleFontRenderer? = null
     )
 
     object NlIcon {
@@ -57,6 +58,7 @@ object Fonts : MinecraftInstance {
         lateinit var Nl_16: LegacyNlFont
         lateinit var Nl_19: LegacyNlFont
         lateinit var Nl_20: LegacyNlFont
+        lateinit var Nl_22: LegacyNlFont
     }
 
     /**
@@ -152,6 +154,7 @@ object Fonts : MinecraftInstance {
     lateinit var Nl_18: SimpleFontRenderer
     lateinit var Nl_19: SimpleFontRenderer
     lateinit var Nl_20: SimpleFontRenderer
+    lateinit var Nl_22: SimpleFontRenderer
 
     lateinit var Nl_16_ICON: SimpleFontRenderer
     lateinit var nlfont_18: SimpleFontRenderer
@@ -327,6 +330,8 @@ object Fonts : MinecraftInstance {
                 getFontFromFile("nlfont.ttf", 19).asSimpleFontRenderer())
             Nl_20 = registerCustomFont(FontInfo(name = "nlfont", size = 20),
                 getFontFromFile("nlfont.ttf", 20).asSimpleFontRenderer())
+            Nl_22 = registerCustomFont(FontInfo(name = "nlfont", size = 22),
+                getFontFromFile("nlfont.ttf", 22).asSimpleFontRenderer())
 
             nlfont_18 = registerCustomFont(FontInfo(name = "nlicon", size = 18),
                 getFontFromFile("nlicon.ttf", 18).asSimpleFontRenderer())
@@ -343,10 +348,11 @@ object Fonts : MinecraftInstance {
             NlIcon.nlfont_24 = LegacyIconFont(nlfont_18, nlfont_20, nlfont_24, nlfont_28)
             NlIcon.nlfont_28 = LegacyIconFont(nlfont_18, nlfont_20, nlfont_24, nlfont_28)
 
-            Nl.Nl_16 = LegacyNlFont(Nl_16, Nl_18, Nl_19, Nl_20)
-            Nl.Nl_18 = LegacyNlFont(Nl_16, Nl_18, Nl_19, Nl_20)
-            Nl.Nl_19 = LegacyNlFont(Nl_16, Nl_18, Nl_19, Nl_20)
-            Nl.Nl_20 = LegacyNlFont(Nl_16, Nl_18, Nl_19, Nl_20)
+            Nl.Nl_16 = LegacyNlFont(Nl_16, Nl_18, Nl_19, Nl_20, Nl_22)
+            Nl.Nl_18 = LegacyNlFont(Nl_16, Nl_18, Nl_19, Nl_20, Nl_22)
+            Nl.Nl_19 = LegacyNlFont(Nl_16, Nl_18, Nl_19, Nl_20, Nl_22)
+            Nl.Nl_20 = LegacyNlFont(Nl_16, Nl_18, Nl_19, Nl_20, Nl_22)
+            Nl.Nl_22 = LegacyNlFont(Nl_16, Nl_18, Nl_19, Nl_20, Nl_22)
 
             NLBold_32 = registerCustomFont(FontInfo(name = "Museo", size = 32),
                 getFontFromFile("MuseoSans_900.ttf", 32).asSimpleFontRenderer())
