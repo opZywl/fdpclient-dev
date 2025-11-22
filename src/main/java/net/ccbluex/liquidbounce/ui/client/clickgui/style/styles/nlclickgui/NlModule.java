@@ -62,8 +62,6 @@ public class NlModule {
         this.module = module;
         this.lef = lef;
         this.posx = lef ? 0 : 170;
-        //临时变量计算value
-
         for(Value setting : module.getValues()) {
             if(setting instanceof BoolValue){
                 this.downwards.add(new BoolSetting((BoolValue) setting,this));
@@ -81,7 +79,6 @@ public class NlModule {
     }
 
     public int getHeight() {
-        //获取背景的height
         int h = 20;
         for (Value s : module.getValues().stream().filter(Value::shouldRender).collect(Collectors.toList())){
             h += 20;
@@ -104,7 +101,6 @@ public class NlModule {
                 break;
             } else {
                 if (tabModule.lef){
-                    //10 间隔
                     leftAdd += tabModule.getHeight() + 10 ;
                 }else {
                     rightAdd += tabModule.getHeight() + 10;
@@ -116,8 +112,6 @@ public class NlModule {
         return lef ? leftAdd : rightAdd;
     }
 
-
-    //左+ 0 右+ 180
     public void draw(int mx, int my){
 
         posy = getY();
@@ -130,7 +124,6 @@ public class NlModule {
 
         HoveringAnimation.setDirection(RenderUtil.isHovering(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,mx,my) ? Direction.FORWARDS : Direction.BACKWARDS );
 
-        //value的高度
         int cheigt = 20;
         for (Downward downward : downwards.stream().filter(s -> s.setting.shouldRender()).collect(Collectors.toList())){
             downward.setX(posx);
@@ -139,16 +132,12 @@ public class NlModule {
 
             downward.draw(mx,my);
         }
-        // RoundedUtil.drawRound(x + 120 ,y + 50,170,50,2,new Color(3,13,26));
-
         rendertoggle();
 
         if (module.getValues().isEmpty()) {
             Fonts.Nl.Nl_22.getNl_22().drawString("No Settings.", x + 100 + posx, y + posy + scrollY + 72, NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
         }
     }
-
-    //95,95,95
 
     public void rendertoggle(){
         Color darkRectColor =  new Color(29, 29, 39, 255);
@@ -159,17 +148,14 @@ public class NlModule {
 
         toggleAnimation.setDirection(module.getState()? Direction.FORWARDS : Direction.BACKWARDS);
 
-        //背景
         RoundedUtil.drawRound(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,
                 2, RenderUtil.interpolateColorC(RenderUtil.applyOpacity(darkRectHover, .5f), accentCircle, (float) toggleAnimation.getOutput()));
 
-        //Glow
         RenderUtil.fakeCircleGlow((float) (x + 265 + 3 - 32 + posx +( (11)* toggleAnimation.getOutput())),
                 y + posy + scrollY + 56 + 2 , 6, Color.BLACK, .3f);
 
         RenderUtil.resetColor();
 
-        //画圆
         RoundedUtil.drawRound((float) (x + 265 - 32 + posx +( (11)* toggleAnimation.getOutput())),
                 y + posy + scrollY + 56 -1, 6.5f,
                 6.5f, 3, module.getState()?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));

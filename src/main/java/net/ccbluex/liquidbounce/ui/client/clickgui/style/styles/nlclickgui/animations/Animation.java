@@ -24,9 +24,9 @@ public abstract class Animation {
 
 
     public Animation(int ms, double endPoint, Direction direction) {
-        this.duration = ms; //所需动画时间的毫秒数
-        this.endPoint = endPoint; //动画移动所需要的距离
-        this.direction = direction; //图形的运行方向。如果向后，将从端点开始并转到0。
+        this.duration = ms;
+        this.endPoint = endPoint;
+        this.direction = direction;
     }
 
     public boolean finished(Direction direction) {
@@ -89,12 +89,6 @@ public abstract class Animation {
             } else return (1 - getEquation(timerUtil.getTime())) * endPoint;
         }
     }
-
-
-
-
-    //This is where the animation equation should go, for example, a logistic function. Output should range from 0 - 1.
-    //This will take the timer's time as an input, x.
     protected abstract double getEquation(double x);
 
 }

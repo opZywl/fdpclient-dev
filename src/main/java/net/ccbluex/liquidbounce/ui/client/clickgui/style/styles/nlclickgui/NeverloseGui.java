@@ -69,30 +69,35 @@ public class NeverloseGui extends GuiScreen {
         INSTANCE = this;
         x = 100;
         y = 100;
-        w = 430;
-        h = 300;
+        w = 470;
+        h = 340;
 
         int y2 = 0;
         int u2 =0;
-        for (Category type : Category.values()){
+        List<Category> orderedCategories = new ArrayList<>();
+        orderedCategories.add(Category.CLIENT);
+
+        for (Category type : Category.values()) {
+            if (!orderedCategories.contains(type)) {
+                orderedCategories.add(type);
+            }
+        }
+
+        for (Category type : orderedCategories){
             if(type.name().equalsIgnoreCase("World") ||
                     type.name().equalsIgnoreCase("Interface")) continue;
 
             nlTabs.add(new NlTab(type,u2 + y2 + 40));
 
             for (Category.SubCategory subCategory: type.getSubCategories()){
-                //计算所有sub间隔
                 u2 += 17;
             }
 
-            //与下一个Type的间隔
             y2 += 14;
         }
 
         nlSetting = new NlSetting();
 
-        //绘制用户头像
-        //获取头像
         if (head) {
             try {
                 Minecraft.getMinecraft().getTextureManager().loadTexture(
@@ -131,13 +136,11 @@ public class NeverloseGui extends GuiScreen {
             Loader = false;
         }
 
-        //移动面板
         if(dragging) {
             this.x = x2 + mouseX;
             this.y = y2 + mouseY;
         }
 
-        //Bloom
         bloomFramebuffer = RenderUtil.createFrameBuffer(bloomFramebuffer);
 
         bloomFramebuffer.framebufferClear();
@@ -147,51 +150,34 @@ public class NeverloseGui extends GuiScreen {
 
         BloomUtil.renderBlur(bloomFramebuffer.framebufferTexture, 6, 3);
 
-        //Blur
         StencilUtil.initStencilToWrite();
-        //放要加blur的方法
         RoundedUtil.drawRound(x,y,w,h,4,nlSetting.Light ? new Color(240,245,248,230) : new Color(7,13,23,230));
-        //
         StencilUtil.readStencilBuffer(1);
         GaussianBlur.renderBlur(/* 大小 */10);
         StencilUtil.uninitStencilBuffer();
-        //
 
         RoundedUtil.drawRound(x,y,w,h,2,nlSetting.Light ? new Color(240,245,248,230) : new Color(7,13,23,230));
 
         RoundedUtil.drawRound(x + 90,y + 40,w - 90,h - 40,1,nlSetting.Light ? new Color(255,255,255) :new Color(9,9,9));
 
-        RoundedUtil.drawRound(x + 90,y,w - 90,h - 260 , 1,nlSetting.Light ?new Color(255,255,255)  :new Color(13,13,11));
-
-        //分界线 26,26,26
+        RoundedUtil.drawRound(x + 90,y,w - 90,h - 300 , 1,nlSetting.Light ?new Color(255,255,255)  :new Color(13,13,11));
 
         RoundedUtil.drawRound(x + 90,y + 39,w - 90,1 , 0,nlSetting.Light ? new Color(213,213,213) : new Color(26,26,26));
 
         RoundedUtil.drawRound(x + 89 ,y,1,h,0,nlSetting.Light ? new Color(213,213,213) : new Color(26,26,26));
 
-        // RoundedUtil.drawRound(x ,y + 200,40,1,0,nlSetting.Light ? new Color(213,213,213) : new Color(26,26,26));
-
-        //
-
-        //   StencilUtil.initStencilToWrite();
-        //  RenderUtil.drawRect2(x  ,y + 274- 4,25,20 + 8, -1);
-        //   StencilUtil.readStencilBuffer(1);
-
         GL11.glEnable(GL11.GL_BLEND);
 
         mc.getTextureManager().bindTexture(new ResourceLocation("nb"));
 
-        RoundedUtil.drawRoundTextured(x + 4 ,y + 274,20,20,10f,1);
+        int footerLineY = y + h - 35;
+        int avatarY = footerLineY + 9;
 
-        //   StencilUtil.uninitStencilBuffer();
+        RoundedUtil.drawRoundTextured(x + 4 , avatarY,20,20,10f,1);
 
-        //
+        Fonts.Nl_18.drawString(mc.getSession().getUsername(),x + 29 , avatarY + 1,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
 
-        //    RoundedUtil.drawRound(x + 3 ,y + 274,20,20,10f,new Color(-1));
-
-        Fonts.Nl_18.drawString(mc.getSession().getUsername(),x + 29 ,y + 275,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
-
-        Fonts.Nl_16.drawString(ChatFormatting.GRAY + "Till: " + ChatFormatting.RESET + new SimpleDateFormat("dd:MM").format(new Date()) + " " + new SimpleDateFormat("HH:mm").format(new Date()),x + 29 ,y + 287,neverlosecolor.getRGB());
+        Fonts.Nl_16.drawString(ChatFormatting.GRAY + "Till: " + ChatFormatting.RESET + new SimpleDateFormat("dd:MM").format(new Date()) + " " + new SimpleDateFormat("HH:mm").format(new Date()),x + 29 , avatarY + 13,neverlosecolor.getRGB());
 
         if (!nlSetting.Light) {
             NLOutline("FDPCLIENT", Fonts.NLBold_28, x + 7, y + 12, -1, neverlosecolor.getRGB(), 0.7f);
@@ -200,7 +186,7 @@ public class NeverloseGui extends GuiScreen {
             Fonts.NLBold_28.drawString("FDP", x + 8, y + 12, new Color(51,51,51).getRGB(), false);
         }
 
-        RoundedUtil.drawRound(x ,y + 265,89,1 , 0,nlSetting.Light ? new Color(213,213,213) :new Color(26,26,26));
+        RoundedUtil.drawRound(x , footerLineY,89,1 , 0,nlSetting.Light ? new Color(213,213,213) :new Color(26,26,26));
 
         for (NlTab nlTab : nlTabs){
             nlTab.x = x;
@@ -242,8 +228,6 @@ public class NeverloseGui extends GuiScreen {
     }
 
 
-    //x + 110,y,w - 110,h - 260
-
     @Override
     protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
         nlTabs.forEach(e -> e.click(mouseX,mouseY,mouseButton));
@@ -251,8 +235,7 @@ public class NeverloseGui extends GuiScreen {
             nlSetting.click(mouseX,mouseY,mouseButton);
         }
         if (mouseButton ==0){
-            //移动面板
-            if(RenderUtil.isHovering(x + 110,y,w - 110,h - 260 ,mouseX,mouseY)) {
+            if(RenderUtil.isHovering(x + 110,y,w - 110,h - 300 ,mouseX,mouseY)) {
                 this.x2 = (int) (x - mouseX);
                 this.y2 = (int) (y - mouseY);
                 this.dragging = true;
@@ -267,7 +250,6 @@ public class NeverloseGui extends GuiScreen {
                 }
             }
 
-            // CORREÇÃO ABAIXO: Adicionado .getNlfont_24() antes de .stringWidth e .getHeight
             if (RenderUtil.isHovering((float) (x + w - 50+ (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,Fonts.NlIcon.nlfont_24.getNlfont_24().stringWidth("x"),Fonts.NlIcon.nlfont_24.getNlfont_24().getHeight(),mouseX,mouseY)){
                 settings = !settings;
                 dragging = false;
@@ -275,8 +257,6 @@ public class NeverloseGui extends GuiScreen {
                 nlSetting.y = this.y;
             }
 
-            // CORREÇÃO ABAIXO: Adicionado .getNlfont_20() antes de .stringWidth e .getHeight
-            // E alterado Fonts.nlfont_20 para Fonts.NlIcon.nlfont_20 para consistência com LegacyIconFont
             if (RenderUtil.isHovering(x + w - 30,y + 18,Fonts.NlIcon.nlfont_20.getNlfont_20().stringWidth("j"),Fonts.NlIcon.nlfont_20.getNlfont_20().getHeight(),mouseX,mouseY)){
                 search = !search;
                 dragging = false;

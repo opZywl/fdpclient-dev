@@ -49,13 +49,11 @@ public class NeverloseConfigManager {
     }
 
     public void loadConfig(String name) {
-        // CORREÇÃO AQUI: Adicionado 'true' como segundo argumento (notify)
         FDPClient.fileManager.load(name, true);
         refresh();
     }
 
     public void saveConfig(String name) {
-        // Aqui já estava correto (passando 'false')
         FDPClient.fileManager.load(name, false);
         FDPClient.fileManager.saveAllConfigs();
         refresh();
@@ -67,7 +65,7 @@ public class NeverloseConfigManager {
             ClientUtils.INSTANCE.getLOGGER().warn("Failed to delete config file: {}", file.getName());
         }
         if (Objects.equals(FDPClient.fileManager.getNowConfig(), config.getName())) {
-            FDPClient.fileManager.load("default", false); // Já estava correto
+            FDPClient.fileManager.load("default", false);
             FDPClient.fileManager.saveAllConfigs();
         }
         refresh();
@@ -78,7 +76,7 @@ public class NeverloseConfigManager {
         if (!file.exists()) {
             try {
                 file.createNewFile();
-                FDPClient.fileManager.load(name, false); // Já estava correto
+                FDPClient.fileManager.load(name, false);
                 FDPClient.fileManager.saveAllConfigs();
             } catch (IOException e) {
                 ClientUtils.INSTANCE.getLOGGER().error("Failed to create config {}", name, e);

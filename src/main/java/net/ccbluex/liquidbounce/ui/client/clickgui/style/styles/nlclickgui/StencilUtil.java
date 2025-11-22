@@ -37,11 +37,7 @@ public class StencilUtil {
         EXTFramebufferObject.glFramebufferRenderbufferEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, EXTFramebufferObject.GL_DEPTH_ATTACHMENT_EXT, EXTFramebufferObject.GL_RENDERBUFFER_EXT, stencilDepthBufferID);
     }
 
-    /**
-     * @implNote Initializes the Stencil Buffer to write to
-     */
     public static void initStencilToWrite() {
-        //init
         mc.getFramebuffer().bindFramebuffer(false);
         checkSetupFBO(mc.getFramebuffer());
         glClear(GL_STENCIL_BUFFER_BIT);
@@ -52,11 +48,6 @@ public class StencilUtil {
         glColorMask(false, false, false, false);
     }
 
-    /**
-     * @param ref (usually 1)
-     * @implNote Reads the Stencil Buffer and stencils it onto everything until
-     * @see StencilUtil#uninitStencilBuffer()  is called
-     */
     public static void readStencilBuffer(int ref) {
         glColorMask(true, true, true, true);
         glStencilFunc(GL_EQUAL, ref, 1);

@@ -90,7 +90,6 @@ public class ShaderUtil {
     }
 
     public static void drawQuads(float x, float y, float width, float height) {
-       // if (mc.gameSettings.ofFastRender) return;
         glBegin(GL_QUADS);
         glTexCoord2f(0, 0);
         glVertex2f(x, y);
@@ -104,7 +103,6 @@ public class ShaderUtil {
     }
 
     public static void drawQuads() {
-       // if (mc.gameSettings.ofFastRender) return;
         ScaledResolution sr = new ScaledResolution(mc);
         float width = (float) sr.getScaledWidth_double();
         float height = (float) sr.getScaledHeight_double();
@@ -162,8 +160,6 @@ public class ShaderUtil {
             "\n" +
             "vec3 createGradient(vec2 coords, vec3 color1, vec3 color2, vec3 color3, vec3 color4){\n" +
             "    vec3 color = mix(mix(color1.rgb, color2.rgb, coords.y), mix(color3.rgb, color4.rgb, coords.y), coords.x);\n" +
-            "    //Dithering the color\n" +
-            "    // from https://shader-tutorial.dev/advanced/color-banding-dithering/\n" +
             "    color += mix(NOISE, -NOISE, fract(sin(dot(coords.xy, vec2(12.9898, 78.233))) * 43758.5453));\n" +
             "    return color;\n" +
             "}\n" +
@@ -191,9 +187,8 @@ public class ShaderUtil {
             "\n" +
             "void main() {\n" +
             "    vec2 rectHalf = rectSize * .5;\n" +
-            "    // Smooth the result (free antialiasing).\n" +
             "    float smoothedAlpha =  (1.0-smoothstep(0.0, 1.0, roundSDF(rectHalf - (gl_TexCoord[0].st * rectSize), rectHalf - radius - 1., radius))) * color.a;\n" +
-            "    gl_FragColor = vec4(color.rgb, smoothedAlpha);// mix(quadColor, shadowColor, 0.0);\n" +
+            "    gl_FragColor = vec4(color.rgb, smoothedAlpha);\n" +
             "\n" +
             "}";
 
