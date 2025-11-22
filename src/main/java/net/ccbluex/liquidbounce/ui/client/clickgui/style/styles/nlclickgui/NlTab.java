@@ -27,7 +27,7 @@ public class NlTab {
         int y3 = 0;
 
         for (Category.SubCategory subCategory: type.getSubCategories()){
-            nlSubList.add( new NlSub(subCategory,y2 + y3));
+            nlSubList.add( new NlSub(type, subCategory,y2 + y3));
             y3 += 18;
         }
     }
@@ -77,7 +77,7 @@ public class NlTab {
         if (mb == 0) {
             for (NlSub categoryRender : nlSubList) {
                 if (RenderUtil.isHovering(categoryRender.x + 7, categoryRender.y + categoryRender.y2 + 8, 76, 15,mx,my)) {
-                    NeverloseGui.getInstance().subCategory = categoryRender.subCategory;
+                    NeverloseGui.getInstance().selectedSub = categoryRender;
                 }
             }
 

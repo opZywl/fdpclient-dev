@@ -96,7 +96,7 @@ public class NlModule {
         leftAdd = 0;
         rightAdd =0;
 
-        for (NlModule tabModule : NlSub.nlModules) {
+        for (NlModule tabModule : NlSub.getLayoutModules()) {
             if (tabModule == this) {
                 break;
             } else {

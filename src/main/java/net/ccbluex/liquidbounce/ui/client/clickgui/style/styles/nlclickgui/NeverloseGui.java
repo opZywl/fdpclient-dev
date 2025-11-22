@@ -21,15 +21,13 @@ import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.IOException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -45,7 +43,7 @@ public class NeverloseGui extends GuiScreen {
 
     public static Color neverlosecolor = new Color(28,133,192);
 
-    public Category.SubCategory subCategory = null;
+    public NlSub selectedSub = null;
 
     public List<NlTab> nlTabs = new ArrayList<>();
 
@@ -55,7 +53,11 @@ public class NeverloseGui extends GuiScreen {
     private int y2;
 
     private boolean dragging,settings,search;
-    private boolean head = true;
+    private String searchText = "";
+
+    private final ResourceLocation defaultAvatar = new ResourceLocation(FDPClient.CLIENT_NAME.toLowerCase() + "/64.png");
+    private ResourceLocation avatarTexture = defaultAvatar;
+    private boolean avatarLoaded;
 
     private NlSetting nlSetting;
 
@@ -69,12 +71,21 @@ public class NeverloseGui extends GuiScreen {
         INSTANCE = this;
         x = 100;
         y = 100;
-        w = 430;
-        h = 300;
+        w = 500;
+        h = 380;
 
         int y2 = 0;
         int u2 =0;
-        for (Category type : Category.values()){
+        List<Category> orderedCategories = new ArrayList<>();
+        orderedCategories.add(Category.CLIENT);
+
+        for (Category type : Category.values()) {
+            if (!orderedCategories.contains(type)) {
+                orderedCategories.add(type);
+            }
+        }
+
+        for (Category type : orderedCategories){
             if(type.name().equalsIgnoreCase("World") ||
                     type.name().equalsIgnoreCase("Interface")) continue;
 
@@ -88,17 +99,6 @@ public class NeverloseGui extends GuiScreen {
         }
 
         nlSetting = new NlSetting();
-
-        if (head) {
-            try {
-                Minecraft.getMinecraft().getTextureManager().loadTexture(
-                        new ResourceLocation("nb"),
-                        new DynamicTexture(ImageIO.read(new URL("https://q.qlogo.cn/headimg_dl?dst_uin="+"2165728490"+"&spec=100"))));
-                head =false;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
 
     }
 
@@ -123,7 +123,7 @@ public class NeverloseGui extends GuiScreen {
 
 
         if (Loader && !nlTabs.isEmpty()){
-            subCategory = nlTabs.get(0).nlSubList.get(0).subCategory;
+            selectedSub = nlTabs.get(0).nlSubList.get(0);
             Loader = false;
         }
 
@@ -151,7 +151,7 @@ public class NeverloseGui extends GuiScreen {
 
         RoundedUtil.drawRound(x + 90,y + 40,w - 90,h - 40,1,nlSetting.Light ? new Color(255,255,255) :new Color(9,9,9));
 
-        RoundedUtil.drawRound(x + 90,y,w - 90,h - 260 , 1,nlSetting.Light ?new Color(255,255,255)  :new Color(13,13,11));
+        RoundedUtil.drawRound(x + 90,y,w - 90,h - 300 , 1,nlSetting.Light ?new Color(255,255,255)  :new Color(13,13,11));
 
         RoundedUtil.drawRound(x + 90,y + 39,w - 90,1 , 0,nlSetting.Light ? new Color(213,213,213) : new Color(26,26,26));
 
@@ -159,13 +159,17 @@ public class NeverloseGui extends GuiScreen {
 
         GL11.glEnable(GL11.GL_BLEND);
 
-        mc.getTextureManager().bindTexture(new ResourceLocation("nb"));
+        ensureAvatarTexture();
+        mc.getTextureManager().bindTexture(avatarTexture);
 
-        RoundedUtil.drawRoundTextured(x + 4 ,y + 274,20,20,10f,1);
+        int footerLineY = y + h - 35;
+        int avatarY = footerLineY + 9;
 
-        Fonts.Nl_18.drawString(mc.getSession().getUsername(),x + 29 ,y + 275,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
+        RoundedUtil.drawRoundTextured(x + 4 , avatarY,20,20,10f,1);
 
-        Fonts.Nl_16.drawString(ChatFormatting.GRAY + "Till: " + ChatFormatting.RESET + new SimpleDateFormat("dd:MM").format(new Date()) + " " + new SimpleDateFormat("HH:mm").format(new Date()),x + 29 ,y + 287,neverlosecolor.getRGB());
+        Fonts.Nl_18.drawString(mc.getSession().getUsername(),x + 29 , avatarY + 1,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
+
+        Fonts.Nl_16.drawString(ChatFormatting.GRAY + "Till: " + ChatFormatting.RESET + new SimpleDateFormat("dd:MM").format(new Date()) + " " + new SimpleDateFormat("HH:mm").format(new Date()),x + 29 , avatarY + 13,neverlosecolor.getRGB());
 
         if (!nlSetting.Light) {
             NLOutline("FDPCLIENT", Fonts.NLBold_28, x + 7, y + 12, -1, neverlosecolor.getRGB(), 0.7f);
@@ -174,7 +178,7 @@ public class NeverloseGui extends GuiScreen {
             Fonts.NLBold_28.drawString("FDP", x + 8, y + 12, new Color(51,51,51).getRGB(), false);
         }
 
-        RoundedUtil.drawRound(x ,y + 265,89,1 , 0,nlSetting.Light ? new Color(213,213,213) :new Color(26,26,26));
+        RoundedUtil.drawRound(x , footerLineY,89,1 , 0,nlSetting.Light ? new Color(213,213,213) :new Color(26,26,26));
 
         for (NlTab nlTab : nlTabs){
             nlTab.x = x;
@@ -193,6 +197,7 @@ public class NeverloseGui extends GuiScreen {
 
         if (search || !searchanim.isDone()){
             RenderUtil.drawRoundedRect((float) (x + w - 30 -(85 * searchanim.getOutput() )), (float) (y + 12), (float) (80 * searchanim.getOutput()),15,1,new Color(3,13,26).getRGB(),1,NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : new Color(28,133,192).getRGB());
+            Fonts.Nl_16.drawString(searchText, (float) (x + w - 26 -(85 * searchanim.getOutput() )), y + 15, NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : -1);
         }
 
         if (settings){
@@ -209,6 +214,13 @@ public class NeverloseGui extends GuiScreen {
         super.drawScreen(mouseX, mouseY, partialTicks);
     }
 
+    private void ensureAvatarTexture() {
+        if (!avatarLoaded) {
+            avatarTexture = defaultAvatar;
+            avatarLoaded = true;
+        }
+    }
+
     public static void NLOutline(String str, FontRenderer fontRenderer, float x, float y, int color, int color2, float size) {
         fontRenderer.drawString(str, x + size, y, color2, false);
         fontRenderer.drawString(str, x, y - size, color2, false);
@@ -223,7 +235,7 @@ public class NeverloseGui extends GuiScreen {
             nlSetting.click(mouseX,mouseY,mouseButton);
         }
         if (mouseButton ==0){
-            if(RenderUtil.isHovering(x + 110,y,w - 110,h - 260 ,mouseX,mouseY)) {
+            if(RenderUtil.isHovering(x + 110,y,w - 110,h - 300 ,mouseX,mouseY)) {
                 this.x2 = (int) (x - mouseX);
                 this.y2 = (int) (y - mouseY);
                 this.dragging = true;
@@ -248,6 +260,9 @@ public class NeverloseGui extends GuiScreen {
             if (RenderUtil.isHovering(x + w - 30,y + 18,Fonts.NlIcon.nlfont_20.getNlfont_20().stringWidth("j"),Fonts.NlIcon.nlfont_20.getNlfont_20().getHeight(),mouseX,mouseY)){
                 search = !search;
                 dragging = false;
+                if (!search) {
+                    searchText = "";
+                }
             }
 
         }
@@ -272,8 +287,34 @@ public class NeverloseGui extends GuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (search) {
+            if (keyCode == 1) {
+                search = false;
+                searchText = "";
+                return;
+            }
+            if (keyCode == 14) {
+                if (!searchText.isEmpty()) {
+                    searchText = searchText.substring(0, searchText.length() - 1);
+                }
+                return;
+            }
+            if (ChatAllowedCharacters.isAllowedCharacter(typedChar)) {
+                searchText = searchText + typedChar;
+                return;
+            }
+        }
+
         nlTabs.forEach( e -> e.keyTyped(typedChar,keyCode));
         super.keyTyped(typedChar, keyCode);
+    }
+
+    public boolean isSearching() {
+        return search && !searchText.isEmpty();
+    }
+
+    public String getSearchText() {
+        return searchText;
     }
 
 
