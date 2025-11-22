@@ -44,7 +44,6 @@ public class Numbersetting extends Downward<Value<?>> {
 
         double clamp = MathHelper.clamp_double(Minecraft.getDebugFPS() / 30.0, 1, 9999);
 
-        // Correção: Casting seguro para obter min/max
         double minimum = 0;
         double maximum = 1;
 
@@ -61,7 +60,6 @@ public class Numbersetting extends Downward<Value<?>> {
 
         percent = Math.max(0, Math.min(1, (float) (percent + (Math.max(0, Math.min(percentBar, 1)) - percent) * (0.2 / clamp))));
 
-        // Correção: Fonts.INSTANCE
         Fonts.INSTANCE.getNl_16().drawString(setting.getName(), mainx + 100 + getX(), mainy + numbery + 57, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
 
         RoundedUtil.drawRound(mainx + 170 + getX(), mainy + numbery + 58, 60, 2, 2, NeverloseGui.getInstance().getLight() ? new Color(230, 230, 230) : new Color(5, 22, 41));
@@ -70,12 +68,10 @@ public class Numbersetting extends Downward<Value<?>> {
 
         RoundedUtil.drawCircle(mainx + 167 + getX() + (60 * percent), mainy + numbery + 56, (float) (5.5f + (0.5f * HoveringAnimation.getOutput())), NeverloseGui.neverlosecolor);
 
-        // Definir novos valores via arraste
         if (iloveyou) {
             float percentt = Math.min(1, Math.max(0, ((mouseX - (mainx + 170 + getX())) / 99.0f) * 1.55f));
             double newValue = ((percentt * (maximum - minimum)) + minimum);
 
-            // Correção: Método set() com 2 argumentos e casting correto
             if (setting instanceof IntValue) {
                 ((IntValue) setting).set((int) Math.round(newValue), true);
             } else if (setting instanceof FloatValue) {
@@ -87,7 +83,6 @@ public class Numbersetting extends Downward<Value<?>> {
             GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) 2.0f);
         }
 
-        // Correção: Nl_14 substituído por Nl_15 e uso de Fonts.INSTANCE
         int stringWidth = Fonts.INSTANCE.getNl_15().stringWidth(isset ? finalvalue + "_" : current + "") + 4;
 
         RenderUtil.drawRoundedRect(mainx + 235 + getX(), mainy + numbery + 55, stringWidth, 9, 1, NeverloseGui.getInstance().getLight() ? new Color(255, 255, 255).getRGB() : new Color(0, 5, 19).getRGB(), 1, new Color(13, 24, 35).getRGB());
@@ -101,7 +96,6 @@ public class Numbersetting extends Downward<Value<?>> {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        // Correção: Recalcular current pois é uma variável local
         double current = ((Number) setting.get()).doubleValue();
 
         if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 170 + getX(), NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 58, 60, 2, mouseX, mouseY) && !isset) {
@@ -110,7 +104,6 @@ public class Numbersetting extends Downward<Value<?>> {
             }
         }
 
-        // Correção: Fonts.INSTANCE e Nl_15
         int stringWidth = Fonts.INSTANCE.getNl_15().stringWidth(isset ? finalvalue + "_" : current + "") + 4;
 
         if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 235 + getX(), NeverloseGui.getInstance().y + (getY() + getScrollY()) + 55, stringWidth, 9, mouseX, mouseY)) {
@@ -132,40 +125,35 @@ public class Numbersetting extends Downward<Value<?>> {
 
     @Override
     public void keyTyped(char typedChar, int keyCode) {
-        // Input
         if (isset) {
             if (keyCode == Keyboard.KEY_ESCAPE) {
                 isset = false;
             } else if (keynumbers(keyCode)) {
-                // Assegurar apenas um ponto decimal
                 if (!(keyCode == Keyboard.KEY_PERIOD && finalvalue.contains("."))) {
                     finalvalue = (finalvalue + typedChar);
                 }
             }
 
-            // Backspace
             if (Keyboard.isKeyDown(Keyboard.KEY_BACK) && finalvalue.length() >= 1) {
                 finalvalue = (finalvalue.substring(0, finalvalue.length() - 1));
             }
 
             if (keyCode == Keyboard.KEY_RETURN) {
                 try {
-                    // Correção: Lógica de casting e set() substituindo o acesso direto a 'value'
                     if (setting instanceof FloatValue) {
                         FloatValue floatSetting = (FloatValue) setting;
                         float val = Float.parseFloat(finalvalue);
                         float max = floatSetting.getMaximum();
                         float min = floatSetting.getMinimum();
-                        floatSetting.set(Math.min(Math.max(val, min), max), true); // set com notificação
+                        floatSetting.set(Math.min(Math.max(val, min), max), true);
                     } else if (setting instanceof IntValue) {
                         IntValue intSetting = (IntValue) setting;
                         int val = Integer.parseInt(finalvalue);
                         int max = intSetting.getMaximum();
                         int min = intSetting.getMinimum();
-                        intSetting.set(Math.min(Math.max(val, min), max), true); // set com notificação
+                        intSetting.set(Math.min(Math.max(val, min), max), true);
                     }
                 } catch (NumberFormatException e) {
-                    // Ignorar erros de parse
                 }
 
                 isset = false;
@@ -175,7 +163,6 @@ public class Numbersetting extends Downward<Value<?>> {
         super.keyTyped(typedChar, keyCode);
     }
 
-    // Verificar input numérico
     public boolean keynumbers(int keyCode) {
         return (keyCode == Keyboard.KEY_0 || keyCode == Keyboard.KEY_1 || keyCode == Keyboard.KEY_2 || keyCode == Keyboard.KEY_3 || keyCode == Keyboard.KEY_4 || keyCode == Keyboard.KEY_6 || keyCode == Keyboard.KEY_5 || keyCode == Keyboard.KEY_7 || keyCode == Keyboard.KEY_8 || keyCode == Keyboard.KEY_9 || keyCode == Keyboard.KEY_PERIOD || keyCode == Keyboard.KEY_MINUS);
     }

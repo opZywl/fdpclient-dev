@@ -23,7 +23,6 @@ public class ColorSetting extends Downward<ColorValue> {
 
         int colory = (int) (getY() + getScrollY());
 
-        // CORREÇÃO 1: Uso de Fonts.INSTANCE.getNl_16() para evitar erro estático
         Fonts.INSTANCE.getNl_16().drawString(setting.getName(), mainx + 100 + getX(), mainy + colory + 57, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
 
         Color color = setting.selectedColor();
@@ -33,10 +32,7 @@ public class ColorSetting extends Downward<ColorValue> {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        // Toggle rainbow on right click for a minimal interaction
         if (mouseButton == 1 && RenderUtil.isHovering(NeverloseGui.getInstance().x + 100 + getX() + 138, NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 52, 16, 10, mouseX, mouseY)) {
-            // CORREÇÃO 2: "Variable expected"
-            // Substituído 'getRainbow() = ...' por 'setRainbow(...)'
             setting.setRainbow(!setting.getRainbow());
         }
     }

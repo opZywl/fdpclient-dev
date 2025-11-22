@@ -10,7 +10,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-//单纯过渡使代码更加清晰
 public class NlTab {
 
     public Category type;
@@ -43,7 +42,6 @@ public class NlTab {
             nlSub.w = w;
             nlSub.h = h;
 
-            //重置拉条动画
             if (!nlSub.isSelected()){
                 for (NlModule nlModule : nlSub.nlModules){
                     for (Downward nlSetting : nlModule.downwards){
@@ -77,7 +75,6 @@ public class NlTab {
         nlSubList.forEach( e -> e.click(mx,my,mb));
 
         if (mb == 0) {
-            //选择面板
             for (NlSub categoryRender : nlSubList) {
                 if (RenderUtil.isHovering(categoryRender.x + 7, categoryRender.y + categoryRender.y2 + 8, 76, 15,mx,my)) {
                     NeverloseGui.getInstance().subCategory = categoryRender.subCategory;

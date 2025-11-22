@@ -69,14 +69,11 @@ public class NlSub {
             }
             onScroll(40);
 
-            // --- CORREÇÃO DO CRASH ---
-            // Verifica se a lista NÃO está vazia antes de tentar acessar o último item.
             if (!nlModules.isEmpty()) {
                 maxScroll = Math.max(0, nlModules.get(nlModules.size() - 1).y + 50 + nlModules.get(nlModules.size() - 1).posy + nlModules.get(nlModules.size() - 1).getHeight());
             } else {
-                maxScroll = 0; // Se estiver vazia, o scroll máximo é 0.
+                maxScroll = 0;
             }
-            // ------------------------
 
             for (NlModule nlModule : nlModules) {
                 nlModule.x = x;
@@ -134,8 +131,6 @@ public class NlSub {
         }
 
     }
-
-    //滚轮
     public void onScroll(int ms) {
         scroll = (float) (rawScroll - scrollAnimation.getOutput());
         rawScroll += Mouse.getDWheel() / 4f;
