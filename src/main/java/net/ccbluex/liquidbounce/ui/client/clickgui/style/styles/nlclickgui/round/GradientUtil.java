@@ -29,16 +29,10 @@ public class GradientUtil {
         gradientShader.setUniformf("location", x * sr.getScaleFactor(), (Minecraft.getMinecraft().displayHeight - (height * sr.getScaleFactor())) - (y * sr.getScaleFactor()));
         gradientShader.setUniformf("rectSize", width * sr.getScaleFactor(), height * sr.getScaleFactor());
         gradientShader.setUniformf("alpha", alpha);
-        // Bottom Left
         gradientShader.setUniformf("color1", bottomLeft.getRed() / 255f, bottomLeft.getGreen() / 255f, bottomLeft.getBlue() / 255f);
-        //Top left
         gradientShader.setUniformf("color2", topLeft.getRed() / 255f, topLeft.getGreen() / 255f, topLeft.getBlue() / 255f);
-        //Bottom Right
         gradientShader.setUniformf("color3", bottomRight.getRed() / 255f, bottomRight.getGreen() / 255f, bottomRight.getBlue() / 255f);
-        //Top Right
         gradientShader.setUniformf("color4", topRight.getRed() / 255f, topRight.getGreen() / 255f, topRight.getBlue() / 255f);
-
-        //Apply the gradient to whatever is put here
         ShaderUtil.drawQuads(x, y, width, height);
 
         gradientShader.unload();
@@ -76,16 +70,10 @@ public class GradientUtil {
         gradientMaskShader.setUniformf("rectSize", width * sr.getScaleFactor(), height * sr.getScaleFactor());
         gradientMaskShader.setUniformf("alpha", alpha);
         gradientMaskShader.setUniformi("tex", 0);
-        // Bottom Left
         gradientMaskShader.setUniformf("color1", bottomLeft.getRed() / 255f, bottomLeft.getGreen() / 255f, bottomLeft.getBlue() / 255f);
-        //Top left
         gradientMaskShader.setUniformf("color2", topLeft.getRed() / 255f, topLeft.getGreen() / 255f, topLeft.getBlue() / 255f);
-        //Bottom Right
         gradientMaskShader.setUniformf("color3", bottomRight.getRed() / 255f, bottomRight.getGreen() / 255f, bottomRight.getBlue() / 255f);
-        //Top Right
         gradientMaskShader.setUniformf("color4", topRight.getRed() / 255f, topRight.getGreen() / 255f, topRight.getBlue() / 255f);
-
-        //Apply the gradient to whatever is put here
         content.run();
 
         gradientMaskShader.unload();

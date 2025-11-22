@@ -72,35 +72,25 @@ public class RenderUtil
         color(Color.white);
     }
 
-    /**
-     * Sets the current color using rgb values
-     *
-     * @param color
-     */
     public static void color(final Color color) {
         GL11.glColor4d(color.getRed() / 255.0, color.getGreen() / 255.0, color.getBlue() / 255.0, color.getAlpha() / 255.0);
     }
 
     private static void drawCircle(final double xPos, final double yPos, final double radius) {
         final double theta = (2 * Math.PI / 360.0);
-        final double tangetial_factor = Math.tan(theta);//calculate the tangential factor
-        final double radial_factor = MathHelper.cos((float) theta);//calculate the radial factor
-        double x = radius;//we start at angle = 0
+        final double tangetial_factor = Math.tan(theta);
+        final double radial_factor = MathHelper.cos((float) theta);
+        double x = radius;
         double y = 0;
         for (int i = 0; i < 360; i++) {
             glVertex2d(x + xPos, y + yPos);
 
-            //calculate the tangential vector
-            //remember, the radial vector is (x, y)
-            //to get the tangential vector we flip those coordinates and negate one of them
             final double tx = -y;
             final double ty = x;
 
-            //add the tangential vector
             x += tx * tangetial_factor;
             y += ty * tangetial_factor;
 
-            //correct using the radial factor
             x *= radial_factor;
             y *= radial_factor;
         }
@@ -611,9 +601,6 @@ public class RenderUtil
         stop2D();
     }
 
-    //XRay From novoline.cc
-
-
     public static void drawSolidBlockESP(BlockPos pos, int color) {
         double xPos = pos.getX() - mc.getRenderManager().renderPosX, yPos = pos.getY() - mc.getRenderManager().renderPosY, zPos = pos.getZ() - mc.getRenderManager().renderPosZ;
         double height = mc.theWorld.getBlockState(pos).getBlock().getBlockBoundsMaxY() - mc.theWorld.getBlockState(pos).getBlock().getBlockBoundsMinY();
@@ -780,7 +767,6 @@ public class RenderUtil
         GlStateManager.alphaFunc(GL_GREATER, (float) (limit * .01));
     }
 
-    // animation for sliders and stuff
     public static void fakeCircleGlow(float posX, float posY, float radius, Color color, float maxAlpha) {
         setAlphaLimit(0);
         glShadeModel(GL_SMOOTH);
@@ -1650,7 +1636,6 @@ public class RenderUtil
         GL11.glEnable(2848);
         GL11.glDisable(3553);
         GL11.glDisable(2929);
-//        Helper.mc.entityRenderer.setupCameraTransform(Helper.mc.timer.renderPartialTicks, 0);
     }
 
     public static void stopDrawing() {
@@ -1702,11 +1687,9 @@ public class RenderUtil
         RenderUtil.csBuffer.forEach(enabled ? RenderUtil.ENABLE_CLIENT_STATE : RenderUtil.DISABLE_CLIENT_STATE);
     }
 
-    // Sometimes colors get messed up in for loops, so we use this method to reset it to allow new colors to be used
     public static void resetColor() {
         GlStateManager.color(1, 1, 1, 1);
     }
-    // This method colors the next avalible texture with a specified alpha value ranging from 0-1
     public static void color(int color, float alpha) {
         float r = (float) (color >> 16 & 255) / 255.0F;
         float g = (float) (color >> 8 & 255) / 255.0F;
@@ -1730,7 +1713,6 @@ public class RenderUtil
         }
         GlStateManager.depthMask(!start);
     }
-    // Colors the next texture without a specified alpha value
     public static void color(int color) {
         color(color, (float) (color >> 24 & 255) / 255.0F);
     }
