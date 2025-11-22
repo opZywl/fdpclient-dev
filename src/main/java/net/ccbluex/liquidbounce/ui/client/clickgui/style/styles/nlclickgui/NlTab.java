@@ -10,7 +10,6 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
-//单纯过渡使代码更加清晰
 public class NlTab {
 
     public Category type;
@@ -28,14 +27,14 @@ public class NlTab {
         int y3 = 0;
 
         for (Category.SubCategory subCategory: type.getSubCategories()){
-            nlSubList.add( new NlSub(subCategory,y2 + y3));
+            nlSubList.add( new NlSub(type, subCategory,y2 + y3));
             y3 += 18;
         }
     }
 
     public void draw(int mx, int my){
 
-        Fonts.Nl_16.drawString(type.name(),x + 10,y  + y2,  NeverloseGui.getInstance().getLight() ? new Color(194,196,198).getRGB() : new Color(66,64,62).getRGB());
+        Fonts.Nl_16.drawString(type.name(),x + 10,y  + y2,  NeverloseGui.getInstance().getLight() ? new Color(60,60,60).getRGB() : new Color(66,64,62).getRGB());
 
         for (NlSub nlSub : nlSubList){
             nlSub.x = x;
@@ -43,7 +42,6 @@ public class NlTab {
             nlSub.w = w;
             nlSub.h = h;
 
-            //重置拉条动画
             if (!nlSub.isSelected()){
                 for (NlModule nlModule : nlSub.nlModules){
                     for (Downward nlSetting : nlModule.downwards){
@@ -77,10 +75,9 @@ public class NlTab {
         nlSubList.forEach( e -> e.click(mx,my,mb));
 
         if (mb == 0) {
-            //选择面板
             for (NlSub categoryRender : nlSubList) {
                 if (RenderUtil.isHovering(categoryRender.x + 7, categoryRender.y + categoryRender.y2 + 8, 76, 15,mx,my)) {
-                    NeverloseGui.getInstance().subCategory = categoryRender.subCategory;
+                    NeverloseGui.getInstance().selectedSub = categoryRender;
                 }
             }
 

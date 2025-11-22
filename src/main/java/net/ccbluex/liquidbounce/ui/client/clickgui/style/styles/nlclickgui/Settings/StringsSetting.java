@@ -27,12 +27,10 @@ public class StringsSetting extends Downward<ListValue> {
 
         int modey = (int) (getY() + getScrollY());
 
-        // CORREÇÃO 1: Fonts.INSTANCE.getNl_16()
         Fonts.INSTANCE.getNl_16().drawString(setting.getName(), mainx + 100 + getX(), mainy + modey + 57, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
 
         RenderUtil.drawRoundedRect(mainx + 170 + getX(), mainy + modey + 54, 80, 14, 2, NeverloseGui.getInstance().getLight() ? new Color(255, 255, 255).getRGB() : new Color(0, 5, 19).getRGB(), 1, new Color(13, 24, 35).getRGB());
 
-        // CORREÇÃO 2: Fonts.INSTANCE.getNl_16()
         Fonts.INSTANCE.getNl_16().drawString(setting.get(), mainx + 173 + getX(), mainy + modey + 59, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
 
 
@@ -51,18 +49,14 @@ public class StringsSetting extends Downward<ListValue> {
         RenderUtil.drawArrow(mainx + 240 + getX(), mainy + modey + 55 + anim, (int) 2, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : new Color(200, 200, 200).getRGB(), length);
 
         if (setting.getOpenList()) {
-            // Loop adicionando Strings
-
             GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) 2.0f);
 
             RenderUtil.drawRoundedRect(mainx + 170 + getX(), mainy + modey + 54 + 14, 80, setting.getValues().length * 12f, 2, NeverloseGui.getInstance().getLight() ? new Color(255, 255, 255).getRGB() : new Color(0, 5, 19).getRGB(), 1, new Color(13, 24, 35).getRGB());
             for (String option : setting.getValues()) {
                 int optionIndex = getIndex(option);
                 if (option.equalsIgnoreCase(setting.get())) {
-                    // Lógica de highlight (se houver)
                 }
 
-                // CORREÇÃO 3: Fonts.INSTANCE.getNl_15()
                 Fonts.INSTANCE.getNl_15().drawString(option, mainx + 173 + getX(), mainy + modey + 59 + 12 + optionIndex * 12, option.equalsIgnoreCase(setting.get()) ? NeverloseGui.neverlosecolor.getRGB() : NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
             }
 
@@ -85,8 +79,6 @@ public class StringsSetting extends Downward<ListValue> {
                     final int v = (NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 59 + 12 + i * 12);
 
                     if (mouseY >= v && mouseY <= v + 12) {
-                        // CORREÇÃO DO ERRO DA LINHA 94:
-                        // Adicionado 'true' como segundo argumento
                         this.setting.set(this.setting.getValues()[i], true);
                     }
                 }

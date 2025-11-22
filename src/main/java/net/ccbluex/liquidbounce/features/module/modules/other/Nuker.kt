@@ -37,7 +37,7 @@ import net.minecraft.util.EnumFacing
 import java.awt.Color
 import kotlin.math.roundToInt
 
-object Nuker : Module("Nuker", Category.OTHER, gameDetecting = false) {
+object Nuker : Module("Nuker", Category.OTHER, Category.SubCategory.MISCELLANEOUS, gameDetecting = false) {
 
     /**
      * OPTIONS

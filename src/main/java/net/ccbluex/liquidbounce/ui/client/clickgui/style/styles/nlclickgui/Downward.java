@@ -52,7 +52,6 @@ public abstract class Downward<V extends Value> extends Gui{
         this.y = y;
     }
 
-    //滚轮
     public int getScrollY() {
         return moduleRender.scrollY;
     }
