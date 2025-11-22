@@ -35,7 +35,7 @@ public class NeverloseConfigManager {
 
     public void refresh() {
         configs.clear();
-        final File[] configFiles = FDPClient.fileManager.getSettingsDir().listFiles((dir, name) -> name.endsWith(".json"));
+        final File[] configFiles = FDPClient.fileManager.getSettingsDir().listFiles((dir, name) -> name.endsWith(".json") || name.endsWith(".txt"));
         if (configFiles != null) {
             for (File file : configFiles) {
                 configs.add(new NeverloseConfig(removeExtension(file.getName()), file));

@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
-import net.ccbluex.liquidbounce.features.module.Module;
+import net.ccbluex.liquidbounce.features.module.Category;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.BoolSetting;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.Numbersetting;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Direction;
@@ -13,7 +13,7 @@ import java.util.List;
 //单纯过渡使代码更加清晰
 public class NlTab {
 
-    public Module.Category type;
+    public Category type;
 
     public int x,y,w,h,y2;
 
@@ -21,13 +21,13 @@ public class NlTab {
 
 
 
-    public NlTab(Module.Category type,int y2){
+    public NlTab(Category type,int y2){
         this.type = type;
         this.y2 = y2;
 
         int y3 = 0;
 
-        for (Module.Category.SubCategory subCategory: type.getSubCategories()){
+        for (Category.SubCategory subCategory: type.getSubCategories()){
             nlSubList.add( new NlSub(subCategory,y2 + y3));
             y3 += 18;
         }
