@@ -75,7 +75,11 @@ public class NlSub {
                 nlModule.scrollY = (int) MathUtil.roundToHalf(scrolll);
             }
             onScroll(40);
-            maxScroll = Math.max(0, nlModules.get(nlModules.size() - 1).y + 50 + nlModules.get(nlModules.size() - 1).posy + nlModules.get(nlModules.size() - 1).getHeight());
+
+            int contentBottom = nlModules.get(nlModules.size() - 1).y + 50 + nlModules.get(nlModules.size() - 1).posy + nlModules.get(nlModules.size() - 1).getHeight();
+            int visibleHeight = h - 40;
+            int contentHeight = contentBottom - (y + 40);
+            maxScroll = Math.max(0, contentHeight - visibleHeight);
 
             for (NlModule nlModule : nlModules) {
                 nlModule.x = x;
@@ -97,7 +101,10 @@ public class NlSub {
 
             NeverloseGui.getInstance().configs.scy = (int) MathUtil.roundToHalf(scrolll);
             onScroll(40);
-            maxScroll = Math.max(0, NeverloseGui.getInstance().configs.getYY());
+
+            int contentHeight = NeverloseGui.getInstance().configs.getYY() - (y + 40);
+            int visibleHeight = h - 40;
+            maxScroll = Math.max(0, contentHeight - visibleHeight);
 
             int x2 = 0, i = 0;
             for (Category type : Category.values()) {

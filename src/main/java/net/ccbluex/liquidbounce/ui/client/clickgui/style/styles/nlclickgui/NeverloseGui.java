@@ -72,22 +72,22 @@ public class NeverloseGui extends GuiScreen {
         w = 430;
         h = 300;
 
-         int y2 = 0;
-         int u2 =0;
-        for (Category type : Category.values()){
-            if(type.name().equalsIgnoreCase("World") ||
-            type.name().equalsIgnoreCase("Interface")) continue;
-
-            nlTabs.add(new NlTab(type,u2 + y2 + 40));
-
-            for (Category.SubCategory subCategory: type.getSubCategories()){
-                //计算所有sub间隔
-                u2 += 17;
+        final List<Category> orderedCategories = new ArrayList<>();
+        orderedCategories.add(Category.CLIENT);
+        for (Category type : Category.values()) {
+            if (type == Category.CLIENT || type.name().equalsIgnoreCase("World") || type.name().equalsIgnoreCase("Interface")) {
+                continue;
             }
-
-            //与下一个Type的间隔
-            y2 += 14;
+            orderedCategories.add(type);
         }
+
+        int currentY = 40;
+        for (Category type : orderedCategories) {
+            nlTabs.add(new NlTab(type, currentY));
+            currentY += (type.getSubCategories().length * 18) + 26;
+        }
+
+        h = Math.max(h, currentY + 30);
 
         nlSetting = new NlSetting();
 
@@ -194,10 +194,10 @@ public class NeverloseGui extends GuiScreen {
         Fonts.Nl_16.drawString(ChatFormatting.GRAY + "Till: " + ChatFormatting.RESET + new SimpleDateFormat("dd:MM").format(new Date()) + " " + new SimpleDateFormat("HH:mm").format(new Date()),x + 29 ,y + 287,neverlosecolor.getRGB());
 
         if (!nlSetting.Light) {
-            NLOutline("Distance", Fonts.NLBold_28, x + 7, y + 12, -1, neverlosecolor.getRGB(), 0.7f);
+            NLOutline("FDPCLIENT", Fonts.NLBold_28, x + 7, y + 12, -1, neverlosecolor.getRGB(), 0.7f);
 
         }else {
-            Fonts.NLBold_28.drawString("Distance", x + 8, y + 12, new Color(51,51,51).getRGB(), false);
+            Fonts.NLBold_28.drawString("FDPCLIENT", x + 8, y + 12, new Color(51,51,51).getRGB(), false);
         }
 
         RoundedUtil.drawRound(x ,y + 265,89,1 , 0,nlSetting.Light ? new Color(213,213,213) :new Color(26,26,26));
