@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
-import cn.distance.Client;
 import cn.distance.Distance;
 import cn.distance.module.Module;
 import cn.distance.module.Render.ClickGui;
@@ -66,18 +65,18 @@ public class NlSub {
         alphaani.setDirection(isSelected() ? Direction.FORWARDS : Direction.BACKWARDS);
 
         if (isSelected()) {
-            RoundedUtil.drawRound(x + 7, y + y2 + 8, 76, 15, 2, Client.instance.neverloseGui.getLight() ? new Color(200,200,200,(int) (100 + (155 * alphaani.getOutput()))) :  new Color(8, 48, 70, (int) (100 + (155 * alphaani.getOutput()))));
+            RoundedUtil.drawRound(x + 7, y + y2 + 8, 76, 15, 2, NeverloseGui.getInstance().getLight() ? new Color(200,200,200,(int) (100 + (155 * alphaani.getOutput()))) :  new Color(8, 48, 70, (int) (100 + (155 * alphaani.getOutput()))));
         }
 
         if (subCategory.getIcon().equalsIgnoreCase("g") || subCategory.getIcon().equalsIgnoreCase("f")){
             Fonts.NlIcon.nlfont_20.nlfont_20.drawString(subCategory.getIcon(),x + 10,y  + y2 + 14,neverlosecolor.getRGB());
 
-            Fonts.Nl.Nl_18.Nl_18.drawString(subCategory.toString(),x + 10 + Fonts.NlIcon.nlfont_20.nlfont_20.stringWidth(subCategory.getIcon()) + 8,y  + y2 + 13, Client.instance.neverloseGui.getLight()? new Color(18,18,19).getRGB() : -1);
+            Fonts.Nl.Nl_18.Nl_18.drawString(subCategory.toString(),x + 10 + Fonts.NlIcon.nlfont_20.nlfont_20.stringWidth(subCategory.getIcon()) + 8,y  + y2 + 13, NeverloseGui.getInstance().getLight()? new Color(18,18,19).getRGB() : -1);
 
         }else {
             Fonts.NlIcon.nlfont_18.nlfont_18.drawString(subCategory.getIcon(),x + 10,y  + y2 + 14,neverlosecolor.getRGB());
 
-            Fonts.Nl.Nl_18.Nl_18.drawString(subCategory.toString(),x + 10 + Fonts.NlIcon.nlfont_18.nlfont_18.stringWidth(subCategory.getIcon()) + 8,y  + y2 + 13, Client.instance.neverloseGui.getLight()? new Color(18,18,19).getRGB() : -1);
+            Fonts.Nl.Nl_18.Nl_18.drawString(subCategory.toString(),x + 10 + Fonts.NlIcon.nlfont_18.nlfont_18.stringWidth(subCategory.getIcon()) + 8,y  + y2 + 13, NeverloseGui.getInstance().getLight()? new Color(18,18,19).getRGB() : -1);
         }
 
       //  if (subCategory == Module.Category.SubCategory.Configs)return;
@@ -114,12 +113,12 @@ public class NlSub {
         if (isSelected() && (subCategory == Module.Category.SubCategory.Configs)){
             double scrolll = getScroll();
 
-            Client.instance.neverloseGui.configs.scy = (int) MathUtil.roundToHalf(scrolll);
+            NeverloseGui.getInstance().configs.scy = (int) MathUtil.roundToHalf(scrolll);
 
             ClickGui clickGui = (ClickGui)Distance.instance.moduleManager.getModuleByClass(ClickGui.class);
             onScroll(clickGui.Scroll.get());
             //判断
-            maxScroll = Math.max(0,Client.instance.neverloseGui.configs.getYY()) ;
+            maxScroll = Math.max(0,NeverloseGui.getInstance().configs.getYY()) ;
             //
 
             int x2 = 0,i=0;
@@ -139,9 +138,9 @@ public class NlSub {
                     l = "C";
                 }
 
-                RoundedUtil.drawRoundOutline(x + 170 + x2, Client.instance.neverloseGui.y + 13,15,15,1,0.1f, Client.instance.neverloseGui.configs.loads[i] ? new Color(10,122,182) : new Color(15,15,19), Client.instance.neverloseGui.configs.loads[i] ? new Color(10,122,182) :new Color(22,22,24));
+                RoundedUtil.drawRoundOutline(x + 170 + x2, NeverloseGui.getInstance().y + 13,15,15,1,0.1f, NeverloseGui.getInstance().configs.loads[i] ? new Color(10,122,182) : new Color(15,15,19), NeverloseGui.getInstance().configs.loads[i] ? new Color(10,122,182) :new Color(22,22,24));
 
-                Fonts.ICONFONT.ICONFONT_17.ICONFONT_17.drawString(l,x + 173.5f + x2, Client.instance.neverloseGui.y + 19,-1);
+                Fonts.ICONFONT.ICONFONT_17.ICONFONT_17.drawString(l,x + 173.5f + x2, NeverloseGui.getInstance().y + 19,-1);
 
                 x2 += 20 ;
                 i++;
@@ -152,9 +151,9 @@ public class NlSub {
 
             GL11.glEnable(GL11.GL_SCISSOR_TEST);
             RenderUtil.scissor(x + 90,y + 40,w - 90,h - 40);
-            Client.instance.neverloseGui.configs.posx = x;
-            Client.instance.neverloseGui.configs.posy = y;
-            Client.instance.neverloseGui.configs.draw(mx,my);
+            NeverloseGui.getInstance().configs.posx = x;
+            NeverloseGui.getInstance().configs.posy = y;
+            NeverloseGui.getInstance().configs.draw(mx,my);
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
         }
 
@@ -193,8 +192,8 @@ public class NlSub {
                         type.name().equalsIgnoreCase("Interface") ||
                         type.name().equalsIgnoreCase("Config")) continue;
 
-                if (RenderUtil.isHovering(x + 170 + x2, Client.instance.neverloseGui.y + 13,15,15,mx,my)) {
-                    Client.instance.neverloseGui.configs.loads[i] = !Client.instance.neverloseGui.configs.loads[i];
+                if (RenderUtil.isHovering(x + 170 + x2, NeverloseGui.getInstance().y + 13,15,15,mx,my)) {
+                    NeverloseGui.getInstance().configs.loads[i] = !NeverloseGui.getInstance().configs.loads[i];
                 }
 
 
@@ -202,14 +201,14 @@ public class NlSub {
                 i++;
             }
 
-            Client.instance.neverloseGui.configs.click(mx,my,mb);
+            NeverloseGui.getInstance().configs.click(mx,my,mb);
         }
     }
 
 
 
     public boolean isSelected() {
-        return Client.instance.neverloseGui.subCategory == this.subCategory;
+        return NeverloseGui.getInstance().subCategory == this.subCategory;
     }
 
 }

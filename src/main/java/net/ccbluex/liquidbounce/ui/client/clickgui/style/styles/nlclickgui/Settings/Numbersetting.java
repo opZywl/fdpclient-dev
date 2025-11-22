@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings;
 
-import cn.distance.Client;
 import cn.distance.ui.cfont.impl.Fonts;
 
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward;
@@ -38,12 +37,12 @@ public class Numbersetting extends Downward<Numbers> {
 
     @Override
     public void draw(int mouseX, int mouseY) {
-        int mainx = Client.instance.neverloseGui.x;
-        int mainy = Client.instance.neverloseGui.y;
+        int mainx = NeverloseGui.getInstance().x;
+        int mainy = NeverloseGui.getInstance().y;
 
         int numbery = (int) (getY() + getScrollY());
 
-        HoveringAnimation.setDirection(iloveyou || RenderUtil.isHovering( Client.instance.neverloseGui.x + 170 + getX(),Client.instance.neverloseGui.y + (int) (getY() + getScrollY()) + 58,60,2,mouseX,mouseY) ? Direction.FORWARDS : Direction.BACKWARDS);
+        HoveringAnimation.setDirection(iloveyou || RenderUtil.isHovering( NeverloseGui.getInstance().x + 170 + getX(),NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 58,60,2,mouseX,mouseY) ? Direction.FORWARDS : Direction.BACKWARDS);
 
         double clamp = MathHelper.clamp_double(Minecraft.getDebugFPS() / 30, 1, 9999);
         final double percentBar = (setting.getValue().floatValue()- setting.getMinimum().floatValue()
@@ -51,9 +50,9 @@ public class Numbersetting extends Downward<Numbers> {
 
         percent = Math.max(0, Math.min(1, (float) (percent + (Math.max(0, Math.min(percentBar, 1)) - percent)* (0.2 / clamp))));
 
-        Fonts.Nl.Nl_16.Nl_16.drawString(setting.getName(),mainx + 100 + getX(),mainy + numbery + 57,Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() :-1 );
+        Fonts.Nl.Nl_16.Nl_16.drawString(setting.getName(),mainx + 100 + getX(),mainy + numbery + 57,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1 );
 
-        RoundedUtil.drawRound(mainx + 170 + getX(),mainy + numbery + 58,60,2,2,Client.instance.neverloseGui.getLight() ? new Color(230,230,230) : new Color(5,22,41));
+        RoundedUtil.drawRound(mainx + 170 + getX(),mainy + numbery + 58,60,2,2,NeverloseGui.getInstance().getLight() ? new Color(230,230,230) : new Color(5,22,41));
 
         RoundedUtil.drawRound(mainx + 170 + getX(),mainy + numbery + 58,60 * percent,2,2, new Color(12,100,138));
 
@@ -90,9 +89,9 @@ public class Numbersetting extends Downward<Numbers> {
         if (isset) {
             GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) 2.0f);
         }
-        RenderUtil.drawRoundedRect(mainx + 235 + getX(),mainy + numbery + 55,Fonts.Nl.Nl_14.Nl_14.stringWidth(isset ? finalvalue + "_" : setting.getValue().floatValue() + "") + 4,9,1,Client.instance.neverloseGui.getLight() ? new Color(255,255,255).getRGB() : new Color(0,5,19).getRGB(),1,new Color(13,24,35).getRGB());
+        RenderUtil.drawRoundedRect(mainx + 235 + getX(),mainy + numbery + 55,Fonts.Nl.Nl_14.Nl_14.stringWidth(isset ? finalvalue + "_" : setting.getValue().floatValue() + "") + 4,9,1,NeverloseGui.getInstance().getLight() ? new Color(255,255,255).getRGB() : new Color(0,5,19).getRGB(),1,new Color(13,24,35).getRGB());
 
-        Fonts.Nl.Nl_14.Nl_14.drawString(isset ? finalvalue + "_" : setting.getValue().floatValue() + "",mainx + 237 + getX(),mainy + numbery + 58,Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() :-1);
+        Fonts.Nl.Nl_14.Nl_14.drawString(isset ? finalvalue + "_" : setting.getValue().floatValue() + "",mainx + 237 + getX(),mainy + numbery + 58,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
 
         if (isset) {
         GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) -2.0f);
@@ -102,12 +101,12 @@ public class Numbersetting extends Downward<Numbers> {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        if (RenderUtil.isHovering( Client.instance.neverloseGui.x + 170 + getX(),Client.instance.neverloseGui.y + (int) (getY() + getScrollY()) + 58,60,2,mouseX,mouseY) && !isset){
+        if (RenderUtil.isHovering( NeverloseGui.getInstance().x + 170 + getX(),NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 58,60,2,mouseX,mouseY) && !isset){
             if (mouseButton == 0) {
                 iloveyou = true;
             }
         }
-        if (RenderUtil.isHovering(Client.instance.neverloseGui.x + 235 + getX(),Client.instance.neverloseGui.y + (getY() + getScrollY()) + 55,Fonts.Nl.Nl_14.Nl_14.stringWidth(isset ? finalvalue + "_" : setting.getValue().floatValue() + "") + 4,9,mouseX,mouseY)){
+        if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 235 + getX(),NeverloseGui.getInstance().y + (getY() + getScrollY()) + 55,Fonts.Nl.Nl_14.Nl_14.stringWidth(isset ? finalvalue + "_" : setting.getValue().floatValue() + "") + 4,9,mouseX,mouseY)){
             if (mouseButton == 0 ){
                 finalvalue = String.valueOf(setting.getValue().floatValue());
                 isset = true;

@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings;
 
-import cn.distance.Client;
 import cn.distance.ui.cfont.impl.Fonts;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui;
@@ -38,8 +37,8 @@ public class ColorSetting extends Downward<cn.distance.values.ColorSetting> {
 
     @Override
     public void draw(int mouseX, int mouseY) {
-        modulex = Client.instance.neverloseGui.x ;
-        moduley= Client.instance.neverloseGui.y ;
+        modulex = NeverloseGui.getInstance().x ;
+        moduley= NeverloseGui.getInstance().y ;
 
         //修复滚轮
         colory = getY() + getScrollY();
@@ -51,7 +50,7 @@ public class ColorSetting extends Downward<cn.distance.values.ColorSetting> {
         float height = 5;
 
         //Value名字
-        Fonts.Nl.Nl_16.Nl_16.drawString(setting.getName(),modulex + 100 + getX(),moduley + colory + 57,Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() :-1 );
+        Fonts.Nl.Nl_16.Nl_16.drawString(setting.getName(),modulex + 100 + getX(),moduley + colory + 57,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1 );
 
         //绘制调色板SKID
         int black = RenderUtil.getColor(0);

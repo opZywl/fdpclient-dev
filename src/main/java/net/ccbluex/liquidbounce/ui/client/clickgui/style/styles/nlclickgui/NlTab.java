@@ -35,7 +35,7 @@ public class NlTab {
 
     public void draw(int mx, int my){
 
-        Fonts.Nl_16.drawString(type.name(),x + 10,y  + y2,  Client.instance.neverloseGui.getLight() ? new Color(194,196,198).getRGB() : new Color(66,64,62).getRGB());
+        Fonts.Nl_16.drawString(type.name(),x + 10,y  + y2,  NeverloseGui.getInstance().getLight() ? new Color(194,196,198).getRGB() : new Color(66,64,62).getRGB());
 
         for (NlSub nlSub : nlSubList){
             nlSub.x = x;
@@ -80,7 +80,7 @@ public class NlTab {
             //选择面板
             for (NlSub categoryRender : nlSubList) {
                 if (RenderUtil.isHovering(categoryRender.x + 7, categoryRender.y + categoryRender.y2 + 8, 76, 15,mx,my)) {
-                    Client.instance.neverloseGui.subCategory = categoryRender.subCategory;
+                    NeverloseGui.getInstance().subCategory = categoryRender.subCategory;
                 }
             }
 
