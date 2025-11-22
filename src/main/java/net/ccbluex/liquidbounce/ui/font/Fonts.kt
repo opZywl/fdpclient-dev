@@ -118,6 +118,17 @@ object Fonts : MinecraftInstance {
 
     lateinit var fontTahomaSmall: GameFontRenderer
 
+    lateinit var Nl_15: SimpleFontRenderer
+    lateinit var Nl_16: SimpleFontRenderer
+    lateinit var Nl_18: SimpleFontRenderer
+
+    lateinit var Nl_16_ICON: SimpleFontRenderer
+
+    lateinit var NLBold_18: SimpleFontRenderer
+    lateinit var NLBold_32: SimpleFontRenderer
+    lateinit var NLBold_35: SimpleFontRenderer
+    lateinit var NLBold_28: SimpleFontRenderer
+
     private fun <T : FontRenderer> register(fontInfo: FontInfo, fontRenderer: T): T {
         FONT_REGISTRY[fontInfo] = fontRenderer
         return fontRenderer
@@ -266,6 +277,26 @@ object Fonts : MinecraftInstance {
             fontTahomaSmall = register(FontInfo(name = "Tahoma", size = 18),
                 getFontFromFile("Tahoma.ttf", 18).asGameFontRenderer())
 
+            //   NL ICON
+
+            Nl_16_ICON = registerCustomFont(FontInfo(name = "nlicon", size = 16),
+                getFontFromFile("nlicon.ttf", 16).asSimpleFontRenderer())
+
+            Nl_15 = registerCustomFont(FontInfo(name = "nlfont", size = 15),
+                getFontFromFile("nlfont.ttf", 15).asSimpleFontRenderer())
+            Nl_16 = registerCustomFont(FontInfo(name = "nlfont", size = 16),
+                getFontFromFile("nlfont.ttf", 16).asSimpleFontRenderer())
+            Nl_18 = registerCustomFont(FontInfo(name = "nlfont", size = 18),
+                getFontFromFile("nlfont.ttf", 18).asSimpleFontRenderer())
+
+            NLBold_32 = registerCustomFont(FontInfo(name = "Museo", size = 32),
+                getFontFromFile("MuseoSans_900.ttf", 32).asSimpleFontRenderer())
+            NLBold_35 = registerCustomFont(FontInfo(name = "Museo", size = 35),
+                getFontFromFile("MuseoSans_900.ttf", 35).asSimpleFontRenderer())
+            NLBold_18 = registerCustomFont(FontInfo(name = "Museo", size = 18),
+                getFontFromFile("MuseoSans_900.ttf", 18).asSimpleFontRenderer())
+            NLBold_28 = registerCustomFont(FontInfo(name = "Museo", size = 28),
+                getFontFromFile("MuseoSans_900.ttf", 28).asSimpleFontRenderer())
 
             loadCustomFonts()
         }
