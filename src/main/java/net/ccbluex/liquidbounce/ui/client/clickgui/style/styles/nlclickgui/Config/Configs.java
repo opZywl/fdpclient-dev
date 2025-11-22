@@ -290,7 +290,10 @@ public class Configs {
     }
 
     private int applyTextColor(int alpha) {
-        return new Color(255, 255, 255, alpha).getRGB();
+        Color base = NeverloseGui.getInstance().getLight()
+                ? new Color(30, 30, 30, alpha)
+                : new Color(255, 255, 255, alpha);
+        return base.getRGB();
     }
 
     private static class ButtonArea {

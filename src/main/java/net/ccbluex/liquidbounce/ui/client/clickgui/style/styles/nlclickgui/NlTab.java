@@ -34,7 +34,7 @@ public class NlTab {
 
     public void draw(int mx, int my){
 
-        Fonts.Nl_16.drawString(type.name(),x + 10,y  + y2,  NeverloseGui.getInstance().getLight() ? new Color(194,196,198).getRGB() : new Color(66,64,62).getRGB());
+        Fonts.Nl_16.drawString(type.name(),x + 10,y  + y2,  NeverloseGui.getInstance().getLight() ? new Color(60,60,60).getRGB() : new Color(66,64,62).getRGB());
 
         for (NlSub nlSub : nlSubList){
             nlSub.x = x;
