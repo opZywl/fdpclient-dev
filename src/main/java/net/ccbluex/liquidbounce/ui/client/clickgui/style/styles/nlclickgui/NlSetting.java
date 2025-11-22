@@ -28,7 +28,6 @@ public class NlSetting{
 
     public void draw(int mx, int my){
 
-        //移动面板
         if(dragging) {
             this.x = x2 + mx;
             this.y = y2 + my;
@@ -110,7 +109,6 @@ public class NlSetting{
     public void click(int mx ,int my,int mb){
 
         if (mb ==0) {
-            //移动面板
             if (RenderUtil.isHovering(x,y,160,160, mx, my)) {
                 this.x2 = (int) (x - mx);
                 this.y2 = (int) (y - my);
