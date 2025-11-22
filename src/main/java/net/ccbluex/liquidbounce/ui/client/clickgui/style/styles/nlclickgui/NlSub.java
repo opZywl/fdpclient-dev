@@ -16,6 +16,7 @@ import org.lwjgl.opengl.GL11;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui.neverlosecolor;
 
@@ -23,9 +24,11 @@ public class NlSub {
 
     public int x, y, w, h, y2;
 
+    private final Category parentCategory;
     public Category.SubCategory subCategory;
 
     public List<NlModule> nlModules = new ArrayList<>();
+    private List<NlModule> visibleModules = new ArrayList<>();
 
     public Animation alphaani = new EaseInOutQuad(150, 1, Direction.BACKWARDS);
 
@@ -35,14 +38,15 @@ public class NlSub {
 
     private Animation scrollAnimation = new SmoothStepAnimation(0, 0, Direction.BACKWARDS);
 
-    public NlSub(Category.SubCategory subCategory, int y2) {
+    public NlSub(Category parentCategory, Category.SubCategory subCategory, int y2) {
+        this.parentCategory = parentCategory;
         this.subCategory = subCategory;
         this.y2 = y2;
 
         int count = 0;
 
         for (Module holder : FDPClient.moduleManager) {
-            if (holder.getSubCategory() == subCategory) {
+            if (holder.getCategory() == parentCategory && holder.getSubCategory() == subCategory) {
                 nlModules.add(new NlModule(this, holder, count % 2 == 0));
                 count++;
             }
@@ -58,24 +62,26 @@ public class NlSub {
             RoundedUtil.drawRound(x + 7, y + y2 + 8, 76, 15, 2, NeverloseGui.getInstance().getLight() ? new Color(200, 200, 200, (int) (100 + (155 * alphaani.getOutput()))) : new Color(8, 48, 70, (int) (100 + (155 * alphaani.getOutput()))));
         }
 
-        Fonts.NlIcon.nlfont_20.getNlfont_20().drawString(subCategory.getIcon(), x + 10, y + y2 + 14, neverlosecolor.getRGB());
+        Fonts.NlIcon.nlfont_20.getNlfont_20().drawString(getIcon(), x + 10, y + y2 + 14, neverlosecolor.getRGB());
 
-        Fonts.Nl.Nl_18.getNl_18().drawString(subCategory.toString(), x + 10 + Fonts.NlIcon.nlfont_20.getNlfont_20().stringWidth(subCategory.getIcon()) + 8, y + y2 + 13, NeverloseGui.getInstance().getLight() ? new Color(18, 18, 19).getRGB() : -1);
+        Fonts.Nl.Nl_18.getNl_18().drawString(subCategory.toString(), x + 10 + Fonts.NlIcon.nlfont_20.getNlfont_20().stringWidth(getIcon()) + 8, y + y2 + 13, NeverloseGui.getInstance().getLight() ? new Color(18, 18, 19).getRGB() : -1);
 
         if (isSelected() && !(subCategory == Category.SubCategory.CONFIGS)) {
             double scrolll = getScroll();
-            for (NlModule nlModule : nlModules) {
+            visibleModules = getVisibleModules();
+            for (NlModule nlModule : visibleModules) {
                 nlModule.scrollY = (int) MathUtil.roundToHalf(scrolll);
             }
             onScroll(40);
 
-            if (!nlModules.isEmpty()) {
-                maxScroll = Math.max(0, nlModules.get(nlModules.size() - 1).y + 50 + nlModules.get(nlModules.size() - 1).posy + nlModules.get(nlModules.size() - 1).getHeight());
+            if (!visibleModules.isEmpty()) {
+                NlModule lastModule = visibleModules.get(visibleModules.size() - 1);
+                maxScroll = Math.max(0, lastModule.y + 50 + lastModule.posy + lastModule.getHeight());
             } else {
                 maxScroll = 0;
             }
 
-            for (NlModule nlModule : nlModules) {
+            for (NlModule nlModule : visibleModules) {
                 nlModule.x = x;
                 nlModule.y = y;
                 nlModule.w = w;
@@ -174,6 +180,41 @@ public class NlSub {
     }
 
     public boolean isSelected() {
-        return NeverloseGui.getInstance().subCategory == this.subCategory;
+        return NeverloseGui.getInstance().selectedSub == this;
+    }
+
+    public List<NlModule> getLayoutModules() {
+        return visibleModules.isEmpty() && NeverloseGui.getInstance().isSearching() ? visibleModules : (visibleModules.isEmpty() ? nlModules : visibleModules);
+    }
+
+    private List<NlModule> getVisibleModules() {
+        if (!NeverloseGui.getInstance().isSearching()) {
+            return nlModules;
+        }
+        String query = NeverloseGui.getInstance().getSearchText().toLowerCase();
+        return nlModules.stream().filter(module -> module.module.getName().toLowerCase().contains(query)).collect(Collectors.toList());
+    }
+
+    private String getIcon() {
+        if (subCategory == Category.SubCategory.GENERAL) {
+            String icon = decodeHtmlIcon(parentCategory.getHtmlIcon());
+            if (icon != null) {
+                return icon;
+            }
+        }
+        return subCategory.getIcon();
+    }
+
+    private String decodeHtmlIcon(String htmlIcon) {
+        if (htmlIcon == null || !htmlIcon.startsWith("&#") || !htmlIcon.endsWith(";")) {
+            return null;
+        }
+        try {
+            String hex = htmlIcon.substring(3, htmlIcon.length() - 1);
+            int code = Integer.parseInt(hex, 16);
+            return String.valueOf((char) code);
+        } catch (NumberFormatException ignored) {
+            return null;
+        }
     }
 }

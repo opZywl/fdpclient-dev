@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.util.ChatAllowedCharacters;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
@@ -42,7 +43,7 @@ public class NeverloseGui extends GuiScreen {
 
     public static Color neverlosecolor = new Color(28,133,192);
 
-    public Category.SubCategory subCategory = null;
+    public NlSub selectedSub = null;
 
     public List<NlTab> nlTabs = new ArrayList<>();
 
@@ -52,6 +53,7 @@ public class NeverloseGui extends GuiScreen {
     private int y2;
 
     private boolean dragging,settings,search;
+    private String searchText = "";
 
     private final ResourceLocation defaultAvatar = new ResourceLocation(FDPClient.CLIENT_NAME.toLowerCase() + "/64.png");
     private ResourceLocation avatarTexture = defaultAvatar;
@@ -121,7 +123,7 @@ public class NeverloseGui extends GuiScreen {
 
 
         if (Loader && !nlTabs.isEmpty()){
-            subCategory = nlTabs.get(0).nlSubList.get(0).subCategory;
+            selectedSub = nlTabs.get(0).nlSubList.get(0);
             Loader = false;
         }
 
@@ -195,6 +197,7 @@ public class NeverloseGui extends GuiScreen {
 
         if (search || !searchanim.isDone()){
             RenderUtil.drawRoundedRect((float) (x + w - 30 -(85 * searchanim.getOutput() )), (float) (y + 12), (float) (80 * searchanim.getOutput()),15,1,new Color(3,13,26).getRGB(),1,NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : new Color(28,133,192).getRGB());
+            Fonts.Nl_16.drawString(searchText, (float) (x + w - 26 -(85 * searchanim.getOutput() )), y + 15, NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : -1);
         }
 
         if (settings){
@@ -257,6 +260,9 @@ public class NeverloseGui extends GuiScreen {
             if (RenderUtil.isHovering(x + w - 30,y + 18,Fonts.NlIcon.nlfont_20.getNlfont_20().stringWidth("j"),Fonts.NlIcon.nlfont_20.getNlfont_20().getHeight(),mouseX,mouseY)){
                 search = !search;
                 dragging = false;
+                if (!search) {
+                    searchText = "";
+                }
             }
 
         }
@@ -281,8 +287,34 @@ public class NeverloseGui extends GuiScreen {
 
     @Override
     protected void keyTyped(char typedChar, int keyCode) throws IOException {
+        if (search) {
+            if (keyCode == 1) {
+                search = false;
+                searchText = "";
+                return;
+            }
+            if (keyCode == 14) {
+                if (!searchText.isEmpty()) {
+                    searchText = searchText.substring(0, searchText.length() - 1);
+                }
+                return;
+            }
+            if (ChatAllowedCharacters.isAllowedCharacter(typedChar)) {
+                searchText = searchText + typedChar;
+                return;
+            }
+        }
+
         nlTabs.forEach( e -> e.keyTyped(typedChar,keyCode));
         super.keyTyped(typedChar, keyCode);
+    }
+
+    public boolean isSearching() {
+        return search && !searchText.isEmpty();
+    }
+
+    public String getSearchText() {
+        return searchText;
     }
 
 
