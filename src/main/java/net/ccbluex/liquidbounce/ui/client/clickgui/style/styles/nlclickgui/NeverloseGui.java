@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
 import net.ccbluex.liquidbounce.FDPClient;
-import net.ccbluex.liquidbounce.features.module.Module;
+import net.ccbluex.liquidbounce.features.module.Category;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Config.Configs;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Config.NeverloseConfigManager;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.BoolSetting;
@@ -45,7 +45,7 @@ public class NeverloseGui extends GuiScreen {
 
     public static Color neverlosecolor = new Color(28,133,192);
 
-    public Module.Category.SubCategory subCategory = null;
+    public Category.SubCategory subCategory = null;
 
     public List<NlTab> nlTabs = new ArrayList<>();
 
@@ -74,13 +74,13 @@ public class NeverloseGui extends GuiScreen {
 
          int y2 = 0;
          int u2 =0;
-        for (Module.Category type : Module.Category.values()){
+        for (Category type : Category.values()){
             if(type.name().equalsIgnoreCase("World") ||
             type.name().equalsIgnoreCase("Interface")) continue;
 
             nlTabs.add(new NlTab(type,u2 + y2 + 40));
 
-            for (Module.Category.SubCategory subCategory: type.getSubCategories()){
+            for (Category.SubCategory subCategory: type.getSubCategories()){
                 //计算所有sub间隔
                 u2 += 17;
             }
@@ -189,7 +189,7 @@ public class NeverloseGui extends GuiScreen {
 
     //    RoundedUtil.drawRound(x + 3 ,y + 274,20,20,10f,new Color(-1));
 
-        Fonts.Nl_18.drawString("younkoo",x + 29 ,y + 275,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
+        Fonts.Nl_18.drawString(mc.getSession().getUsername(),x + 29 ,y + 275,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
 
         Fonts.Nl_16.drawString(ChatFormatting.GRAY + "Till: " + ChatFormatting.RESET + new SimpleDateFormat("dd:MM").format(new Date()) + " " + new SimpleDateFormat("HH:mm").format(new Date()),x + 29 ,y + 287,neverlosecolor.getRGB());
 
@@ -211,9 +211,9 @@ public class NeverloseGui extends GuiScreen {
             nlTab.draw(mouseX,mouseY);
         }
 
-        Fonts.nlfont_24.drawString("x", (float) (x + w - 50 + (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,settings ? neverlosecolor.getRGB() : NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() :-1);
+        Fonts.NlIcon.getNlfont_20().getNlfont_20().drawString("x", (float) (x + w - 50 + (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,settings ? neverlosecolor.getRGB() : NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() :-1);
 
-        Fonts.nlfont_20.drawString("j",x + w - 30,y + 18,search ? neverlosecolor.getRGB() :NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : -1);
+        Fonts.NlIcon.getNlfont_20().getNlfont_20().drawString("j",x + w - 30,y + 18,search ? neverlosecolor.getRGB() :NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : -1);
 
         searchanim.setDirection(search ? Direction.FORWARDS : Direction.BACKWARDS);
 
@@ -227,9 +227,9 @@ public class NeverloseGui extends GuiScreen {
 
         RoundedUtil.drawRoundOutline(x + 105,y+10,45 + 10,16 + 5,2,0.1f,NeverloseGui.INSTANCE.getLight() ? new Color(245,245,245) : new Color(13,13,11),RenderUtil.isHovering(x + 105, y + 10, 45 + 10, 16 + 5, mouseX, mouseY) ? neverlosecolor :new Color(19,19,17));
 
-        Fonts.Nl_20.drawString( "Save",x + 128,y+18 ,NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
+        Fonts.Nl_18.drawString( "Save",x + 128,y+18 ,NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
 
-        Fonts.nlfont_20.drawString("K",x + 110,y+19, NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
+        Fonts.NlIcon.getNlfont_20().getNlfont_20().drawString("K",x + 110,y+19, NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
 
         GL11.glPopMatrix();
         super.drawScreen(mouseX, mouseY, partialTicks);
