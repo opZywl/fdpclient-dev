@@ -3,12 +3,11 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Conf
 import net.ccbluex.liquidbounce.FDPClient;
 import net.ccbluex.liquidbounce.config.SettingsUtils;
 import net.ccbluex.liquidbounce.handler.api.ClientApi;
-import net.ccbluex.liquidbounce.handler.api.autoSettingsList;
+import net.ccbluex.liquidbounce.utils.client.ClientUtils;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
-import net.ccbluex.liquidbounce.utils.client.ClientUtils;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -130,8 +129,9 @@ public class Configs {
                 Fonts.InterBold_26.drawString("No local configurations available.", configX, configY, applyTextColor(alpha));
             }
         } else {
-            if (autoSettingsList != null && !autoSettingsList.isEmpty()) {
-                for (Object autoSetting : autoSettingsList) {
+            List<?> remoteSettings = ClientApi.INSTANCE.getAutoSettingsList();
+            if (remoteSettings != null && !remoteSettings.isEmpty()) {
+                for (Object autoSetting : remoteSettings) {
                     String settingName = getSettingName(autoSetting);
                     String settingId = getSettingId(autoSetting);
                     drawConfigButton(mx, my, buttonWidth, buttonHeight, configX, configY, () -> loadOnlineConfig(settingId, settingName));
@@ -165,7 +165,8 @@ public class Configs {
             File[] localConfigs = FDPClient.fileManager.getSettingsDir().listFiles((dir, name) -> name.endsWith(".txt"));
             itemCount = localConfigs == null ? 0 : localConfigs.length;
         } else {
-            itemCount = autoSettingsList == null ? 0 : autoSettingsList.size();
+            List<?> remoteSettings = ClientApi.INSTANCE.getAutoSettingsList();
+            itemCount = remoteSettings == null ? 0 : remoteSettings.size();
         }
         if (itemCount == 0) {
             return rowHeight + 5;
@@ -177,23 +178,23 @@ public class Configs {
     private void loadLocalConfig(File file) {
         String configName = file.getName().replace(".txt", "");
         try {
-            ClientUtils.displayChatMessage("Loading local configuration: " + configName + "...");
+            ClientUtils.INSTANCE.displayChatMessage("Loading local configuration: " + configName + "...");
             String localConfigContent = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
-            SettingsUtils.applyScript(localConfigContent);
-            ClientUtils.displayChatMessage("Local configuration " + configName + " loaded successfully!");
+            SettingsUtils.INSTANCE.applyScript(localConfigContent);
+            ClientUtils.INSTANCE.displayChatMessage("Local configuration " + configName + " loaded successfully!");
         } catch (IOException e) {
-            ClientUtils.displayChatMessage("Error loading local configuration: " + e.getMessage());
+            ClientUtils.INSTANCE.displayChatMessage("Error loading local configuration: " + e.getMessage());
         }
     }
 
     private void loadOnlineConfig(String settingId, String configName) {
         try {
-            ClientUtils.displayChatMessage("Loading configuration: " + configName + "...");
+            ClientUtils.INSTANCE.displayChatMessage("Loading configuration: " + configName + "...");
             String configScript = ClientApi.INSTANCE.getSettingsScript("legacy", settingId);
-            SettingsUtils.applyScript(configScript);
-            ClientUtils.displayChatMessage("Configuration " + configName + " loaded successfully!");
+            SettingsUtils.INSTANCE.applyScript(configScript);
+            ClientUtils.INSTANCE.displayChatMessage("Configuration " + configName + " loaded successfully!");
         } catch (Exception e) {
-            ClientUtils.displayChatMessage("Error loading configuration: " + e.getMessage());
+            ClientUtils.INSTANCE.displayChatMessage("Error loading configuration: " + e.getMessage());
         }
     }
 
@@ -220,9 +221,9 @@ public class Configs {
     private void openFolder() {
         try {
             Desktop.getDesktop().open(FDPClient.fileManager.getSettingsDir());
-            ClientUtils.displayChatMessage("Opening configuration folder...");
+            ClientUtils.INSTANCE.displayChatMessage("Opening configuration folder...");
         } catch (IOException e) {
-            ClientUtils.displayChatMessage("Error opening folder: " + e.getMessage());
+            ClientUtils.INSTANCE.displayChatMessage("Error opening folder: " + e.getMessage());
         }
     }
 
