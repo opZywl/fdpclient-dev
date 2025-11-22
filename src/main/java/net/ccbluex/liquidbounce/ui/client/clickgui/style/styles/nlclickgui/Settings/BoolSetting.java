@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings;
 
-import cn.distance.Client;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward;
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Animation;
@@ -30,12 +30,12 @@ public class BoolSetting extends Downward<Option> {
 
     @Override
     public void draw(int mouseX, int mouseY) {
-        int mainx = Client.instance.neverloseGui.x;
-        int mainy = Client.instance.neverloseGui.y;
+        int mainx = NeverloseGui.getInstance().x;
+        int mainy = NeverloseGui.getInstance().y;
 
         int booly = (int) (getY() + getScrollY());
 
-        Fonts.Nl_16.drawString(setting.getName(),mainx + 100 + getX(),mainy + booly + 57,Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() :-1 );
+        Fonts.Nl_16.drawString(setting.getName(),mainx + 100 + getX(),mainy + booly + 57,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1 );
 
         Color darkRectColor = new Color(29, 29, 39, 255);
 
@@ -45,12 +45,12 @@ public class BoolSetting extends Downward<Option> {
 
         toggleAnimation.setDirection(setting.getValue()? Direction.FORWARDS : Direction.BACKWARDS);
 
-        HoveringAnimation.setDirection(RenderUtil.isHovering(Client.instance.neverloseGui.x + 265 - 32 + getX(), Client.instance.neverloseGui.y + (int) (getY() + getScrollY()) + 57, 16, 4.5f,mouseX,mouseY)? Direction.FORWARDS : Direction.BACKWARDS);
+        HoveringAnimation.setDirection(RenderUtil.isHovering(NeverloseGui.getInstance().x + 265 - 32 + getX(), NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 57, 16, 4.5f,mouseX,mouseY)? Direction.FORWARDS : Direction.BACKWARDS);
 
 
         //背景
         RoundedUtil.drawRound(mainx + 265 - 32 + getX(),mainy + booly + 57, 16, 4.5f,
-                2,Client.instance.neverloseGui.getLight()? RenderUtil.interpolateColorC(new Color(230,230,230), new Color(0,112,186), (float) toggleAnimation.getOutput()) : RenderUtil.interpolateColorC(RenderUtil.applyOpacity(darkRectHover, .5f), accentCircle, (float) toggleAnimation.getOutput()));
+                2,NeverloseGui.getInstance().getLight()? RenderUtil.interpolateColorC(new Color(230,230,230), new Color(0,112,186), (float) toggleAnimation.getOutput()) : RenderUtil.interpolateColorC(RenderUtil.applyOpacity(darkRectHover, .5f), accentCircle, (float) toggleAnimation.getOutput()));
 
         //Glow
         RenderUtil.fakeCircleGlow((float) (mainx + 265 + 3 - 32 + getX() +( (11)* toggleAnimation.getOutput())),
@@ -61,13 +61,13 @@ public class BoolSetting extends Downward<Option> {
         //画圆
         RoundedUtil.drawRound((float) (mainx + 265 - 32 + getX() +( (11)* toggleAnimation.getOutput())),
                 mainy + booly + 57 -1, 6.5f,
-                6.5f, 3, setting.getValue() ?  neverlosecolor : Client.instance.neverloseGui.getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
+                6.5f, 3, setting.getValue() ?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
     }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (mouseButton ==0 ){
-            if (RenderUtil.isHovering(Client.instance.neverloseGui.x + 265 - 32 + getX(), Client.instance.neverloseGui.y + (int) (getY() + getScrollY()) + 57, 16, 4.5f,mouseX,mouseY)){
+            if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 265 - 32 + getX(), NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 57, 16, 4.5f,mouseX,mouseY)){
                 setting.setValue(!setting.value);
             }
         }

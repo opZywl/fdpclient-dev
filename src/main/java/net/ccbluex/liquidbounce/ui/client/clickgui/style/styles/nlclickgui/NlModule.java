@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
-import cn.distance.Client;
 import cn.distance.ui.cfont.impl.Fonts;
 import net.ccbluex.liquidbounce.config.Value;
 import net.ccbluex.liquidbounce.features.module.Module;
@@ -119,11 +118,11 @@ public class NlModule {
 
         posy = getY();
 
-        RoundedUtil.drawRound(x + 95 + posx,y + 50 + posy + scrollY,160,getHeight(),2, Client.instance.neverloseGui.getLight() ? new Color(245,245,245) : new Color(3,13,26));
+        RoundedUtil.drawRound(x + 95 + posx,y + 50 + posy + scrollY,160,getHeight(),2, NeverloseGui.getInstance().getLight() ? new Color(245,245,245) : new Color(3,13,26));
 
-        Fonts.Nl.Nl_18.Nl_18.drawString(module.getName(),x + 100 + posx,y + posy + 55 + scrollY,Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() : -1);
+        Fonts.Nl.Nl_18.Nl_18.drawString(module.getName(),x + 100 + posx,y + posy + 55 + scrollY,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() : -1);
 
-        RoundedUtil.drawRound(x + 100 + posx,y + 65 + posy + scrollY,150,0.7f,0, Client.instance.neverloseGui.getLight() ? new Color(213,213,213) : new Color(9,21,34));
+        RoundedUtil.drawRound(x + 100 + posx,y + 65 + posy + scrollY,150,0.7f,0, NeverloseGui.getInstance().getLight() ? new Color(213,213,213) : new Color(9,21,34));
 
         HoveringAnimation.setDirection(RenderUtil.isHovering(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,mx,my) ? Direction.FORWARDS : Direction.BACKWARDS );
 
@@ -141,7 +140,7 @@ public class NlModule {
         rendertoggle();
 
         if (module.getValues().isEmpty()) {
-            Fonts.Nl.Nl_22.Nl_22.drawString("No Settings.", x + 100 + posx, y + posy + scrollY + 72, Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() :-1);
+            Fonts.Nl.Nl_22.Nl_22.drawString("No Settings.", x + 100 + posx, y + posy + scrollY + 72, NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
         }
     }
 
@@ -169,7 +168,7 @@ public class NlModule {
         //画圆
         RoundedUtil.drawRound((float) (x + 265 - 32 + posx +( (11)* toggleAnimation.getOutput())),
                 y + posy + scrollY + 56 -1, 6.5f,
-                6.5f, 3, module.isEnabled()?  neverlosecolor : Client.instance.neverloseGui.getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
+                6.5f, 3, module.isEnabled()?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
     }
 
     public void keyTyped(char typedChar,int keyCode){

@@ -1,32 +1,22 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
+import com.mojang.realmsclient.gui.ChatFormatting;
+import net.ccbluex.liquidbounce.FDPClient;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Config.Configs;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Animation;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Direction;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.EaseInOutQuad;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.blur.BloomUtil;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.blur.GaussianBlur;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
-
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Config.NeverloseConfigManager;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.BoolSetting;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.ColorSetting;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.Numbersetting;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.StringsSetting;
-
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.EaseInOutQuad;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.SmoothStepAnimation;
-
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Animation;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Direction;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.DecelerateAnimation;
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.EaseInOutQuad;
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.SmoothStepAnimation;
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.blur.BloomUtil;
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.blur.GaussianBlur;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
-
-import com.mojang.realmsclient.gui.ChatFormatting;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer;
 import net.minecraft.client.Minecraft;
@@ -38,16 +28,16 @@ import org.lwjgl.opengl.GL11;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 public class NeverloseGui extends GuiScreen {
+
+    public static NeverloseGui INSTANCE;
 
     public int x,y,w,h;
 
@@ -73,8 +63,10 @@ public class NeverloseGui extends GuiScreen {
 
 
     public Configs configs = new Configs();
+    private final NeverloseConfigManager configManager = new NeverloseConfigManager();
 
     public NeverloseGui(){
+        INSTANCE = this;
         x = 100;
         y = 100;
         w = 430;
@@ -118,25 +110,7 @@ public class NeverloseGui extends GuiScreen {
     @Override
     public void initGui() {
         super.initGui();
-        final File mcDataDir = Minecraft.getMinecraft().mcDataDir;
-
-        final File dir = new File(mcDataDir, "Distance");
-
-        final File configsdir = new File(dir, "Configs");
-
-        for (File c : Objects.requireNonNull(configsdir.listFiles())){
-            if (c.getName().contains(".distance") && Client.instance.getFileManager().configsList.contains(new cn.distance.config.Configs(c.getName().split("\\.")[0])))
-                continue;
-
-            try {
-                //只要结尾带.miku的
-                if (c.getName().contains(".distance")) {
-                    Client.instance.getFileManager().configsList.add(new cn.distance.config.Configs(c.getName().split("\\.")[0]));
-                }
-            } catch (NullPointerException e) {
-                e.printStackTrace();
-            }
-        }
+        configManager.refresh();
 
         alphaani = new EaseInOutQuad(300,0.6,Direction.FORWARDS);
     }
@@ -237,25 +211,25 @@ public class NeverloseGui extends GuiScreen {
             nlTab.draw(mouseX,mouseY);
         }
 
-        Fonts.nlfont_24.drawString("x", (float) (x + w - 50 + (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,settings ? neverlosecolor.getRGB() : Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() :-1);
+        Fonts.nlfont_24.drawString("x", (float) (x + w - 50 + (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,settings ? neverlosecolor.getRGB() : NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() :-1);
 
-        Fonts.nlfont_20.drawString("j",x + w - 30,y + 18,search ? neverlosecolor.getRGB() :Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() : -1);
+        Fonts.nlfont_20.drawString("j",x + w - 30,y + 18,search ? neverlosecolor.getRGB() :NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : -1);
 
         searchanim.setDirection(search ? Direction.FORWARDS : Direction.BACKWARDS);
 
         if (search || !searchanim.isDone()){
-            RenderUtil.drawRoundedRect((float) (x + w - 30 -(85 * searchanim.getOutput() )), (float) (y + 12), (float) (80 * searchanim.getOutput()),15,1,new Color(3,13,26).getRGB(),1,Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() : new Color(28,133,192).getRGB());
+            RenderUtil.drawRoundedRect((float) (x + w - 30 -(85 * searchanim.getOutput() )), (float) (y + 12), (float) (80 * searchanim.getOutput()),15,1,new Color(3,13,26).getRGB(),1,NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : new Color(28,133,192).getRGB());
         }
 
         if (settings){
             nlSetting.draw(mouseX,mouseY);
         }
 
-        RoundedUtil.drawRoundOutline(x + 105,y+10,45 + 10,16 + 5,2,0.1f,Client.instance.neverloseGui.getLight() ? new Color(245,245,245) : new Color(13,13,11),RenderUtil.isHovering(x + 105, y + 10, 45 + 10, 16 + 5, mouseX, mouseY) ? neverlosecolor :new Color(19,19,17));
+        RoundedUtil.drawRoundOutline(x + 105,y+10,45 + 10,16 + 5,2,0.1f,NeverloseGui.INSTANCE.getLight() ? new Color(245,245,245) : new Color(13,13,11),RenderUtil.isHovering(x + 105, y + 10, 45 + 10, 16 + 5, mouseX, mouseY) ? neverlosecolor :new Color(19,19,17));
 
-        Fonts.Nl_20.drawString( "Save",x + 128,y+18 ,Client.instance.neverloseGui.getLight()? new Color(18,18,19).getRGB() : -1);
+        Fonts.Nl_20.drawString( "Save",x + 128,y+18 ,NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
 
-        Fonts.nlfont_20.drawString("K",x + 110,y+19, Client.instance.neverloseGui.getLight()? new Color(18,18,19).getRGB() : -1);
+        Fonts.nlfont_20.drawString("K",x + 110,y+19, NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
 
         GL11.glPopMatrix();
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -285,7 +259,12 @@ public class NeverloseGui extends GuiScreen {
             }
 
             if (RenderUtil.isHovering(x + 105, y + 10, 45 + 10, 16 + 5, mouseX, mouseY)) {
-                Client.instance.getFileManager().saveConfig(Client.instance.getFileManager().isUsing().name);
+                if (configManager.getActiveConfig() != null) {
+                    configManager.saveConfig(configManager.getActiveConfig().getName());
+                } else {
+                    FDPClient.fileManager.saveAllConfigs();
+                    configManager.refresh();
+                }
             }
 
             if (RenderUtil.isHovering((float) (x + w - 50+ (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,Fonts.NlIcon.nlfont_24.nlfont_24.stringWidth("x"),Fonts.NlIcon.nlfont_24.nlfont_24.getHeight(),mouseX,mouseY)){
@@ -326,6 +305,14 @@ public class NeverloseGui extends GuiScreen {
         super.keyTyped(typedChar, keyCode);
     }
 
+
+    public static NeverloseGui getInstance() {
+        return INSTANCE;
+    }
+
+    public NeverloseConfigManager getConfigManager() {
+        return configManager;
+    }
 
     public boolean getLight(){
         return nlSetting.Light;

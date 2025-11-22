@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings;
 
-import cn.distance.Client;
 
 import cn.distance.values.Mode;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward;
@@ -25,16 +24,16 @@ public class StringsSetting extends Downward<Mode> {
 
     @Override
     public void draw(int mouseX, int mouseY) {
-        int mainx = Client.instance.neverloseGui.x;
-        int mainy = Client.instance.neverloseGui.y;
+        int mainx = NeverloseGui.getInstance().x;
+        int mainy = NeverloseGui.getInstance().y;
 
         int modey = (int) (getY() + getScrollY());
 
-        Fonts.Nl_16.drawString(setting.getName(),mainx + 100 + getX(),mainy + modey + 57,Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() :-1 );
+        Fonts.Nl_16.drawString(setting.getName(),mainx + 100 + getX(),mainy + modey + 57,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1 );
 
-        RenderUtil.drawRoundedRect(mainx + 170 + getX(),mainy + modey + 54, 80,14,2,Client.instance.neverloseGui.getLight() ? new Color(255,255,255).getRGB() : new Color(0,5,19).getRGB(),1,new Color(13,24,35).getRGB());
+        RenderUtil.drawRoundedRect(mainx + 170 + getX(),mainy + modey + 54, 80,14,2,NeverloseGui.getInstance().getLight() ? new Color(255,255,255).getRGB() : new Color(0,5,19).getRGB(),1,new Color(13,24,35).getRGB());
 
-        Fonts.Nl_16.drawString(setting.getModeAsString(),mainx + 173 + getX(),mainy + modey + 59,Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() :-1);
+        Fonts.Nl_16.drawString(setting.getModeAsString(),mainx + 173 + getX(),mainy + modey + 59,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
 
 
         double val = getDebugFPS() / 8.3;
@@ -49,7 +48,7 @@ public class StringsSetting extends Downward<Mode> {
             anim -= 3 / val;
         }
 
-        RenderUtil.drawArrow(mainx + 240+ getX(),mainy + modey + 55 + anim, (int) 2,  Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() : new Color(200,200,200).getRGB(), length);
+        RenderUtil.drawArrow(mainx + 240+ getX(),mainy + modey + 55 + anim, (int) 2,  NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() : new Color(200,200,200).getRGB(), length);
 
         if (setting.openList) {
             //循环添加Strings
@@ -58,13 +57,13 @@ public class StringsSetting extends Downward<Mode> {
             GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) 2.0f);
 
            // RoundedUtil.drawRound(mainx + 91 + getX(), mainy + 35 +12 + y, 70, setting.getModes().length * 12f, 2, new Color(45, 46, 53));
-            RenderUtil.drawRoundedRect(mainx + 170 + getX(),mainy + modey + 54 + 14, 80, setting.getModes().length * 12f,2, Client.instance.neverloseGui.getLight() ? new Color(255,255,255).getRGB() :new Color(0,5,19).getRGB(),1,new Color(13,24,35).getRGB());
+            RenderUtil.drawRoundedRect(mainx + 170 + getX(),mainy + modey + 54 + 14, 80, setting.getModes().length * 12f,2, NeverloseGui.getInstance().getLight() ? new Color(255,255,255).getRGB() :new Color(0,5,19).getRGB(),1,new Color(13,24,35).getRGB());
             for (Enum option : setting.getModes()) {
                 if (option.equals(setting.getValue())){
                   //  RoundedUtil.drawRound(mainx + 91 + 69 + getX(),mainy + 38 + 11 +  y + setting.getModeListinde(option)* 12 , 1,8,1,new Color(ClickGui.colorValue.getValue()));
                 }
 
-                Fonts.Nl_15.drawString(option.name(),mainx + 173 + getX(),mainy + modey + 59 + 12 + setting.getModeListinde(option)* 12 , option.equals(setting.getValue()) ? NeverloseGui.neverlosecolor.getRGB() : Client.instance.neverloseGui.getLight() ? new Color(95,95,95).getRGB() : -1);
+                Fonts.Nl_15.drawString(option.name(),mainx + 173 + getX(),mainy + modey + 59 + 12 + setting.getModeListinde(option)* 12 , option.equals(setting.getValue()) ? NeverloseGui.neverlosecolor.getRGB() : NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() : -1);
             }
 
             GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) -2.0f);
@@ -75,19 +74,19 @@ public class StringsSetting extends Downward<Mode> {
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        if (mouseButton == 1 && RenderUtil.isHovering(Client.instance.neverloseGui.x + 170 + getX(), Client.instance.neverloseGui.y +  (int) (getY() + getScrollY()) + 54, 80,14,mouseX,mouseY)){
+        if (mouseButton == 1 && RenderUtil.isHovering(NeverloseGui.getInstance().x + 170 + getX(), NeverloseGui.getInstance().y +  (int) (getY() + getScrollY()) + 54, 80,14,mouseX,mouseY)){
             setting.openList = !setting.openList;
         }
 
         if (mouseButton == 0) {
             if (this.setting.openList //在这个x里面
-                    && mouseX >=Client.instance.neverloseGui.x + 170 + getX() // 最小x
-                    && mouseX <= Client.instance.neverloseGui.x + 170 + getX() + 80 // 最大x
+                    && mouseX >=NeverloseGui.getInstance().x + 170 + getX() // 最小x
+                    && mouseX <= NeverloseGui.getInstance().x + 170 + getX() + 80 // 最大x
             ) {
                 //循环判断点击
                 for (int i = 0; i < setting.getModes().length; i++) {
                     //判断Y
-                    final int v = (Client.instance.neverloseGui.y + (int) (getY() + getScrollY()) + 59 + 12  + i * 12);
+                    final int v = (NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 59 + 12  + i * 12);
 
                     if (mouseY >= v && mouseY <= v + 12) {
                         this.setting.setValue(this.setting.getModeGet(i));
