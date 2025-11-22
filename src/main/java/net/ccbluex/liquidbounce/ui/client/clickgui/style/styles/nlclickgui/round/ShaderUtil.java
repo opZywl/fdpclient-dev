@@ -48,7 +48,7 @@ public class ShaderUtil {
     }
 
     public ShaderUtil(String fragmentShaderLoc) {
-        this(fragmentShaderLoc, "Distance/shaders/vertex.vsh");
+        this(fragmentShaderLoc, "fdpclient/shaders/vertex.vsh");
     }
 
 

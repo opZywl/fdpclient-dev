@@ -18,7 +18,7 @@ import static net.minecraft.client.renderer.OpenGlHelper.glUniform1;
 
 public class BloomUtil {
 
-    public static ShaderUtil gaussianBloom = new ShaderUtil("Distance/shaders/bloom.frag");
+    public static ShaderUtil gaussianBloom = new ShaderUtil("fdpclient/shaders/bloom.frag");
 
     public static Framebuffer framebuffer = new Framebuffer(1, 1, false);
 

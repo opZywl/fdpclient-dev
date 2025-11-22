@@ -14,8 +14,8 @@ import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgu
 
 public class GradientUtil {
 
-    private static final ShaderUtil gradientMaskShader = new ShaderUtil("Distance/shaders/gradientMask.frag");
-    private static final ShaderUtil gradientShader = new ShaderUtil("Distance/shaders/gradient.frag");
+    private static final ShaderUtil gradientMaskShader = new ShaderUtil("fdpclient/shaders/gradientMask.frag");
+    private static final ShaderUtil gradientShader = new ShaderUtil("fdpclient/shaders/gradient.frag");
 
 
 

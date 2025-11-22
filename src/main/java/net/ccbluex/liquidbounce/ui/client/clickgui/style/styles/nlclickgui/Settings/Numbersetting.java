@@ -1,7 +1,8 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings;
 
-import cn.distance.ui.cfont.impl.Fonts;
-
+import net.ccbluex.liquidbounce.config.FloatValue;
+import net.ccbluex.liquidbounce.config.IntValue;
+import net.ccbluex.liquidbounce.config.Value;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule;
@@ -10,7 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.anima
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Direction;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.DecelerateAnimation;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
-import cn.distance.values.Numbers;
+import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.MathHelper;
 import org.lwjgl.input.Keyboard;
@@ -18,19 +19,16 @@ import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 
-import static cn.distance.ui.clickguis.nlclickgui.MathUtil.incValue;
-
-public class Numbersetting extends Downward<Numbers> {
-    public Numbersetting(Numbers s, NlModule moduleRender) {
+public class Numbersetting extends Downward<Value<?>> {
+    public Numbersetting(Value<?> s, NlModule moduleRender) {
         super(s, moduleRender);
     }
 
     public float percent = 0;
 
-    private boolean iloveyou,isset;
+    private boolean iloveyou, isset;
 
     private String finalvalue;
-
 
     public Animation HoveringAnimation = new DecelerateAnimation(225, 1, Direction.BACKWARDS);
 
@@ -42,81 +40,89 @@ public class Numbersetting extends Downward<Numbers> {
 
         int numbery = (int) (getY() + getScrollY());
 
-        HoveringAnimation.setDirection(iloveyou || RenderUtil.isHovering( NeverloseGui.getInstance().x + 170 + getX(),NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 58,60,2,mouseX,mouseY) ? Direction.FORWARDS : Direction.BACKWARDS);
+        HoveringAnimation.setDirection(iloveyou || RenderUtil.isHovering(NeverloseGui.getInstance().x + 170 + getX(), NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 58, 60, 2, mouseX, mouseY) ? Direction.FORWARDS : Direction.BACKWARDS);
 
-        double clamp = MathHelper.clamp_double(Minecraft.getDebugFPS() / 30, 1, 9999);
-        final double percentBar = (setting.getValue().floatValue()- setting.getMinimum().floatValue()
-        ) / (setting.getMaximum().floatValue() - setting.getMinimum().floatValue());
+        double clamp = MathHelper.clamp_double(Minecraft.getDebugFPS() / 30.0, 1, 9999);
 
-        percent = Math.max(0, Math.min(1, (float) (percent + (Math.max(0, Math.min(percentBar, 1)) - percent)* (0.2 / clamp))));
+        // Correção: Casting seguro para obter min/max
+        double minimum = 0;
+        double maximum = 1;
 
-        Fonts.Nl.Nl_16.Nl_16.drawString(setting.getName(),mainx + 100 + getX(),mainy + numbery + 57,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1 );
+        if (setting instanceof IntValue) {
+            minimum = ((IntValue) setting).getMinimum();
+            maximum = ((IntValue) setting).getMaximum();
+        } else if (setting instanceof FloatValue) {
+            minimum = ((FloatValue) setting).getMinimum();
+            maximum = ((FloatValue) setting).getMaximum();
+        }
 
-        RoundedUtil.drawRound(mainx + 170 + getX(),mainy + numbery + 58,60,2,2,NeverloseGui.getInstance().getLight() ? new Color(230,230,230) : new Color(5,22,41));
+        double current = ((Number) setting.get()).doubleValue();
+        final double percentBar = (current - minimum) / (maximum - minimum);
 
-        RoundedUtil.drawRound(mainx + 170 + getX(),mainy + numbery + 58,60 * percent,2,2, new Color(12,100,138));
+        percent = Math.max(0, Math.min(1, (float) (percent + (Math.max(0, Math.min(percentBar, 1)) - percent) * (0.2 / clamp))));
 
-        RoundedUtil.drawCircle(mainx + 167 + getX() + (60 * percent),mainy + numbery + 56, (float) (5.5f + (0.5f* HoveringAnimation.getOutput())), NeverloseGui.neverlosecolor);
+        // Correção: Fonts.INSTANCE
+        Fonts.INSTANCE.getNl_16().drawString(setting.getName(), mainx + 100 + getX(), mainy + numbery + 57, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
 
-        //设置新的值
-        if (iloveyou){
+        RoundedUtil.drawRound(mainx + 170 + getX(), mainy + numbery + 58, 60, 2, 2, NeverloseGui.getInstance().getLight() ? new Color(230, 230, 230) : new Color(5, 22, 41));
 
-            if (setting.value instanceof Float) {
-                float percentt = Math.min(1, Math.max(0, ((mouseX - (mainx + 170 + getX())) / 99)* 1.55f));
-                float newValue = (percentt * (setting.getMaximum().floatValue()
-                        - setting.getMinimum().floatValue())) + setting.getMinimum().floatValue();
-                float set = incValue(newValue, setting.getIncrement().floatValue());
+        RoundedUtil.drawRound(mainx + 170 + getX(), mainy + numbery + 58, 60 * percent, 2, 2, new Color(12, 100, 138));
 
-                setting.value = set;
-            } else if (setting.value instanceof Double) {
-                float percentt = Math.min(1, Math.max(0, ((mouseX - (mainx + 170 + getX())) / 99)* 1.55f));
-                double newValue =  ((percentt * (setting.getMaximum().doubleValue()
-                                        - setting.getMinimum().intValue())) + setting.getMinimum().doubleValue());
-                double set = incValue(newValue, setting.getIncrement().doubleValue());
+        RoundedUtil.drawCircle(mainx + 167 + getX() + (60 * percent), mainy + numbery + 56, (float) (5.5f + (0.5f * HoveringAnimation.getOutput())), NeverloseGui.neverlosecolor);
 
-                setting.value = set;
-            } else if (setting.value instanceof Integer) {
-                float percentt = Math.min(1, Math.max(0, ((mouseX - (mainx + 170 + getX())) / 99)* 1.55f));
-                double newValue =  ((percentt * (setting.getMaximum().floatValue()
-                        - setting.getMinimum().floatValue())) + setting.getMinimum().floatValue());
+        // Definir novos valores via arraste
+        if (iloveyou) {
+            float percentt = Math.min(1, Math.max(0, ((mouseX - (mainx + 170 + getX())) / 99.0f) * 1.55f));
+            double newValue = ((percentt * (maximum - minimum)) + minimum);
 
-                int set = (int) incValue(newValue, setting.getIncrement().intValue());
-
-                setting.value = set;
+            // Correção: Método set() com 2 argumentos e casting correto
+            if (setting instanceof IntValue) {
+                ((IntValue) setting).set((int) Math.round(newValue), true);
+            } else if (setting instanceof FloatValue) {
+                ((FloatValue) setting).set((float) newValue, true);
             }
         }
 
         if (isset) {
             GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) 2.0f);
         }
-        RenderUtil.drawRoundedRect(mainx + 235 + getX(),mainy + numbery + 55,Fonts.Nl.Nl_14.Nl_14.stringWidth(isset ? finalvalue + "_" : setting.getValue().floatValue() + "") + 4,9,1,NeverloseGui.getInstance().getLight() ? new Color(255,255,255).getRGB() : new Color(0,5,19).getRGB(),1,new Color(13,24,35).getRGB());
 
-        Fonts.Nl.Nl_14.Nl_14.drawString(isset ? finalvalue + "_" : setting.getValue().floatValue() + "",mainx + 237 + getX(),mainy + numbery + 58,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
+        // Correção: Nl_14 substituído por Nl_15 e uso de Fonts.INSTANCE
+        int stringWidth = Fonts.INSTANCE.getNl_15().stringWidth(isset ? finalvalue + "_" : current + "") + 4;
+
+        RenderUtil.drawRoundedRect(mainx + 235 + getX(), mainy + numbery + 55, stringWidth, 9, 1, NeverloseGui.getInstance().getLight() ? new Color(255, 255, 255).getRGB() : new Color(0, 5, 19).getRGB(), 1, new Color(13, 24, 35).getRGB());
+
+        Fonts.INSTANCE.getNl_15().drawString(isset ? finalvalue + "_" : current + "", mainx + 237 + getX(), mainy + numbery + 58, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
 
         if (isset) {
-        GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) -2.0f);
+            GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) -2.0f);
         }
-
     }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
-        if (RenderUtil.isHovering( NeverloseGui.getInstance().x + 170 + getX(),NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 58,60,2,mouseX,mouseY) && !isset){
+        // Correção: Recalcular current pois é uma variável local
+        double current = ((Number) setting.get()).doubleValue();
+
+        if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 170 + getX(), NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 58, 60, 2, mouseX, mouseY) && !isset) {
             if (mouseButton == 0) {
                 iloveyou = true;
             }
         }
-        if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 235 + getX(),NeverloseGui.getInstance().y + (getY() + getScrollY()) + 55,Fonts.Nl.Nl_14.Nl_14.stringWidth(isset ? finalvalue + "_" : setting.getValue().floatValue() + "") + 4,9,mouseX,mouseY)){
-            if (mouseButton == 0 ){
-                finalvalue = String.valueOf(setting.getValue().floatValue());
+
+        // Correção: Fonts.INSTANCE e Nl_15
+        int stringWidth = Fonts.INSTANCE.getNl_15().stringWidth(isset ? finalvalue + "_" : current + "") + 4;
+
+        if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 235 + getX(), NeverloseGui.getInstance().y + (getY() + getScrollY()) + 55, stringWidth, 9, mouseX, mouseY)) {
+            if (mouseButton == 0) {
+                finalvalue = String.valueOf(current);
                 isset = true;
             }
-        }else {
-            if (mouseButton ==0 ){
+        } else {
+            if (mouseButton == 0) {
                 isset = false;
             }
         }
-        
     }
 
     @Override
@@ -126,42 +132,51 @@ public class Numbersetting extends Downward<Numbers> {
 
     @Override
     public void keyTyped(char typedChar, int keyCode) {
-        //输入
+        // Input
         if (isset) {
             if (keyCode == Keyboard.KEY_ESCAPE) {
-                isset = (false);
+                isset = false;
             } else if (keynumbers(keyCode)) {
-                //确保只有一个小数点
+                // Assegurar apenas um ponto decimal
                 if (!(keyCode == Keyboard.KEY_PERIOD && finalvalue.contains("."))) {
                     finalvalue = (finalvalue + typedChar);
                 }
             }
 
-            //删除
+            // Backspace
             if (Keyboard.isKeyDown(Keyboard.KEY_BACK) && finalvalue.length() >= 1) {
                 finalvalue = (finalvalue.substring(0, finalvalue.length() - 1));
             }
 
-            if (keyCode == Keyboard.KEY_RETURN){
-                if(setting.value instanceof Float) {
-                    setting.value = (Float.parseFloat(finalvalue) > setting.getMaximum().floatValue() ? setting.getMaximum().floatValue() : Math.max(Float.parseFloat(finalvalue), setting.getMinimum().floatValue()));
-                } else if (setting.value instanceof Integer) {
-                    setting.value = (Integer.parseInt(finalvalue) > setting.getMaximum().intValue() ? setting.getMaximum().intValue() : Math.max(Integer.parseInt(finalvalue), setting.getMinimum().intValue()));
-                } else if (setting.value instanceof Double) {
-                    setting.value = (Double.parseDouble(finalvalue) > setting.getMaximum().doubleValue() ? setting.getMaximum().doubleValue() : Math.max(Double.parseDouble(finalvalue), setting.getMinimum().doubleValue()));
+            if (keyCode == Keyboard.KEY_RETURN) {
+                try {
+                    // Correção: Lógica de casting e set() substituindo o acesso direto a 'value'
+                    if (setting instanceof FloatValue) {
+                        FloatValue floatSetting = (FloatValue) setting;
+                        float val = Float.parseFloat(finalvalue);
+                        float max = floatSetting.getMaximum();
+                        float min = floatSetting.getMinimum();
+                        floatSetting.set(Math.min(Math.max(val, min), max), true); // set com notificação
+                    } else if (setting instanceof IntValue) {
+                        IntValue intSetting = (IntValue) setting;
+                        int val = Integer.parseInt(finalvalue);
+                        int max = intSetting.getMaximum();
+                        int min = intSetting.getMinimum();
+                        intSetting.set(Math.min(Math.max(val, min), max), true); // set com notificação
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignorar erros de parse
                 }
-                //设置 输入的
-                isset = (false);
+
+                isset = false;
             }
         }
 
         super.keyTyped(typedChar, keyCode);
     }
 
-
-    //判断输入数字
-    public boolean keynumbers(int keyCode){
+    // Verificar input numérico
+    public boolean keynumbers(int keyCode) {
         return (keyCode == Keyboard.KEY_0 || keyCode == Keyboard.KEY_1 || keyCode == Keyboard.KEY_2 || keyCode == Keyboard.KEY_3 || keyCode == Keyboard.KEY_4 || keyCode == Keyboard.KEY_6 || keyCode == Keyboard.KEY_5 || keyCode == Keyboard.KEY_7 || keyCode == Keyboard.KEY_8 || keyCode == Keyboard.KEY_9 || keyCode == Keyboard.KEY_PERIOD || keyCode == Keyboard.KEY_MINUS);
     }
-
 }

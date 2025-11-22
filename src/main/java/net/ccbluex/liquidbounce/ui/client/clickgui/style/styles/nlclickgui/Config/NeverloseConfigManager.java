@@ -35,7 +35,7 @@ public class NeverloseConfigManager {
 
     public void refresh() {
         configs.clear();
-        final File[] configFiles = FDPClient.fileManager.getSettingsDir().listFiles((dir, name) -> name.endsWith(".json"));
+        final File[] configFiles = FDPClient.fileManager.getSettingsDir().listFiles((dir, name) -> name.endsWith(".json") || name.endsWith(".txt"));
         if (configFiles != null) {
             for (File file : configFiles) {
                 configs.add(new NeverloseConfig(removeExtension(file.getName()), file));
@@ -49,11 +49,13 @@ public class NeverloseConfigManager {
     }
 
     public void loadConfig(String name) {
-        FDPClient.fileManager.load(name);
+        // CORREÇÃO AQUI: Adicionado 'true' como segundo argumento (notify)
+        FDPClient.fileManager.load(name, true);
         refresh();
     }
 
     public void saveConfig(String name) {
+        // Aqui já estava correto (passando 'false')
         FDPClient.fileManager.load(name, false);
         FDPClient.fileManager.saveAllConfigs();
         refresh();
@@ -62,10 +64,10 @@ public class NeverloseConfigManager {
     public void deleteConfig(NeverloseConfig config) {
         final File file = config.getFile();
         if (file.exists() && !file.delete()) {
-            ClientUtils.LOGGER.warn("Failed to delete config file: {}", file.getName());
+            ClientUtils.INSTANCE.getLOGGER().warn("Failed to delete config file: {}", file.getName());
         }
         if (Objects.equals(FDPClient.fileManager.getNowConfig(), config.getName())) {
-            FDPClient.fileManager.load("default", false);
+            FDPClient.fileManager.load("default", false); // Já estava correto
             FDPClient.fileManager.saveAllConfigs();
         }
         refresh();
@@ -76,10 +78,10 @@ public class NeverloseConfigManager {
         if (!file.exists()) {
             try {
                 file.createNewFile();
-                FDPClient.fileManager.load(name, false);
+                FDPClient.fileManager.load(name, false); // Já estava correto
                 FDPClient.fileManager.saveAllConfigs();
             } catch (IOException e) {
-                ClientUtils.LOGGER.error("Failed to create config {}", name, e);
+                ClientUtils.INSTANCE.getLOGGER().error("Failed to create config {}", name, e);
             }
             refresh();
         }

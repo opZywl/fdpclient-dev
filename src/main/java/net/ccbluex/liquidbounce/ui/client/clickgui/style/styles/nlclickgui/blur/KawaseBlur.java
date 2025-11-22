@@ -11,8 +11,8 @@ import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgu
 
 public class KawaseBlur {
 
-    public static ShaderUtil kawaseDown = new ShaderUtil("Distance/shaders/kawaseDown.frag");
-    public static ShaderUtil kawaseUp = new ShaderUtil("Distance/shaders/kawaseUp.frag");
+    public static ShaderUtil kawaseDown = new ShaderUtil("fdpclient/shaders/kawaseDown.frag");
+    public static ShaderUtil kawaseUp = new ShaderUtil("fdpclient/shaders/kawaseUp.frag");
 
     public static Framebuffer framebuffer = new Framebuffer(1, 1, false);
 

@@ -1,6 +1,10 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
-import cn.distance.ui.cfont.impl.Fonts;
+import net.ccbluex.liquidbounce.config.BoolValue;
+import net.ccbluex.liquidbounce.config.ColorValue;
+import net.ccbluex.liquidbounce.config.FloatValue;
+import net.ccbluex.liquidbounce.config.IntValue;
+import net.ccbluex.liquidbounce.config.ListValue;
 import net.ccbluex.liquidbounce.config.Value;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.BoolSetting;
@@ -13,12 +17,12 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.anima
 
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Animation;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Direction;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.DecelerateAnimation;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
+import net.ccbluex.liquidbounce.ui.font.Fonts;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -61,17 +65,17 @@ public class NlModule {
         //临时变量计算value
 
         for(Value setting : module.getValues()) {
-            if(setting instanceof Option){
-                this.downwards.add(new BoolSetting((Option) setting,this));
+            if(setting instanceof BoolValue){
+                this.downwards.add(new BoolSetting((BoolValue) setting,this));
             }
-            if(setting instanceof Numbers){
-                this.downwards.add(new Numbersetting((Numbers) setting,this));
+            if(setting instanceof FloatValue || setting instanceof IntValue){
+                this.downwards.add(new Numbersetting(setting,this));
             }
-            if(setting instanceof Mode){
-                this.downwards.add(new StringsSetting((Mode) setting ,this));
+            if(setting instanceof ListValue){
+                this.downwards.add(new StringsSetting((ListValue) setting ,this));
             }
-            if (setting instanceof ColorSetting){
-                this.downwards.add(new cn.distance.ui.clickguis.nlclickgui.Settings.ColorSetting((ColorSetting) setting,this));
+            if (setting instanceof ColorValue){
+                this.downwards.add(new ColorSetting((ColorValue) setting,this));
             }
         }
     }
@@ -79,7 +83,7 @@ public class NlModule {
     public int getHeight() {
         //获取背景的height
         int h = 20;
-        for (Value s : module.getValues().stream().filter(Value::getDisplayableFunc).collect(Collectors.toList())){
+        for (Value s : module.getValues().stream().filter(Value::shouldRender).collect(Collectors.toList())){
             h += 20;
         }
         if (module.getValues().isEmpty())
@@ -120,7 +124,7 @@ public class NlModule {
 
         RoundedUtil.drawRound(x + 95 + posx,y + 50 + posy + scrollY,160,getHeight(),2, NeverloseGui.getInstance().getLight() ? new Color(245,245,245) : new Color(3,13,26));
 
-        Fonts.Nl.Nl_18.Nl_18.drawString(module.getName(),x + 100 + posx,y + posy + 55 + scrollY,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() : -1);
+        Fonts.Nl.Nl_18.getNl_18().drawString(module.getName(),x + 100 + posx,y + posy + 55 + scrollY,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() : -1);
 
         RoundedUtil.drawRound(x + 100 + posx,y + 65 + posy + scrollY,150,0.7f,0, NeverloseGui.getInstance().getLight() ? new Color(213,213,213) : new Color(9,21,34));
 
@@ -128,19 +132,19 @@ public class NlModule {
 
         //value的高度
         int cheigt = 20;
-        for (Downward downward : downwards.stream().filter(s -> s.setting.getDisplayableFunc()).collect(Collectors.toList())){
+        for (Downward downward : downwards.stream().filter(s -> s.setting.shouldRender()).collect(Collectors.toList())){
             downward.setX(posx);
             downward.setY(getY() + cheigt);
             cheigt += 20;
 
             downward.draw(mx,my);
         }
-       // RoundedUtil.drawRound(x + 120 ,y + 50,170,50,2,new Color(3,13,26));
+        // RoundedUtil.drawRound(x + 120 ,y + 50,170,50,2,new Color(3,13,26));
 
         rendertoggle();
 
         if (module.getValues().isEmpty()) {
-            Fonts.Nl.Nl_22.Nl_22.drawString("No Settings.", x + 100 + posx, y + posy + scrollY + 72, NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
+            Fonts.Nl.Nl_22.getNl_22().drawString("No Settings.", x + 100 + posx, y + posy + scrollY + 72, NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
         }
     }
 
@@ -153,7 +157,7 @@ public class NlModule {
 
         Color accentCircle =  RenderUtil.darker(neverlosecolor, .5f);
 
-        toggleAnimation.setDirection(module.isEnabled()? Direction.FORWARDS : Direction.BACKWARDS);
+        toggleAnimation.setDirection(module.getState()? Direction.FORWARDS : Direction.BACKWARDS);
 
         //背景
         RoundedUtil.drawRound(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,
@@ -168,7 +172,7 @@ public class NlModule {
         //画圆
         RoundedUtil.drawRound((float) (x + 265 - 32 + posx +( (11)* toggleAnimation.getOutput())),
                 y + posy + scrollY + 56 -1, 6.5f,
-                6.5f, 3, module.isEnabled()?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
+                6.5f, 3, module.getState()?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
     }
 
     public void keyTyped(char typedChar,int keyCode){
@@ -176,11 +180,11 @@ public class NlModule {
     }
 
     public void released(int mx ,int my,int mb) {
-        downwards.stream().filter(e -> e.setting.getDisplayableFunc()).forEach(e -> e.mouseReleased(mx,my,mb));
+        downwards.stream().filter(e -> e.setting.shouldRender()).forEach(e -> e.mouseReleased(mx,my,mb));
     }
 
     public void click(int mx ,int my,int mb){
-        downwards.stream().filter(e -> e.setting.getDisplayableFunc()).forEach(e -> e.mouseClicked(mx,my,mb));
+        downwards.stream().filter(e -> e.setting.shouldRender()).forEach(e -> e.mouseClicked(mx,my,mb));
 
         if (RenderUtil.isHovering(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,mx,my) && mb == 0){
             module.toggle();

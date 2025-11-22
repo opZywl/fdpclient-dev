@@ -16,7 +16,7 @@ import static org.lwjgl.opengl.GL11.*;
 
 public class GaussianBlur {
 
-    public static ShaderUtil blurShader = new ShaderUtil("Distance/shaders/gaussian.frag");
+    public static ShaderUtil blurShader = new ShaderUtil("fdpclient/shaders/gaussian.frag");
 
     public static Framebuffer framebuffer = new Framebuffer(1, 1, false);
 

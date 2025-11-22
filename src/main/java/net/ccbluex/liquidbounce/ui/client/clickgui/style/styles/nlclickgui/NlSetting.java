@@ -1,13 +1,17 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
+import net.ccbluex.liquidbounce.FDPClient;
+import net.ccbluex.liquidbounce.handler.api.ClientUpdate;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
 import com.mojang.realmsclient.gui.ChatFormatting;
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer;
 
 import java.awt.*;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Properties;
 
 import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui.neverlosecolor;
 
@@ -32,25 +36,47 @@ public class NlSetting{
 
         RoundedUtil.drawRound(x,y,160,160,3,Light ? new Color(238,240,235,230) : new Color(7,13,23,230));
 
-        Fonts.Nl_15.drawString("About Distance",x + 13,y + 4,Light ? new Color(95,95,95).getRGB() :-1);
+        Fonts.Nl_15.drawString("About " + FDPClient.CLIENT_NAME,x + 13,y + 4,Light ? new Color(95,95,95).getRGB() :-1);
 
         Fonts.Nl_16_ICON.drawString("x",x + 2, y + 4,neverlosecolor.getRGB());
 
         if (!Light) {
-            NLOutline("distance.me".toUpperCase(), Fonts.NLBold_35, x, y + 30, -1, neverlosecolor.getRGB(), 160, 0.7f);
+            NLOutline(FDPClient.CLIENT_NAME, Fonts.NLBold_35, x, y + 30, -1, neverlosecolor.getRGB(), 160, 0.7f);
         }else {
-            Fonts.NLBold_35.drawCenteredString("distance.me".toUpperCase(),x + 80,y+30 ,new Color(51,51,51).getRGB());
+            Fonts.NLBold_35.drawCenteredString(FDPClient.CLIENT_NAME,x + 80,y+30 ,new Color(51,51,51).getRGB());
         }
 
-        Fonts.Nl_18.drawString((!Light ? ChatFormatting.WHITE : ChatFormatting.BLACK) + "Version: " + ChatFormatting.RESET + "Dev",x + 10,y + 65,neverlosecolor.getRGB());
+        String version = FDPClient.INSTANCE.getClientVersionText();
+        if (version == null || version.equals("unknown")) {
+            version = FDPClient.CLIENT_VERSION;
+        }
 
-        Fonts.Nl_18.drawString((!Light ? ChatFormatting.WHITE : ChatFormatting.BLACK) + "Build Type: " + ChatFormatting.RESET + "Dev",x + 10,y + 65 + Fonts.Nl_18.getHeight() + 5,neverlosecolor.getRGB());
+        Fonts.Nl_18.drawString((!Light ? ChatFormatting.WHITE : ChatFormatting.BLACK) + "Version: " + ChatFormatting.RESET + version,x + 10,y + 65,neverlosecolor.getRGB());
 
-        Fonts.Nl_18.drawString((!Light ? ChatFormatting.WHITE : ChatFormatting.BLACK) + "Build Date: " + ChatFormatting.RESET + new SimpleDateFormat("dd:MM").format(new Date()) + " " + new SimpleDateFormat("HH:mm").format(new Date()),x + 10,y + 65 + (Fonts.Nl_18.getHeight() + 5) * 2,neverlosecolor.getRGB());
+        String buildType = FDPClient.IN_DEV ? "Development" : "Release";
+        Fonts.Nl_18.drawString((!Light ? ChatFormatting.WHITE : ChatFormatting.BLACK) + "Build Type: " + ChatFormatting.RESET + buildType,x + 10,y + 65 + Fonts.Nl_18.getHeight() + 5,neverlosecolor.getRGB());
 
-        Fonts.Nl_18.drawString((!Light ? ChatFormatting.WHITE : ChatFormatting.BLACK) + "Registered to: " + ChatFormatting.RESET + "younkoo",x + 10,y + 65 + (Fonts.Nl_18.getHeight() + 5) * 3,neverlosecolor.getRGB());
+        Properties gitInfo = ClientUpdate.INSTANCE.getGitInfo();
+        String rawBuildTime = gitInfo.getProperty("git.build.time", "Unknown");
+        String formattedBuildTime = rawBuildTime;
+        try {
+            formattedBuildTime = DateTimeFormatter.ofPattern("dd:MM HH:mm")
+                    .withZone(ZoneId.systemDefault())
+                    .format(Instant.parse(rawBuildTime));
+        } catch (Exception first) {
+            try {
+                formattedBuildTime = DateTimeFormatter.ofPattern("dd:MM HH:mm")
+                        .withZone(ZoneId.systemDefault())
+                        .format(Instant.parse(rawBuildTime.replace(" ", "T")));
+            } catch (Exception ignored) {
+            }
+        }
 
-        Fonts.Nl_18.drawCenteredString("distance.reborn @ 2023", x+ (160/2) , y + 65 + (Fonts.Nl_18.getHeight() + 5) * 4 + 7, Light ? new Color(95,95,95).getRGB() :-1);
+        Fonts.Nl_18.drawString((!Light ? ChatFormatting.WHITE : ChatFormatting.BLACK) + "Build Date: " + ChatFormatting.RESET + formattedBuildTime,x + 10,y + 65 + (Fonts.Nl_18.getHeight() + 5) * 2,neverlosecolor.getRGB());
+
+        Fonts.Nl_18.drawString((!Light ? ChatFormatting.WHITE : ChatFormatting.BLACK) + "Registered to: " + ChatFormatting.RESET + FDPClient.CLIENT_AUTHOR,x + 10,y + 65 + (Fonts.Nl_18.getHeight() + 5) * 3,neverlosecolor.getRGB());
+
+        Fonts.Nl_18.drawCenteredString("fdpclient @ 2023", x+ (160/2) , y + 65 + (Fonts.Nl_18.getHeight() + 5) * 4 + 7, Light ? new Color(95,95,95).getRGB() :-1);
 
         Fonts.Nl_18.drawString("Style",x + 10,y + 145,Light ? new Color(95,95,95).getRGB() :-1);
 

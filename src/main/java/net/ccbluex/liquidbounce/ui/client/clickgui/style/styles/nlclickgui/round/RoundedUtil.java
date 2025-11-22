@@ -14,8 +14,8 @@ import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgu
 public class RoundedUtil {
     Minecraft mc = Minecraft.getMinecraft();
     public static ShaderUtil roundedShader = new ShaderUtil("roundedRect");
-    public static ShaderUtil roundedOutlineShader = new ShaderUtil("Distance/shaders/roundRectOutline.frag");
-    private static final ShaderUtil roundedTexturedShader = new ShaderUtil("Distance/shaders/roundRectTextured.frag");
+    public static ShaderUtil roundedOutlineShader = new ShaderUtil("fdpclient/shaders/roundRectOutline.frag");
+    private static final ShaderUtil roundedTexturedShader = new ShaderUtil("fdpclient/shaders/roundRectTextured.frag");
     private static final ShaderUtil roundedGradientShader = new ShaderUtil("roundedRectGradient");
 
     public static void drawRound(float x, float y, float width, float height, float radius, Color color) {

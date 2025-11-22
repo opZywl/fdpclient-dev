@@ -16,11 +16,13 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.*;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.glu.GLU;
 
 import java.awt.*;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -230,9 +232,16 @@ public class RenderUtil
         GlStateManager.color(color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, alpha / 255f);
     }
     public static double[] project2D(final double x, final double y, final double z) {
-        FloatBuffer objectPosition = ActiveRenderInfo.objectCoords();
+        final FloatBuffer objectPosition = BufferUtils.createFloatBuffer(3);
+        final FloatBuffer modelView = BufferUtils.createFloatBuffer(16);
+        final FloatBuffer projection = BufferUtils.createFloatBuffer(16);
+        final IntBuffer viewport = BufferUtils.createIntBuffer(16);
+
+        GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX, modelView);
+        GL11.glGetFloat(GL11.GL_PROJECTION_MATRIX, projection);
+        GL11.glGetInteger(GL11.GL_VIEWPORT, viewport);
         ScaledResolution sc = new ScaledResolution(mc);
-        if (GLU.gluProject((float)x, (float)y, (float)z, ActiveRenderInfo.modelview(), ActiveRenderInfo.projection(), ActiveRenderInfo.viewport(), objectPosition))
+        if (GLU.gluProject((float)x, (float)y, (float)z, modelView, projection, viewport, objectPosition))
             return new double[]{ objectPosition.get(0) / sc.getScaleFactor(), objectPosition.get(1) / sc.getScaleFactor(),
                     objectPosition.get(2) };
         return null;
@@ -1148,10 +1157,10 @@ public class RenderUtil
                 GlStateManager.enableDepth();
             }
 
-            if (Reflector.ForgeItem_getDurabilityForDisplay.exists()) {
-                double health = Reflector.callDouble(stack.getItem(), Reflector.ForgeItem_getDurabilityForDisplay, new Object[]{stack});;
-                int j = (int)Math.round(13.0 - health * 13.0);
-                int i = (int)Math.round(255.0 - health * 255.0);
+            if (stack.isItemDamaged()) {
+                double durability = (double)stack.getItemDamage() / (double)stack.getMaxDamage();
+                int j = (int)Math.round(13.0 - durability * 13.0);
+                int i = (int)Math.round(255.0 - durability * 255.0);
                 GlStateManager.disableLighting();
                 GlStateManager.disableDepth();
                 GlStateManager.disableTexture2D();
@@ -1231,7 +1240,7 @@ public class RenderUtil
     public RenderUtil() {
         super();
     }
-    
+
     public static int width() {
         return new ScaledResolution(Minecraft.getMinecraft()).getScaledWidth();
     }
@@ -1619,21 +1628,21 @@ public class RenderUtil
         GL11.glDisable(3042);
         GL11.glDisable(2848);
     }
-    
+
     public static void pre() {
         GL11.glDisable(2929);
         GL11.glDisable(3553);
         GL11.glEnable(3042);
         GL11.glBlendFunc(770, 771);
     }
-    
+
     public static void post() {
         GL11.glDisable(3042);
         GL11.glEnable(3553);
         GL11.glEnable(2929);
         GL11.glColor3d(1.0, 1.0, 1.0);
     }
-    
+
     public static void startDrawing() {
         GL11.glEnable(3042);
         GL11.glEnable(3042);
@@ -1643,7 +1652,7 @@ public class RenderUtil
         GL11.glDisable(2929);
 //        Helper.mc.entityRenderer.setupCameraTransform(Helper.mc.timer.renderPartialTicks, 0);
     }
-    
+
     public static void stopDrawing() {
         GL11.glDisable(3042);
         GL11.glEnable(3553);
@@ -1651,7 +1660,7 @@ public class RenderUtil
         GL11.glDisable(3042);
         GL11.glEnable(2929);
     }
-    
+
     public static Color blend(final Color color1, final Color color2, final double ratio) {
         final float r = (float)ratio;
         final float ir = 1.0f - r;
@@ -1662,11 +1671,11 @@ public class RenderUtil
         final Color color3 = new Color(rgb1[0] * r + rgb2[0] * ir, rgb1[1] * r + rgb2[1] * ir, rgb1[2] * r + rgb2[2] * ir);
         return color3;
     }
-    
+
     public static void drawLine(final Vec2f start, final Vec2f end, final float width) {
         drawLine(start.getX(), start.getY(), end.getX(), end.getY(), width);
     }
-    
+
     public static void drawLine(final Vec3f start, final Vec3f end, final float width) {
         drawLine((float)start.getX(), (float)start.getY(), (float)start.getZ(), (float)end.getX(), (float)end.getY(), (float)end.getZ(), width);
     }

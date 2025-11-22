@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
 import net.ccbluex.liquidbounce.FDPClient;
-import net.ccbluex.liquidbounce.features.module.Module;
+import net.ccbluex.liquidbounce.features.module.Category;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Config.Configs;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Config.NeverloseConfigManager;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.BoolSetting;
@@ -45,7 +45,7 @@ public class NeverloseGui extends GuiScreen {
 
     public static Color neverlosecolor = new Color(28,133,192);
 
-    public Module.Category.SubCategory subCategory = null;
+    public Category.SubCategory subCategory = null;
 
     public List<NlTab> nlTabs = new ArrayList<>();
 
@@ -72,15 +72,15 @@ public class NeverloseGui extends GuiScreen {
         w = 430;
         h = 300;
 
-         int y2 = 0;
-         int u2 =0;
-        for (Module.Category type : Module.Category.values()){
+        int y2 = 0;
+        int u2 =0;
+        for (Category type : Category.values()){
             if(type.name().equalsIgnoreCase("World") ||
-            type.name().equalsIgnoreCase("Interface")) continue;
+                    type.name().equalsIgnoreCase("Interface")) continue;
 
             nlTabs.add(new NlTab(type,u2 + y2 + 40));
 
-            for (Module.Category.SubCategory subCategory: type.getSubCategories()){
+            for (Category.SubCategory subCategory: type.getSubCategories()){
                 //计算所有sub间隔
                 u2 += 17;
             }
@@ -169,13 +169,13 @@ public class NeverloseGui extends GuiScreen {
 
         RoundedUtil.drawRound(x + 89 ,y,1,h,0,nlSetting.Light ? new Color(213,213,213) : new Color(26,26,26));
 
-      // RoundedUtil.drawRound(x ,y + 200,40,1,0,nlSetting.Light ? new Color(213,213,213) : new Color(26,26,26));
+        // RoundedUtil.drawRound(x ,y + 200,40,1,0,nlSetting.Light ? new Color(213,213,213) : new Color(26,26,26));
 
         //
 
-     //   StencilUtil.initStencilToWrite();
-      //  RenderUtil.drawRect2(x  ,y + 274- 4,25,20 + 8, -1);
-     //   StencilUtil.readStencilBuffer(1);
+        //   StencilUtil.initStencilToWrite();
+        //  RenderUtil.drawRect2(x  ,y + 274- 4,25,20 + 8, -1);
+        //   StencilUtil.readStencilBuffer(1);
 
         GL11.glEnable(GL11.GL_BLEND);
 
@@ -183,21 +183,21 @@ public class NeverloseGui extends GuiScreen {
 
         RoundedUtil.drawRoundTextured(x + 4 ,y + 274,20,20,10f,1);
 
-     //   StencilUtil.uninitStencilBuffer();
+        //   StencilUtil.uninitStencilBuffer();
 
         //
 
-    //    RoundedUtil.drawRound(x + 3 ,y + 274,20,20,10f,new Color(-1));
+        //    RoundedUtil.drawRound(x + 3 ,y + 274,20,20,10f,new Color(-1));
 
-        Fonts.Nl_18.drawString("younkoo",x + 29 ,y + 275,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
+        Fonts.Nl_18.drawString(mc.getSession().getUsername(),x + 29 ,y + 275,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
 
         Fonts.Nl_16.drawString(ChatFormatting.GRAY + "Till: " + ChatFormatting.RESET + new SimpleDateFormat("dd:MM").format(new Date()) + " " + new SimpleDateFormat("HH:mm").format(new Date()),x + 29 ,y + 287,neverlosecolor.getRGB());
 
         if (!nlSetting.Light) {
-            NLOutline("Distance", Fonts.NLBold_28, x + 7, y + 12, -1, neverlosecolor.getRGB(), 0.7f);
+            NLOutline("FDPCLIENT", Fonts.NLBold_28, x + 7, y + 12, -1, neverlosecolor.getRGB(), 0.7f);
 
         }else {
-            Fonts.NLBold_28.drawString("Distance", x + 8, y + 12, new Color(51,51,51).getRGB(), false);
+            Fonts.NLBold_28.drawString("FDP", x + 8, y + 12, new Color(51,51,51).getRGB(), false);
         }
 
         RoundedUtil.drawRound(x ,y + 265,89,1 , 0,nlSetting.Light ? new Color(213,213,213) :new Color(26,26,26));
@@ -211,9 +211,9 @@ public class NeverloseGui extends GuiScreen {
             nlTab.draw(mouseX,mouseY);
         }
 
-        Fonts.nlfont_24.drawString("x", (float) (x + w - 50 + (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,settings ? neverlosecolor.getRGB() : NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() :-1);
+        Fonts.NlIcon.nlfont_20.getNlfont_20().drawString("x", (float) (x + w - 50 + (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,settings ? neverlosecolor.getRGB() : NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() :-1);
 
-        Fonts.nlfont_20.drawString("j",x + w - 30,y + 18,search ? neverlosecolor.getRGB() :NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : -1);
+        Fonts.NlIcon.nlfont_20.getNlfont_20().drawString("j",x + w - 30,y + 18,search ? neverlosecolor.getRGB() :NeverloseGui.INSTANCE.getLight() ? new Color(95,95,95).getRGB() : -1);
 
         searchanim.setDirection(search ? Direction.FORWARDS : Direction.BACKWARDS);
 
@@ -227,9 +227,9 @@ public class NeverloseGui extends GuiScreen {
 
         RoundedUtil.drawRoundOutline(x + 105,y+10,45 + 10,16 + 5,2,0.1f,NeverloseGui.INSTANCE.getLight() ? new Color(245,245,245) : new Color(13,13,11),RenderUtil.isHovering(x + 105, y + 10, 45 + 10, 16 + 5, mouseX, mouseY) ? neverlosecolor :new Color(19,19,17));
 
-        Fonts.Nl_20.drawString( "Save",x + 128,y+18 ,NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
+        Fonts.Nl_18.drawString( "Save",x + 128,y+18 ,NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
 
-        Fonts.nlfont_20.drawString("K",x + 110,y+19, NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
+        Fonts.NlIcon.nlfont_20.getNlfont_20().drawString("K",x + 110,y+19, NeverloseGui.INSTANCE.getLight()? new Color(18,18,19).getRGB() : -1);
 
         GL11.glPopMatrix();
         super.drawScreen(mouseX, mouseY, partialTicks);
@@ -267,14 +267,17 @@ public class NeverloseGui extends GuiScreen {
                 }
             }
 
-            if (RenderUtil.isHovering((float) (x + w - 50+ (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,Fonts.NlIcon.nlfont_24.nlfont_24.stringWidth("x"),Fonts.NlIcon.nlfont_24.nlfont_24.getHeight(),mouseX,mouseY)){
+            // CORREÇÃO ABAIXO: Adicionado .getNlfont_24() antes de .stringWidth e .getHeight
+            if (RenderUtil.isHovering((float) (x + w - 50+ (search || !searchanim.isDone() ? -83 * searchanim.getOutput() : 0)),y + 17,Fonts.NlIcon.nlfont_24.getNlfont_24().stringWidth("x"),Fonts.NlIcon.nlfont_24.getNlfont_24().getHeight(),mouseX,mouseY)){
                 settings = !settings;
                 dragging = false;
                 nlSetting.x = this.x + this.w + 20;
                 nlSetting.y = this.y;
             }
 
-            if (RenderUtil.isHovering(x + w - 30,y + 18,Fonts.nlfont_20.stringWidth("j"),Fonts.nlfont_20.getHeight(),mouseX,mouseY)){
+            // CORREÇÃO ABAIXO: Adicionado .getNlfont_20() antes de .stringWidth e .getHeight
+            // E alterado Fonts.nlfont_20 para Fonts.NlIcon.nlfont_20 para consistência com LegacyIconFont
+            if (RenderUtil.isHovering(x + w - 30,y + 18,Fonts.NlIcon.nlfont_20.getNlfont_20().stringWidth("j"),Fonts.NlIcon.nlfont_20.getNlfont_20().getHeight(),mouseX,mouseY)){
                 search = !search;
                 dragging = false;
             }
