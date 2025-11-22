@@ -93,12 +93,12 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         buttonList.clear()
         textFields.clear()
 
-        val searchWidth = width - 40
-        searchField = textField(401, mc.fontRendererObj, 20, 30, searchWidth, 18)
+        val searchWidth = width - 56
+        searchField = textField(401, mc.fontRendererObj, 28, HEADER_HEIGHT - 36, searchWidth, 18)
         searchField.maxStringLength = 80
 
         backButton = +GuiButton(BUTTON_BACK, 20, height - 28, 80, 20, I18n.format("gui.back"))
-        refreshButton = +GuiButton(BUTTON_REFRESH, width - 100, 30, 80, 20, "Reload")
+        refreshButton = +GuiButton(BUTTON_REFRESH, width - 104, HEADER_HEIGHT - 38, 84, 20, "Reload")
         previousButton = +GuiButton(BUTTON_PREVIOUS, width / 2 - 90, height - 60, 40, 20, "⏮")
         playPauseButton = +GuiButton(BUTTON_PLAY_PAUSE, width / 2 - 40, height - 60, 80, 20, resolvePlayPauseLabel())
         nextButton = +GuiButton(BUTTON_NEXT, width / 2 + 50, height - 60, 40, 20, "⏭")
@@ -145,24 +145,33 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         }
         val text = "Status: $status"
         val textWidth = mc.fontRendererObj.getStringWidth(text)
-        val badgeLeft = width - textWidth - 30
-        val badgeTop = 10
-        Gui.drawRect(badgeLeft - 4, badgeTop - 2, badgeLeft + textWidth + 6, badgeTop + 12, 0x66000000)
+        val badgeLeft = width - textWidth - 34
+        val badgeTop = 18
+        Gui.drawRect(badgeLeft - 10, badgeTop - 4, badgeLeft + textWidth + 10, badgeTop + 14, 0x66000000)
+        Gui.drawRect(badgeLeft - 10, badgeTop + 12, badgeLeft + textWidth + 10, badgeTop + 13, color)
         mc.fontRendererObj.drawString(text, badgeLeft, badgeTop, color)
     }
 
     private fun drawTopChrome() {
-        Gui.drawRect(0, 0, width, 46, 0xFF0F0F0F.toInt())
-        drawCenteredString(mc.fontRendererObj, "Spotify Browser", width / 2, 16, 0xFFFFFFFF.toInt())
+        drawGradientRect(0, 0, width, HEADER_HEIGHT, 0xFF111111.toInt(), 0xFF0A0A0A.toInt())
+        drawAmbientCover()
+        Gui.drawRect(0, HEADER_HEIGHT - 2, width, HEADER_HEIGHT, 0xFF1DB954.toInt())
+
+        val greeting = "Good morning"
+        mc.fontRendererObj.drawString(greeting, 28, 16, 0xFFFFFFFF.toInt())
+        mc.fontRendererObj.drawString("Browse and play like Spotify", 28, 28, 0xFFB8B8B8.toInt())
         drawConnectionBadge()
-        Gui.drawRect(20, 44, width - 20, 45, 0xFF1DB954.toInt())
+        drawNowPlayingBadge()
+        drawSearchBackdrop()
     }
 
     private fun drawPlaylists(mouseX: Int, mouseY: Int) {
         val area = playlistArea()
         Gui.drawRect(area.left - 1, area.top - 1, area.right + 1, area.bottom + 1, 0xFF0F0F0F.toInt())
         Gui.drawRect(area.left, area.top, area.right, area.bottom, 0xB0121212.toInt())
-        mc.fontRendererObj.drawString("Your Library", area.left, area.top - 12, 0xFFE6E6E6.toInt())
+        Gui.drawRect(area.left, area.top - 14, area.right, area.top - 2, 0xFF0D0D0D.toInt())
+        mc.fontRendererObj.drawString("Your Library", area.left + 2, area.top - 12, 0xFFE6E6E6.toInt())
+        mc.fontRendererObj.drawString("Playlists and mixes", area.left + 2, area.top - 2, 0xFF6F6F6F.toInt())
 
         when {
             playlistsLoading -> {
@@ -195,9 +204,10 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
                         if (bgColor != 0) {
                             Gui.drawRect(area.left + 1, y.toInt(), area.right - 1, (y + rowHeight).toInt(), bgColor)
                         }
+                        drawPlaylistCover(playlist, area.left + 4, y.toInt() + 4, 24)
                         val trackLabel = if (playlist.trackCount == 1) "1 track" else "${playlist.trackCount} tracks"
-                        mc.fontRendererObj.drawString(playlist.name, area.left + 6, y.toInt() + 4, 0xFFF8F8F8.toInt())
-                        mc.fontRendererObj.drawString(trackLabel, area.left + 6, y.toInt() + 16, 0xFFBEBEBE.toInt())
+                        mc.fontRendererObj.drawString(playlist.name, area.left + 34, y.toInt() + 4, 0xFFF8F8F8.toInt())
+                        mc.fontRendererObj.drawString(trackLabel, area.left + 34, y.toInt() + 16, 0xFFBEBEBE.toInt())
                     }
                     y += rowHeight
                 }
@@ -236,11 +246,12 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         val maxScroll = max(0f, filteredTracks.size * rowHeight - viewHeight + 8f)
         trackScroll = trackScroll.coerceIn(0f, maxScroll)
 
-        val titleColumnWidth = (area.width() * 0.55f).toInt()
-        val artistColumnWidth = (area.width() * 0.30f).toInt()
-        val durationColumnX = area.right - 40
+        val titleColumnWidth = (area.width() * 0.42f).toInt()
+        val albumColumnWidth = (area.width() * 0.23f).toInt()
+        val artistColumnWidth = (area.width() * 0.24f).toInt()
+        val durationColumnX = area.right - 48
 
-        drawTrackHeaders(area, titleColumnWidth, artistColumnWidth, durationColumnX)
+        drawTrackHeaders(area, titleColumnWidth, albumColumnWidth, artistColumnWidth, durationColumnX)
 
         var y = area.top + 4 - trackScroll
         filteredTracks.forEachIndexed { index, track ->
@@ -262,22 +273,25 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
                 }
                 val baseY = y.toInt() + 4
                 mc.fontRendererObj.drawString((index + 1).toString(), area.left + 6, baseY, 0xFFAAAAAA.toInt())
-                mc.fontRendererObj.drawString(trimToWidth(track.title, titleColumnWidth - 20), area.left + 24, baseY, 0xFFF0F0F0.toInt())
-                mc.fontRendererObj.drawString(trimToWidth(track.artists, artistColumnWidth - 10), area.left + 24 + titleColumnWidth, baseY, 0xFFB0B0B0.toInt())
+                drawTrackCover(track, area.left + 16, baseY - 2, 18)
+                mc.fontRendererObj.drawString(trimToWidth(track.title, titleColumnWidth - 20), area.left + 40, baseY, 0xFFF0F0F0.toInt())
+                mc.fontRendererObj.drawString(trimToWidth(track.album, albumColumnWidth - 12), area.left + 40 + titleColumnWidth, baseY, 0xFFB0B0B0.toInt())
+                mc.fontRendererObj.drawString(trimToWidth(track.artists, artistColumnWidth - 10), area.left + 40 + titleColumnWidth + albumColumnWidth, baseY, 0xFFB0B0B0.toInt())
                 mc.fontRendererObj.drawString(formatDuration(track.durationMs), durationColumnX, baseY, 0xFFB0B0B0.toInt())
             }
             y += rowHeight
         }
     }
 
-    private fun drawTrackHeaders(area: PanelArea, titleColumnWidth: Int, artistColumnWidth: Int, durationColumnX: Int) {
+    private fun drawTrackHeaders(area: PanelArea, titleColumnWidth: Int, albumColumnWidth: Int, artistColumnWidth: Int, durationColumnX: Int) {
         val headerTop = area.top - 2
         val headerBottom = area.top + 16
         Gui.drawRect(area.left, headerTop, area.right, headerBottom, 0xFF101010.toInt())
         Gui.drawRect(area.left, headerBottom, area.right, headerBottom + 1, 0xFF1DB954.toInt())
         mc.fontRendererObj.drawString("#", area.left + 6, area.top + 2, 0xFF888888.toInt())
-        mc.fontRendererObj.drawString("Title", area.left + 18, area.top + 2, 0xFFCCCCCC.toInt())
-        mc.fontRendererObj.drawString("Artist", area.left + 18 + titleColumnWidth, area.top + 2, 0xFFCCCCCC.toInt())
+        mc.fontRendererObj.drawString("Title", area.left + 38, area.top + 2, 0xFFCCCCCC.toInt())
+        mc.fontRendererObj.drawString("Album", area.left + 40 + titleColumnWidth, area.top + 2, 0xFFCCCCCC.toInt())
+        mc.fontRendererObj.drawString("Artist", area.left + 40 + titleColumnWidth + albumColumnWidth, area.top + 2, 0xFFCCCCCC.toInt())
         mc.fontRendererObj.drawString("Time", durationColumnX, area.top + 2, 0xFFCCCCCC.toInt())
     }
 
@@ -642,9 +656,45 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         bannerExpiry = System.currentTimeMillis() + 3500
     }
 
+    private fun drawAmbientCover() {
+        val texture = coverTexture ?: return
+        GlStateManager.color(1f, 1f, 1f, 0.12f)
+        mc.textureManager.bindTexture(texture)
+        val size = 156
+        Gui.drawScaledCustomSizeModalRect(width - size - 18, 12, 0f, 0f, 256, 256, size, size, 256f, 256f)
+        GlStateManager.color(1f, 1f, 1f, 1f)
+    }
+
+    private fun drawNowPlayingBadge() {
+        val track = playbackState?.track ?: return
+        val cardLeft = 28
+        val cardTop = 48
+        val cardRight = width / 2 + 90
+        val cardBottom = cardTop + 60
+        Gui.drawRect(cardLeft, cardTop, cardRight, cardBottom, 0x33000000)
+        Gui.drawRect(cardLeft, cardBottom - 2, cardRight, cardBottom, 0xFF1DB954.toInt())
+        drawTrackCover(track, cardLeft + 6, cardTop + 6, 44)
+        mc.fontRendererObj.drawString("Now playing", cardLeft + 58, cardTop + 6, 0xFFB0B0B0.toInt())
+        mc.fontRendererObj.drawString(trimToWidth(track.title, 160), cardLeft + 58, cardTop + 20, 0xFFFFFFFF.toInt())
+        mc.fontRendererObj.drawString(trimToWidth(track.artists, 200), cardLeft + 58, cardTop + 32, 0xFFB0B0B0.toInt())
+        mc.fontRendererObj.drawString(trimToWidth(track.album, 200), cardLeft + 58, cardTop + 44, 0xFF8F8F8F.toInt())
+    }
+
+    private fun drawSearchBackdrop() {
+        if (!::searchField.isInitialized) {
+            return
+        }
+        val left = searchField.xPosition - 6
+        val top = searchField.yPosition - 4
+        val boxWidth = width - 56
+        val boxHeight = 18
+        Gui.drawRect(left, top, left + boxWidth + 12, top + boxHeight + 8, 0x44000000)
+        Gui.drawRect(left, top + boxHeight + 6, left + boxWidth + 12, top + boxHeight + 8, 0xFF1DB954.toInt())
+    }
+
     private fun playlistArea(): PanelArea {
         val left = 20
-        val top = 60
+        val top = HEADER_HEIGHT + 20
         val right = left + width / 4
         val bottom = height - 110
         return PanelArea(left, top, right, bottom)
@@ -653,7 +703,7 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
     private fun trackArea(): PanelArea {
         val playlistRight = playlistArea().right
         val left = playlistRight + 16
-        val top = 60
+        val top = HEADER_HEIGHT + 20
         val right = width - 20
         val bottom = height - 110
         return PanelArea(left, top, right, bottom)
@@ -675,6 +725,36 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
             trimmed = trimmed.dropLast(1)
         }
         return if (trimmed.isEmpty()) text else "$trimmed..."
+    }
+
+    private fun drawPlaylistCover(playlist: SpotifyPlaylistSummary, x: Int, y: Int, size: Int) {
+        drawArtwork(playlist.imageUrl, x, y, size, 0xFF202020.toInt())
+        if (playlist.isLikedSongs) {
+            Gui.drawRect(x, y + size - 4, x + size, y + size, 0xCC1DB954.toInt())
+        }
+    }
+
+    private fun drawTrackCover(track: SpotifyTrack, x: Int, y: Int, size: Int) {
+        drawArtwork(track.coverUrl, x, y, size, 0xFF1A1A1A.toInt())
+        if (playbackState?.track?.id == track.id) {
+            Gui.drawRect(x, y + size - 3, x + size, y + size, 0xCC1DB954.toInt())
+        }
+    }
+
+    private fun drawArtwork(url: String?, x: Int, y: Int, size: Int, fallbackColor: Int) {
+        if (url.isNullOrBlank()) {
+            Gui.drawRect(x, y, x + size, y + size, fallbackColor)
+            return
+        }
+        val cached = coverCache[url]
+        if (cached != null) {
+            GlStateManager.color(1f, 1f, 1f, 1f)
+            mc.textureManager.bindTexture(cached)
+            Gui.drawScaledCustomSizeModalRect(x, y, 0f, 0f, 256, 256, size, size, 256f, 256f)
+            return
+        }
+        Gui.drawRect(x, y, x + size, y + size, fallbackColor)
+        requestTexture(url)
     }
 
     private fun drawWrappedText(text: String, area: PanelArea, color: Int) {
@@ -707,7 +787,18 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
             coverTexture = cached
             return
         }
+        requestTexture(url) { location ->
+            if (coverUrl == url) {
+                coverTexture = location
+            }
+        }
+    }
 
+    private fun requestTexture(url: String, onReady: ((ResourceLocation) -> Unit)? = null) {
+        if (coverCache.containsKey(url)) {
+            coverCache[url]?.let { onReady?.invoke(it) }
+            return
+        }
         SharedScopes.IO.launch {
             runCatching {
                 HttpClient.get(url).use { response ->
@@ -715,14 +806,13 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
                     response.body.byteStream().use { stream ->
                         val image = javax.imageio.ImageIO.read(stream) ?: throw IOException("Cover art missing")
                         val texture = DynamicTexture(image)
-                        val location = mc.textureManager.getDynamicTextureLocation("spotify/" + UUID.randomUUID(), texture)
-                        coverCache[url] = location
-                        mc.addScheduledTask {
-                            if (coverUrl == url) {
-                                coverTexture = location
-                            }
-                        }
+                        mc.textureManager.getDynamicTextureLocation("spotify/" + UUID.randomUUID(), texture)
                     }
+                }
+            }.onSuccess { location ->
+                mc.addScheduledTask {
+                    coverCache[url] = location
+                    onReady?.invoke(location)
                 }
             }.onFailure {
                 LOGGER.warn("[Spotify][GUI] Failed to load cover art from $url", it)
@@ -753,5 +843,6 @@ class GuiSpotifyPlayer(private val prevScreen: GuiScreen?) : AbstractScreen(), L
         private const val SAVED_TRACK_LIMIT = 50
         private const val PLAYLIST_ROW_HEIGHT = 32f
         private const val TRACK_ROW_HEIGHT = 22f
+        private const val HEADER_HEIGHT = 132
     }
 }
