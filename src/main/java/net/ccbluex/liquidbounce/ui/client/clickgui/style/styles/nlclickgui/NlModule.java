@@ -1,6 +1,10 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
-import cn.distance.ui.cfont.impl.Fonts;
+import net.ccbluex.liquidbounce.config.BoolValue;
+import net.ccbluex.liquidbounce.config.ColorValue;
+import net.ccbluex.liquidbounce.config.FloatValue;
+import net.ccbluex.liquidbounce.config.IntValue;
+import net.ccbluex.liquidbounce.config.ListValue;
 import net.ccbluex.liquidbounce.config.Value;
 import net.ccbluex.liquidbounce.features.module.Module;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.BoolSetting;
@@ -13,7 +17,6 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.anima
 
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui;
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Animation;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Direction;
@@ -61,17 +64,17 @@ public class NlModule {
         //临时变量计算value
 
         for(Value setting : module.getValues()) {
-            if(setting instanceof Option){
-                this.downwards.add(new BoolSetting((Option) setting,this));
+            if(setting instanceof BoolValue){
+                this.downwards.add(new BoolSetting((BoolValue) setting,this));
             }
-            if(setting instanceof Numbers){
-                this.downwards.add(new Numbersetting((Numbers) setting,this));
+            if(setting instanceof FloatValue || setting instanceof IntValue){
+                this.downwards.add(new Numbersetting(setting,this));
             }
-            if(setting instanceof Mode){
-                this.downwards.add(new StringsSetting((Mode) setting ,this));
+            if(setting instanceof ListValue){
+                this.downwards.add(new StringsSetting((ListValue) setting ,this));
             }
-            if (setting instanceof ColorSetting){
-                this.downwards.add(new cn.distance.ui.clickguis.nlclickgui.Settings.ColorSetting((ColorSetting) setting,this));
+            if (setting instanceof ColorValue){
+                this.downwards.add(new ColorSetting((ColorValue) setting,this));
             }
         }
     }
@@ -79,7 +82,7 @@ public class NlModule {
     public int getHeight() {
         //获取背景的height
         int h = 20;
-        for (Value s : module.getValues().stream().filter(Value::getDisplayableFunc).collect(Collectors.toList())){
+        for (Value s : module.getValues().stream().filter(Value::shouldRender).collect(Collectors.toList())){
             h += 20;
         }
         if (module.getValues().isEmpty())

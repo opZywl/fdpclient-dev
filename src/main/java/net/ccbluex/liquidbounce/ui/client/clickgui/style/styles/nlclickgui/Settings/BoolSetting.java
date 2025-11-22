@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings;
 
+import net.ccbluex.liquidbounce.config.BoolValue;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule;
@@ -8,8 +9,6 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.anima
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Direction;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.DecelerateAnimation;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
-
-import cn.distance.values.Option;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 
 import java.awt.*;
@@ -17,9 +16,9 @@ import java.awt.*;
 import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui.neverlosecolor;
 
 
-public class BoolSetting extends Downward<Option> {
+public class BoolSetting extends Downward<BoolValue> {
 
-    public BoolSetting(Option s, NlModule moduleRender) {
+    public BoolSetting(BoolValue s, NlModule moduleRender) {
         super(s, moduleRender);
     }
 
@@ -43,7 +42,7 @@ public class BoolSetting extends Downward<Option> {
 
         Color accentCircle =  RenderUtil.darker(neverlosecolor, .5f);
 
-        toggleAnimation.setDirection(setting.getValue()? Direction.FORWARDS : Direction.BACKWARDS);
+        toggleAnimation.setDirection(setting.get()? Direction.FORWARDS : Direction.BACKWARDS);
 
         HoveringAnimation.setDirection(RenderUtil.isHovering(NeverloseGui.getInstance().x + 265 - 32 + getX(), NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 57, 16, 4.5f,mouseX,mouseY)? Direction.FORWARDS : Direction.BACKWARDS);
 
@@ -61,14 +60,14 @@ public class BoolSetting extends Downward<Option> {
         //画圆
         RoundedUtil.drawRound((float) (mainx + 265 - 32 + getX() +( (11)* toggleAnimation.getOutput())),
                 mainy + booly + 57 -1, 6.5f,
-                6.5f, 3, setting.getValue() ?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
+                6.5f, 3, setting.get() ?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
     }
 
     @Override
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         if (mouseButton ==0 ){
             if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 265 - 32 + getX(), NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 57, 16, 4.5f,mouseX,mouseY)){
-                setting.setValue(!setting.value);
+                setting.set(!setting.get());
             }
         }
     }
