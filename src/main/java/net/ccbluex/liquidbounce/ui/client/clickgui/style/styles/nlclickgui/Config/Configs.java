@@ -26,6 +26,10 @@ public class Configs {
     private final List<ButtonArea> interactiveAreas = new ArrayList<>();
     private int contentHeight;
 
+    private final List<RemoteSetting> remoteSettings = new ArrayList<>();
+    private boolean loadingRemoteSettings;
+    private String remoteError;
+
     public void setBounds(int posx, int posy, float areaWidth) {
         this.posx = posx;
         this.posy = posy;
@@ -41,6 +45,10 @@ public class Configs {
         int baseX = posx + 10;
         int baseY = posy + scy + 10;
 
+        if (!showLocalConfigs) {
+            ensureRemoteSettingsLoaded();
+        }
+
         int alpha = 255;
         int buttonHeight = 20;
         int buttonSpacing = 10;
@@ -54,7 +62,10 @@ public class Configs {
         int togglesY = baseY + buttonHeight + buttonSpacing;
         drawToggle(baseX, togglesY, buttonToggleWidth, buttonHeight, mx, my, !showLocalConfigs);
         Fonts.InterBold_26.drawString("ONLINE", baseX + 10, togglesY + 5, applyTextColor(alpha));
-        interactiveAreas.add(new ButtonArea(baseX, togglesY, buttonToggleWidth, buttonHeight, () -> showLocalConfigs = false));
+        interactiveAreas.add(new ButtonArea(baseX, togglesY, buttonToggleWidth, buttonHeight, () -> {
+            showLocalConfigs = false;
+            ensureRemoteSettingsLoaded();
+        }));
 
         int localX = baseX + buttonToggleWidth + buttonSpacing;
         drawToggle(localX, togglesY, buttonToggleWidth, buttonHeight, mx, my, showLocalConfigs);
@@ -129,13 +140,25 @@ public class Configs {
                 Fonts.InterBold_26.drawString("No local configurations available.", configX, configY, applyTextColor(alpha));
             }
         } else {
-            List<?> remoteSettings = ClientApi.INSTANCE.getAutoSettingsList();
-            if (remoteSettings != null && !remoteSettings.isEmpty()) {
-                for (Object autoSetting : remoteSettings) {
-                    String settingName = getSettingName(autoSetting);
-                    String settingId = getSettingId(autoSetting);
-                    drawConfigButton(mx, my, buttonWidth, buttonHeight, configX, configY, () -> loadOnlineConfig(settingId, settingName));
-                    Fonts.InterBold_26.drawString(settingName, configX + 5, configY + 5, applyTextColor(alpha));
+            if (loadingRemoteSettings) {
+                Fonts.InterBold_26.drawString("Loading online configurations...", configX, configY, applyTextColor(alpha));
+                return;
+            }
+
+            if (remoteError != null) {
+                Fonts.InterBold_26.drawString("Error: " + remoteError, configX, configY, applyTextColor(alpha));
+                return;
+            }
+
+            List<RemoteSetting> remoteSnapshot;
+            synchronized (remoteSettings) {
+                remoteSnapshot = new ArrayList<>(remoteSettings);
+            }
+
+            if (!remoteSnapshot.isEmpty()) {
+                for (RemoteSetting setting : remoteSnapshot) {
+                    drawConfigButton(mx, my, buttonWidth, buttonHeight, configX, configY, () -> loadOnlineConfig(setting.id, setting.name));
+                    Fonts.InterBold_26.drawString(setting.name, configX + 5, configY + 5, applyTextColor(alpha));
                     configX += buttonWidth + 10;
                     configCount++;
                     if (configCount % configsPerRow == 0) {
@@ -165,14 +188,53 @@ public class Configs {
             File[] localConfigs = FDPClient.fileManager.getSettingsDir().listFiles((dir, name) -> name.endsWith(".txt"));
             itemCount = localConfigs == null ? 0 : localConfigs.length;
         } else {
-            List<?> remoteSettings = ClientApi.INSTANCE.getAutoSettingsList();
-            itemCount = remoteSettings == null ? 0 : remoteSettings.size();
+            if (loadingRemoteSettings) {
+                return rowHeight + 5;
+            }
+            if (remoteError != null) {
+                return rowHeight + 5;
+            }
+
+            synchronized (remoteSettings) {
+                itemCount = remoteSettings.size();
+            }
         }
         if (itemCount == 0) {
             return rowHeight + 5;
         }
         int rows = (int) Math.ceil(itemCount / 4.0);
         return rows * rowHeight;
+    }
+
+    private void ensureRemoteSettingsLoaded() {
+        if (loadingRemoteSettings || !remoteSettings.isEmpty()) {
+            return;
+        }
+
+        loadingRemoteSettings = true;
+        remoteError = null;
+
+        Thread fetcher = new Thread(() -> {
+            try {
+                List<?> remoteList = ClientApi.INSTANCE.getAutoSettingsList();
+                List<RemoteSetting> fetched = new ArrayList<>();
+                if (remoteList != null) {
+                    for (Object autoSetting : remoteList) {
+                        fetched.add(new RemoteSetting(getSettingId(autoSetting), getSettingName(autoSetting)));
+                    }
+                }
+                synchronized (remoteSettings) {
+                    remoteSettings.clear();
+                    remoteSettings.addAll(fetched);
+                }
+            } catch (Exception e) {
+                remoteError = e.getMessage();
+            } finally {
+                loadingRemoteSettings = false;
+            }
+        }, "nl-online-config-fetch");
+        fetcher.setDaemon(true);
+        fetcher.start();
     }
 
     private void loadLocalConfig(File file) {
@@ -244,6 +306,16 @@ public class Configs {
             this.width = width;
             this.height = height;
             this.action = action;
+        }
+    }
+
+    private static class RemoteSetting {
+        private final String id;
+        private final String name;
+
+        private RemoteSetting(String id, String name) {
+            this.id = id;
+            this.name = name;
         }
     }
 }
