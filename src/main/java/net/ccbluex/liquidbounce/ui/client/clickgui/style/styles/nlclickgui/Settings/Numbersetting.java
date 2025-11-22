@@ -38,9 +38,11 @@ public class Numbersetting extends Downward<Value<?>> {
         int mainx = NeverloseGui.getInstance().x;
         int mainy = NeverloseGui.getInstance().y;
 
+        int baseOffset = NeverloseGui.getInstance().getContentTopOffset();
+
         int numbery = (int) (getY() + getScrollY());
 
-        HoveringAnimation.setDirection(iloveyou || RenderUtil.isHovering(NeverloseGui.getInstance().x + 170 + getX(), NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 58, 60, 2, mouseX, mouseY) ? Direction.FORWARDS : Direction.BACKWARDS);
+        HoveringAnimation.setDirection(iloveyou || RenderUtil.isHovering(NeverloseGui.getInstance().x + 170 + getX(), NeverloseGui.getInstance().y + NeverloseGui.getInstance().getContentTopOffset() + (int) (getY() + getScrollY()) + 8, 60, 2, mouseX, mouseY) ? Direction.FORWARDS : Direction.BACKWARDS);
 
         double clamp = MathHelper.clamp_double(Minecraft.getDebugFPS() / 30.0, 1, 9999);
 
@@ -60,13 +62,13 @@ public class Numbersetting extends Downward<Value<?>> {
 
         percent = Math.max(0, Math.min(1, (float) (percent + (Math.max(0, Math.min(percentBar, 1)) - percent) * (0.2 / clamp))));
 
-        Fonts.INSTANCE.getNl_16().drawString(setting.getName(), mainx + 100 + getX(), mainy + numbery + 57, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
+        Fonts.INSTANCE.getNl_16().drawString(setting.getName(), mainx + 100 + getX(), mainy + baseOffset + numbery + 7, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
 
-        RoundedUtil.drawRound(mainx + 170 + getX(), mainy + numbery + 58, 60, 2, 2, NeverloseGui.getInstance().getLight() ? new Color(230, 230, 230) : new Color(5, 22, 41));
+        RoundedUtil.drawRound(mainx + 170 + getX(), mainy + baseOffset + numbery + 8, 60, 2, 2, NeverloseGui.getInstance().getLight() ? new Color(230, 230, 230) : new Color(5, 22, 41));
 
-        RoundedUtil.drawRound(mainx + 170 + getX(), mainy + numbery + 58, 60 * percent, 2, 2, new Color(12, 100, 138));
+        RoundedUtil.drawRound(mainx + 170 + getX(), mainy + baseOffset + numbery + 8, 60 * percent, 2, 2, new Color(12, 100, 138));
 
-        RoundedUtil.drawCircle(mainx + 167 + getX() + (60 * percent), mainy + numbery + 56, (float) (5.5f + (0.5f * HoveringAnimation.getOutput())), NeverloseGui.neverlosecolor);
+        RoundedUtil.drawCircle(mainx + 167 + getX() + (60 * percent), mainy + baseOffset + numbery + 6, (float) (5.5f + (0.5f * HoveringAnimation.getOutput())), NeverloseGui.neverlosecolor);
 
         if (iloveyou) {
             float percentt = Math.min(1, Math.max(0, ((mouseX - (mainx + 170 + getX())) / 99.0f) * 1.55f));
@@ -85,9 +87,9 @@ public class Numbersetting extends Downward<Value<?>> {
 
         int stringWidth = Fonts.INSTANCE.getNl_15().stringWidth(isset ? finalvalue + "_" : current + "") + 4;
 
-        RenderUtil.drawRoundedRect(mainx + 235 + getX(), mainy + numbery + 55, stringWidth, 9, 1, NeverloseGui.getInstance().getLight() ? new Color(255, 255, 255).getRGB() : new Color(0, 5, 19).getRGB(), 1, new Color(13, 24, 35).getRGB());
+        RenderUtil.drawRoundedRect(mainx + 235 + getX(), mainy + baseOffset + numbery + 5, stringWidth, 9, 1, NeverloseGui.getInstance().getLight() ? new Color(255, 255, 255).getRGB() : new Color(0, 5, 19).getRGB(), 1, new Color(13, 24, 35).getRGB());
 
-        Fonts.INSTANCE.getNl_15().drawString(isset ? finalvalue + "_" : current + "", mainx + 237 + getX(), mainy + numbery + 58, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
+        Fonts.INSTANCE.getNl_15().drawString(isset ? finalvalue + "_" : current + "", mainx + 237 + getX(), mainy + baseOffset + numbery + 8, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
 
         if (isset) {
             GL11.glTranslatef((float) 0.0f, (float) 0.0f, (float) -2.0f);
@@ -98,7 +100,7 @@ public class Numbersetting extends Downward<Value<?>> {
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         double current = ((Number) setting.get()).doubleValue();
 
-        if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 170 + getX(), NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 58, 60, 2, mouseX, mouseY) && !isset) {
+        if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 170 + getX(), NeverloseGui.getInstance().y + NeverloseGui.getInstance().getContentTopOffset() + (int) (getY() + getScrollY()) + 8, 60, 2, mouseX, mouseY) && !isset) {
             if (mouseButton == 0) {
                 iloveyou = true;
             }
@@ -106,7 +108,7 @@ public class Numbersetting extends Downward<Value<?>> {
 
         int stringWidth = Fonts.INSTANCE.getNl_15().stringWidth(isset ? finalvalue + "_" : current + "") + 4;
 
-        if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 235 + getX(), NeverloseGui.getInstance().y + (getY() + getScrollY()) + 55, stringWidth, 9, mouseX, mouseY)) {
+        if (RenderUtil.isHovering(NeverloseGui.getInstance().x + 235 + getX(), NeverloseGui.getInstance().y + NeverloseGui.getInstance().getContentTopOffset() + (getY() + getScrollY()) + 5, stringWidth, 9, mouseX, mouseY)) {
             if (mouseButton == 0) {
                 finalvalue = String.valueOf(current);
                 isset = true;

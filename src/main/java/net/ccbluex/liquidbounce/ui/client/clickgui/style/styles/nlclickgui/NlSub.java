@@ -76,7 +76,7 @@ public class NlSub {
 
             if (!visibleModules.isEmpty()) {
                 NlModule lastModule = visibleModules.get(visibleModules.size() - 1);
-                maxScroll = Math.max(0, lastModule.y + 50 + lastModule.posy + lastModule.getHeight());
+                maxScroll = Math.max(0, lastModule.y + NeverloseGui.getInstance().getContentTopOffset() + lastModule.posy + lastModule.getHeight() - NeverloseGui.getInstance().getContentHeight());
             } else {
                 maxScroll = 0;
             }
@@ -88,7 +88,7 @@ public class NlSub {
                 nlModule.h = h;
 
                 GL11.glEnable(GL11.GL_SCISSOR_TEST);
-                RenderUtil.scissor(x + 90, y + 40, w - 90, h - 40);
+                RenderUtil.scissor(x + 90, NeverloseGui.getInstance().getContentTop(), w - 90, NeverloseGui.getInstance().getContentHeight());
 
                 nlModule.draw(mx, my);
                 GL11.glDisable(GL11.GL_SCISSOR_TEST);
@@ -99,12 +99,12 @@ public class NlSub {
         if (isSelected() && (subCategory == Category.SubCategory.CONFIGS)) {
             double scrolll = getScroll();
             NeverloseGui.getInstance().configs.setScroll((int) MathUtil.roundToHalf(scrolll));
-            NeverloseGui.getInstance().configs.setBounds(x + 90, y + 40, w - 110);
+            NeverloseGui.getInstance().configs.setBounds(x + 90, NeverloseGui.getInstance().getContentTop(), w - 110);
             onScroll(40);
-            maxScroll = Math.max(0, NeverloseGui.getInstance().configs.getContentHeight() - (h - 40));
+            maxScroll = Math.max(0, NeverloseGui.getInstance().configs.getContentHeight() - NeverloseGui.getInstance().getContentHeight());
 
             GL11.glEnable(GL11.GL_SCISSOR_TEST);
-            RenderUtil.scissor(x + 90, y + 40, w - 90, h - 40);
+            RenderUtil.scissor(x + 90, NeverloseGui.getInstance().getContentTop(), w - 90, NeverloseGui.getInstance().getContentHeight());
             NeverloseGui.getInstance().configs.draw(mx, my);
             GL11.glDisable(GL11.GL_SCISSOR_TEST);
         }

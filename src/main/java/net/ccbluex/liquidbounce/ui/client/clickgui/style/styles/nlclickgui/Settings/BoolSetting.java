@@ -30,12 +30,14 @@ public class BoolSetting extends Downward<BoolValue> {
         int mainx = NeverloseGui.getInstance().x;
         int mainy = NeverloseGui.getInstance().y;
 
+        int baseOffset = NeverloseGui.getInstance().getContentTopOffset();
+
         int booly = (int) (getY() + getScrollY());
 
         int toggleX = moduleRender.getToggleX();
-        int toggleY = mainy + booly + 57;
+        int toggleY = mainy + baseOffset + booly + 7;
 
-        Fonts.INSTANCE.getNl_16().drawString(setting.getName(), mainx + 100 + getX(), mainy + booly + 57, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
+        Fonts.INSTANCE.getNl_16().drawString(setting.getName(), mainx + 100 + getX(), mainy + baseOffset + booly + 7, NeverloseGui.getInstance().getLight() ? new Color(95, 95, 95).getRGB() : -1);
 
         Color darkRectColor = new Color(29, 29, 39, 255);
 
@@ -65,7 +67,7 @@ public class BoolSetting extends Downward<BoolValue> {
     public void mouseClicked(int mouseX, int mouseY, int mouseButton) {
         int toggleX = moduleRender.getToggleX();
         if (mouseButton == 0) {
-            if (RenderUtil.isHovering(toggleX, NeverloseGui.getInstance().y + (int) (getY() + getScrollY()) + 57, 16, 4.5f, mouseX, mouseY)) {
+            if (RenderUtil.isHovering(toggleX, NeverloseGui.getInstance().y + NeverloseGui.getInstance().getContentTopOffset() + (int) (getY() + getScrollY()) + 7, 16, 4.5f, mouseX, mouseY)) {
                 setting.set(!setting.get(), true);
             }
         }

@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.blur.
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer;
+import net.ccbluex.liquidbounce.ui.client.gui.GuiSpotify;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.shader.Framebuffer;
@@ -59,10 +60,15 @@ public class NeverloseGui extends GuiScreen {
     private String searchText = "";
 
     private final ResourceLocation defaultAvatar = new ResourceLocation(FDPClient.CLIENT_NAME.toLowerCase() + "/64.png");
+    private final ResourceLocation spotifyIcon = new ResourceLocation(FDPClient.CLIENT_NAME.toLowerCase() + "/spotify.png");
     private ResourceLocation avatarTexture = defaultAvatar;
     private boolean avatarLoaded;
 
     private NlSetting nlSetting;
+
+    private int spotifyX;
+    private int spotifyY;
+    private final int spotifySize = 16;
 
     private Animation searchanim = new EaseInOutQuad(400,1, Direction.BACKWARDS);
 
@@ -153,9 +159,9 @@ public class NeverloseGui extends GuiScreen {
 
         RoundedUtil.drawRound(x,y,w,h,2,nlSetting.Light ? new Color(240,245,248,230) : new Color(7,13,23,230));
 
-        RoundedUtil.drawRound(x + 90,y + 40,w - 90,h - 40,1,nlSetting.Light ? new Color(255,255,255) :new Color(9,9,9));
+        RoundedUtil.drawRound(x + 90,getContentTop(),w - 90,getContentHeight(),1,nlSetting.Light ? new Color(255,255,255) :new Color(0,0,0,235));
 
-        RoundedUtil.drawRound(x + 90,y,w - 90,h - 300 , 1,nlSetting.Light ?new Color(255,255,255)  :new Color(13,13,11));
+        RoundedUtil.drawRound(x + 90,y,w - 90,getContentTopOffset() , 1,nlSetting.Light ?new Color(255,255,255)  :new Color(13,13,11));
 
         RoundedUtil.drawRound(x + 90,y + 39,w - 90,1 , 0,nlSetting.Light ? new Color(213,213,213) : new Color(26,26,26));
 
@@ -183,6 +189,10 @@ public class NeverloseGui extends GuiScreen {
         }
 
         RoundedUtil.drawRound(x , footerLineY,89,1 , 0,nlSetting.Light ? new Color(213,213,213) :new Color(26,26,26));
+
+        spotifyX = x + 165;
+        spotifyY = y + 14;
+        RenderUtil.drawImage(spotifyIcon, spotifyX, spotifyY, spotifySize, spotifySize);
 
         for (NlTab nlTab : nlTabs){
             nlTab.x = x;
@@ -244,6 +254,11 @@ public class NeverloseGui extends GuiScreen {
                 nlSetting.click(mouseX,mouseY,mouseButton);
             }
             if (mouseButton ==0){
+                if (RenderUtil.isHovering(spotifyX, spotifyY, spotifySize, spotifySize, mouseX, mouseY)) {
+                    mc.displayGuiScreen(new GuiSpotify(this));
+                    return;
+                }
+
                 if(RenderUtil.isHovering(x + 110,y,w - 110,h - 300 ,mouseX,mouseY)) {
                     this.x2 = (int) (x - mouseX);
                     this.y2 = (int) (y - mouseY);
@@ -332,6 +347,19 @@ public class NeverloseGui extends GuiScreen {
 
     public String getSearchText() {
         return searchText;
+    }
+
+
+    public int getContentTopOffset() {
+        return Math.max(70, h - 290);
+    }
+
+    public int getContentTop() {
+        return y + getContentTopOffset();
+    }
+
+    public int getContentHeight() {
+        return h - getContentTopOffset() - 40;
     }
 
 

@@ -103,9 +103,9 @@ public class NlModule {
                 break;
             } else {
                 if (tabModule.lef){
-                    leftAdd += tabModule.getHeight() + 14 ;
+                    leftAdd += tabModule.getHeight() + 18 ;
                 }else {
-                    rightAdd += tabModule.getHeight() + 14;
+                    rightAdd += tabModule.getHeight() + 18;
                 }
 
             }
@@ -117,7 +117,7 @@ public class NlModule {
     public void draw(int mx, int my){
 
         int contentWidth = w - 120;
-        int columnSpacing = 15;
+        int columnSpacing = 18;
         int columnWidth = (contentWidth - columnSpacing) / 2;
 
         posx = lef ? 0 : columnWidth + columnSpacing;
@@ -127,13 +127,15 @@ public class NlModule {
         cardX = x + 95 + posx;
 
         int toggleX = cardX + cardWidth - 35;
-        int toggleY = y + posy + scrollY + 56;
+        int toggleY = y + NeverloseGui.getInstance().getContentTopOffset() + posy + scrollY + 6;
 
-        RoundedUtil.drawRound(cardX,y + 50 + posy + scrollY,cardWidth,getHeight(),2, NeverloseGui.getInstance().getLight() ? new Color(245,245,245) : new Color(3,13,26));
+        int cardY = y + NeverloseGui.getInstance().getContentTopOffset() + posy + scrollY;
 
-        Fonts.Nl.Nl_18.getNl_18().drawString(module.getName(),cardX + 5,y + posy + 55 + scrollY,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() : -1);
+        RoundedUtil.drawRound(cardX, cardY,cardWidth,getHeight(),2, NeverloseGui.getInstance().getLight() ? new Color(245,245,245) : new Color(3,13,26));
 
-        RoundedUtil.drawRound(cardX + 5,y + 65 + posy + scrollY,cardWidth - 10,0.7f,0, NeverloseGui.getInstance().getLight() ? new Color(213,213,213) : new Color(9,21,34));
+        Fonts.Nl.Nl_18.getNl_18().drawString(module.getName(),cardX + 5, cardY + 5,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() : -1);
+
+        RoundedUtil.drawRound(cardX + 5, cardY + 15,cardWidth - 10,0.7f,0, NeverloseGui.getInstance().getLight() ? new Color(213,213,213) : new Color(9,21,34));
 
         HoveringAnimation.setDirection(RenderUtil.isHovering(toggleX,toggleY, 16, 4.5f,mx,my) ? Direction.FORWARDS : Direction.BACKWARDS );
 
@@ -148,7 +150,7 @@ public class NlModule {
         rendertoggle();
 
         if (module.getValues().isEmpty()) {
-            Fonts.Nl.Nl_22.getNl_22().drawString("No Settings.", cardX + 5, y + posy + scrollY + 72, NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
+            Fonts.Nl.Nl_22.getNl_22().drawString("No Settings.", cardX + 5, cardY + 22, NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
         }
     }
 
@@ -182,7 +184,7 @@ public class NlModule {
     }
 
     public int getToggleY() {
-        return y + posy + scrollY + 56;
+        return y + NeverloseGui.getInstance().getContentTopOffset() + posy + scrollY + 6;
     }
 
     public void keyTyped(char typedChar,int keyCode){
