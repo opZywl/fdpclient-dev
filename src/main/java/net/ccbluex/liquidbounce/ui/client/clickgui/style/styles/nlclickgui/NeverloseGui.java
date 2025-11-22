@@ -19,17 +19,15 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.blur.
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer;
+import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraft.util.ResourceLocation;
 import org.lwjgl.opengl.GL11;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.io.IOException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -55,7 +53,10 @@ public class NeverloseGui extends GuiScreen {
     private int y2;
 
     private boolean dragging,settings,search;
-    private boolean head = true;
+
+    private final ResourceLocation defaultAvatar = new ResourceLocation(FDPClient.CLIENT_NAME.toLowerCase() + "/64.png");
+    private ResourceLocation avatarTexture = defaultAvatar;
+    private boolean avatarLoaded;
 
     private NlSetting nlSetting;
 
@@ -97,17 +98,6 @@ public class NeverloseGui extends GuiScreen {
         }
 
         nlSetting = new NlSetting();
-
-        if (head) {
-            try {
-                Minecraft.getMinecraft().getTextureManager().loadTexture(
-                        new ResourceLocation("nb"),
-                        new DynamicTexture(ImageIO.read(new URL("https://q.qlogo.cn/headimg_dl?dst_uin="+"2165728490"+"&spec=100"))));
-                head =false;
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
 
     }
 
@@ -168,7 +158,8 @@ public class NeverloseGui extends GuiScreen {
 
         GL11.glEnable(GL11.GL_BLEND);
 
-        mc.getTextureManager().bindTexture(new ResourceLocation("nb"));
+        ensureAvatarTexture();
+        mc.getTextureManager().bindTexture(avatarTexture);
 
         int footerLineY = y + h - 35;
         int avatarY = footerLineY + 9;
@@ -219,6 +210,23 @@ public class NeverloseGui extends GuiScreen {
 
         GL11.glPopMatrix();
         super.drawScreen(mouseX, mouseY, partialTicks);
+    }
+
+    private void ensureAvatarTexture() {
+        if (avatarLoaded) {
+            return;
+        }
+        avatarLoaded = true;
+
+        if (mc.thePlayer != null) {
+            String username = mc.getSession().getUsername();
+            ResourceLocation skinLocation = AbstractClientPlayer.getLocationSkin(username);
+            AbstractClientPlayer.getDownloadImageSkin(skinLocation, username);
+            avatarTexture = skinLocation;
+            return;
+        }
+
+        avatarTexture = defaultAvatar;
     }
 
     public static void NLOutline(String str, FontRenderer fontRenderer, float x, float y, int color, int color2, float size) {
