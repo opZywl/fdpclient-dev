@@ -189,7 +189,7 @@ public class NeverloseGui extends GuiScreen {
 
     //    RoundedUtil.drawRound(x + 3 ,y + 274,20,20,10f,new Color(-1));
 
-        Fonts.Nl_18.drawString("younkoo",x + 29 ,y + 275,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
+        Fonts.Nl_18.drawString(mc.getSession().getUsername(),x + 29 ,y + 275,nlSetting.Light ? new Color(51,51,51).getRGB() : -1);
 
         Fonts.Nl_16.drawString(ChatFormatting.GRAY + "Till: " + ChatFormatting.RESET + new SimpleDateFormat("dd:MM").format(new Date()) + " " + new SimpleDateFormat("HH:mm").format(new Date()),x + 29 ,y + 287,neverlosecolor.getRGB());
 
