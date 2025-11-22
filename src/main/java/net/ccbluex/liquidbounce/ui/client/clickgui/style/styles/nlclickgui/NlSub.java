@@ -196,25 +196,6 @@ public class NlSub {
     }
 
     private String getIcon() {
-        if (subCategory == Category.SubCategory.GENERAL) {
-            String icon = decodeHtmlIcon(parentCategory.getHtmlIcon());
-            if (icon != null) {
-                return icon;
-            }
-        }
         return subCategory.getIcon();
-    }
-
-    private String decodeHtmlIcon(String htmlIcon) {
-        if (htmlIcon == null || !htmlIcon.startsWith("&#") || !htmlIcon.endsWith(";")) {
-            return null;
-        }
-        try {
-            String hex = htmlIcon.substring(3, htmlIcon.length() - 1);
-            int code = Integer.parseInt(hex, 16);
-            return String.valueOf((char) code);
-        } catch (NumberFormatException ignored) {
-            return null;
-        }
     }
 }
