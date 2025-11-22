@@ -29,7 +29,7 @@ public class NlSub {
 
     public Animation alphaani = new EaseInOutQuad(150, 1, Direction.BACKWARDS);
 
-    private float maxScroll = Float.MAX_VALUE, minScroll = 0, rawScroll;
+    private float maxScroll = 0, minScroll = 0, rawScroll;
 
     private float scroll;
 
@@ -64,6 +64,12 @@ public class NlSub {
         Fonts.Nl.getNl_18().getNl_18().drawString(subCategory.toString(), x + 10 + Fonts.NlIcon.getNlfont_20().getNlfont_20().stringWidth(subCategory.getIcon()) + 8, y + y2 + 13, NeverloseGui.getInstance().getLight() ? new Color(18, 18, 19).getRGB() : -1);
 
         if (isSelected() && !(subCategory == Category.SubCategory.CONFIGS)) {
+            if (nlModules.isEmpty()) {
+                maxScroll = 0;
+                rawScroll = Math.max(Math.min(minScroll, rawScroll), -maxScroll);
+                return;
+            }
+
             double scrolll = getScroll();
             for (NlModule nlModule : nlModules) {
                 nlModule.scrollY = (int) MathUtil.roundToHalf(scrolll);
