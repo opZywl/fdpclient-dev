@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.blur.
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer;
-import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.shader.Framebuffer;
@@ -70,8 +69,8 @@ public class NeverloseGui extends GuiScreen {
         INSTANCE = this;
         x = 100;
         y = 100;
-        w = 470;
-        h = 340;
+        w = 500;
+        h = 380;
 
         int y2 = 0;
         int u2 =0;
@@ -213,20 +212,10 @@ public class NeverloseGui extends GuiScreen {
     }
 
     private void ensureAvatarTexture() {
-        if (avatarLoaded) {
-            return;
+        if (!avatarLoaded) {
+            avatarTexture = defaultAvatar;
+            avatarLoaded = true;
         }
-        avatarLoaded = true;
-
-        if (mc.thePlayer != null) {
-            String username = mc.getSession().getUsername();
-            ResourceLocation skinLocation = AbstractClientPlayer.getLocationSkin(username);
-            AbstractClientPlayer.getDownloadImageSkin(skinLocation, username);
-            avatarTexture = skinLocation;
-            return;
-        }
-
-        avatarTexture = defaultAvatar;
     }
 
     public static void NLOutline(String str, FontRenderer fontRenderer, float x, float y, int color, int color2, float size) {
