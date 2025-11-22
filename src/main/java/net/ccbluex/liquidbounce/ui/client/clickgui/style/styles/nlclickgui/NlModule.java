@@ -44,6 +44,9 @@ public class NlModule {
 
     public int posx, posy;
 
+    private int cardX;
+    private int cardWidth;
+
     public int height = 0;
 
     public List<Downward> downwards = new ArrayList<>();
@@ -61,7 +64,6 @@ public class NlModule {
         this.NlSub = sub;
         this.module = module;
         this.lef = lef;
-        this.posx = lef ? 0 : 170;
         for(Value setting : module.getValues()) {
             if(setting instanceof BoolValue){
                 this.downwards.add(new BoolSetting((BoolValue) setting,this));
@@ -101,9 +103,9 @@ public class NlModule {
                 break;
             } else {
                 if (tabModule.lef){
-                    leftAdd += tabModule.getHeight() + 10 ;
+                    leftAdd += tabModule.getHeight() + 14 ;
                 }else {
-                    rightAdd += tabModule.getHeight() + 10;
+                    rightAdd += tabModule.getHeight() + 14;
                 }
 
             }
@@ -114,15 +116,26 @@ public class NlModule {
 
     public void draw(int mx, int my){
 
+        int contentWidth = w - 120;
+        int columnSpacing = 15;
+        int columnWidth = (contentWidth - columnSpacing) / 2;
+
+        posx = lef ? 0 : columnWidth + columnSpacing;
         posy = getY();
 
-        RoundedUtil.drawRound(x + 95 + posx,y + 50 + posy + scrollY,160,getHeight(),2, NeverloseGui.getInstance().getLight() ? new Color(245,245,245) : new Color(3,13,26));
+        cardWidth = columnWidth;
+        cardX = x + 95 + posx;
 
-        Fonts.Nl.Nl_18.getNl_18().drawString(module.getName(),x + 100 + posx,y + posy + 55 + scrollY,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() : -1);
+        int toggleX = cardX + cardWidth - 35;
+        int toggleY = y + posy + scrollY + 56;
 
-        RoundedUtil.drawRound(x + 100 + posx,y + 65 + posy + scrollY,150,0.7f,0, NeverloseGui.getInstance().getLight() ? new Color(213,213,213) : new Color(9,21,34));
+        RoundedUtil.drawRound(cardX,y + 50 + posy + scrollY,cardWidth,getHeight(),2, NeverloseGui.getInstance().getLight() ? new Color(245,245,245) : new Color(3,13,26));
 
-        HoveringAnimation.setDirection(RenderUtil.isHovering(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,mx,my) ? Direction.FORWARDS : Direction.BACKWARDS );
+        Fonts.Nl.Nl_18.getNl_18().drawString(module.getName(),cardX + 5,y + posy + 55 + scrollY,NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() : -1);
+
+        RoundedUtil.drawRound(cardX + 5,y + 65 + posy + scrollY,cardWidth - 10,0.7f,0, NeverloseGui.getInstance().getLight() ? new Color(213,213,213) : new Color(9,21,34));
+
+        HoveringAnimation.setDirection(RenderUtil.isHovering(toggleX,toggleY, 16, 4.5f,mx,my) ? Direction.FORWARDS : Direction.BACKWARDS );
 
         int cheigt = 20;
         for (Downward downward : downwards.stream().filter(s -> s.setting.shouldRender()).collect(Collectors.toList())){
@@ -135,7 +148,7 @@ public class NlModule {
         rendertoggle();
 
         if (module.getValues().isEmpty()) {
-            Fonts.Nl.Nl_22.getNl_22().drawString("No Settings.", x + 100 + posx, y + posy + scrollY + 72, NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
+            Fonts.Nl.Nl_22.getNl_22().drawString("No Settings.", cardX + 5, y + posy + scrollY + 72, NeverloseGui.getInstance().getLight() ? new Color(95,95,95).getRGB() :-1);
         }
     }
 
@@ -148,17 +161,28 @@ public class NlModule {
 
         toggleAnimation.setDirection(module.getState()? Direction.FORWARDS : Direction.BACKWARDS);
 
-        RoundedUtil.drawRound(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,
+        int toggleX = getToggleX();
+        int toggleY = getToggleY();
+
+        RoundedUtil.drawRound(toggleX, toggleY, 16, 4.5f,
                 2, RenderUtil.interpolateColorC(RenderUtil.applyOpacity(darkRectHover, .5f), accentCircle, (float) toggleAnimation.getOutput()));
 
-        RenderUtil.fakeCircleGlow((float) (x + 265 + 3 - 32 + posx +( (11)* toggleAnimation.getOutput())),
-                y + posy + scrollY + 56 + 2 , 6, Color.BLACK, .3f);
+        RenderUtil.fakeCircleGlow((float) (toggleX + 3 + ((11)* toggleAnimation.getOutput())),
+                toggleY + 2 , 6, Color.BLACK, .3f);
 
         RenderUtil.resetColor();
 
-        RoundedUtil.drawRound((float) (x + 265 - 32 + posx +( (11)* toggleAnimation.getOutput())),
-                y + posy + scrollY + 56 -1, 6.5f,
+        RoundedUtil.drawRound((float) (toggleX + ((11)* toggleAnimation.getOutput())),
+                toggleY -1, 6.5f,
                 6.5f, 3, module.getState()?  neverlosecolor : NeverloseGui.getInstance().getLight() ? new Color(255,255,255) : new Color((int) (68 - (28 * HoveringAnimation.getOutput())), (int) (82 + (44 * HoveringAnimation.getOutput())), (int) (87 +( 83 * HoveringAnimation.getOutput()))));
+    }
+
+    public int getToggleX() {
+        return cardX + cardWidth - 35;
+    }
+
+    public int getToggleY() {
+        return y + posy + scrollY + 56;
     }
 
     public void keyTyped(char typedChar,int keyCode){
@@ -172,7 +196,7 @@ public class NlModule {
     public void click(int mx ,int my,int mb){
         downwards.stream().filter(e -> e.setting.shouldRender()).forEach(e -> e.mouseClicked(mx,my,mb));
 
-        if (RenderUtil.isHovering(x + 265 - 32 + posx,y + posy + scrollY + 56, 16, 4.5f,mx,my) && mb == 0){
+        if (RenderUtil.isHovering(getToggleX(), getToggleY(), 16, 4.5f,mx,my) && mb == 0){
             module.toggle();
         }
     }
