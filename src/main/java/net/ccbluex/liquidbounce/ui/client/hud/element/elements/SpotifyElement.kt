@@ -37,7 +37,7 @@ class SpotifyElement(
     override fun drawElement(): Border {
         val width = cardWidth.toFloat()
         val padding = 6f
-        val titleFont = Fonts.fontBold40
+        val titleFont = Fonts.fontRegular40
         val infoFont = Fonts.fontSemibold35
         val connectionState = SpotifyModule.connectionState
         val moduleEnabled = SpotifyModule.state
@@ -57,20 +57,23 @@ class SpotifyElement(
         if (!moduleEnabled) {
             lines += "Enable the Spotify module to start syncing." to secondaryTextColor.rgb
         } else if (connectionState != SpotifyConnectionState.CONNECTED || playbackState == null) {
-            when (connectionState) {
+            lines += when (connectionState) {
                 SpotifyConnectionState.CONNECTING ->
-                    lines += "Connecting to Spotify account..." to secondaryTextColor.rgb
+                    "Connecting to Spotify account..." to secondaryTextColor.rgb
+
                 SpotifyConnectionState.ERROR -> {
                     val error = SpotifyModule.lastErrorMessage
                     if (!error.isNullOrBlank()) {
-                        lines += ellipsize(error, infoFont, contentWidth) to secondaryTextColor.rgb
+                        ellipsize(error, infoFont, contentWidth) to secondaryTextColor.rgb
                     } else {
-                        lines += "Failed to contact Spotify." to secondaryTextColor.rgb
+                        "Failed to contact Spotify." to secondaryTextColor.rgb
                     }
                 }
+
                 SpotifyConnectionState.DISCONNECTED ->
-                    lines += "Not connected. Open the Spotify module to begin." to secondaryTextColor.rgb
-                SpotifyConnectionState.CONNECTED -> lines += "Waiting for playback data..." to secondaryTextColor.rgb
+                    "Not connected. Open the Spotify module to begin." to secondaryTextColor.rgb
+
+                SpotifyConnectionState.CONNECTED -> "Waiting for playback data..." to secondaryTextColor.rgb
             }
         } else {
             val track = playbackState.track

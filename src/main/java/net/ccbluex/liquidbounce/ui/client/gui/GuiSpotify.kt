@@ -16,11 +16,10 @@ import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyConnectionState
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyState
 import net.ccbluex.liquidbounce.ui.client.spotify.SpotifyStateChangedEvent
 import net.ccbluex.liquidbounce.utils.client.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.client.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.io.HttpClient
+import net.ccbluex.liquidbounce.utils.io.get
 import net.ccbluex.liquidbounce.utils.kotlin.SharedScopes
 import net.ccbluex.liquidbounce.utils.ui.AbstractScreen
-import net.minecraft.client.gui.Gui
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -76,7 +75,7 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
 
     private val connectionHandler = handler<SpotifyConnectionChangedEvent>(always = true) { event ->
         connectionState = event.state
-        connectionError = event.error ?: SpotifyModule.lastErrorMessage
+        connectionError = event.errorMessage ?: SpotifyModule.lastErrorMessage
     }
 
     private val stateHandler = handler<SpotifyStateChangedEvent>(always = true) { event ->
@@ -352,7 +351,7 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
         val top = 45
         val right = width / 2 - 10
         val bottom = height - 40
-        Gui.drawRect(left, top, right, bottom, 0xAA050505.toInt())
+        drawRect(left, top, right, bottom, 0xAA050505.toInt())
 
         val padding = 12
         val coverSize = max(64, min(180, bottom - top - 120))
@@ -362,9 +361,9 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
         if (coverTex != null) {
             GlStateManager.color(1f, 1f, 1f, 1f)
             mc.textureManager.bindTexture(coverTex)
-            Gui.drawModalRectWithCustomSizedTexture(coverX, coverY, 0f, 0f, coverSize, coverSize, coverSize.toFloat(), coverSize.toFloat())
+            drawModalRectWithCustomSizedTexture(coverX, coverY, 0f, 0f, coverSize, coverSize, coverSize.toFloat(), coverSize.toFloat())
         } else {
-            Gui.drawRect(coverX, coverY, coverX + coverSize, coverY + coverSize, 0x33000000)
+            drawRect(coverX, coverY, coverX + coverSize, coverY + coverSize, 0x33000000)
             mc.fontRendererObj.drawString("Cover unavailable", coverX + 6, coverY + coverSize / 2 - 4, 0xFF777777.toInt())
         }
 
@@ -393,9 +392,9 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
             val duration = max(track.durationMs, 1)
             val barWidth = textWidth
             val barY = coverY + 50
-            Gui.drawRect(textX, barY, textX + barWidth, barY + 4, 0x33000000)
+            drawRect(textX, barY, textX + barWidth, barY + 4, 0x33000000)
             val fillWidth = (barWidth * progress) / duration
-            Gui.drawRect(textX, barY, textX + fillWidth, barY + 4, 0xFF1DB954.toInt())
+            drawRect(textX, barY, textX + fillWidth, barY + 4, 0xFF1DB954.toInt())
             val timeText = "${formatDuration(progress)} / ${formatDuration(duration)}"
             mc.fontRendererObj.drawString(timeText, textX, barY + 8, 0xFF9EA3AD.toInt())
 
@@ -443,7 +442,7 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
         val top = 45
         val right = width - 20
         val bottom = height - 40
-        Gui.drawRect(left, top, right, bottom, 0xAA050505.toInt())
+        drawRect(left, top, right, bottom, 0xAA050505.toInt())
 
         val padding = 12
         val textColor = 0xFFEEEEEE.toInt()
@@ -480,7 +479,7 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
         val widthText = mc.fontRendererObj.getStringWidth(text) + 10
         val x = width / 2 - widthText / 2
         val y = height - 30
-        Gui.drawRect(x - 4, y - 4, x + widthText + 4, y + 16, 0xCC050505.toInt())
+        drawRect(x - 4, y - 4, x + widthText + 4, y + 16, 0xCC050505.toInt())
         mc.fontRendererObj.drawString(text, x, y, color)
     }
 
@@ -514,22 +513,28 @@ class GuiSpotify(private val prevGui: GuiScreen?) : AbstractScreen(), Listenable
         }
 
         SharedScopes.IO.launch {
-            runCatching {
+            val imageResult = runCatching {
                 HttpClient.get(url).use { response ->
                     ensureSuccess(response)
                     response.body.byteStream().use { stream ->
-                        val image = ImageIO.read(stream) ?: throw IOException("Cover art was empty")
+                        ImageIO.read(stream) ?: throw IOException("Cover art was empty")
+                    }
+                }
+            }
+            imageResult.onSuccess { image ->
+                mc.addScheduledTask {
+                    runCatching {
                         val texture = DynamicTexture(image)
                         val location = mc.textureManager.getDynamicTextureLocation(
                             "spotify/" + UUID.randomUUID(),
-                            texture
+                            texture,
                         )
                         coverCache[url] = location
-                        mc.addScheduledTask {
-                            if (coverUrl == url) {
-                                coverTexture = location
-                            }
+                        if (coverUrl == url) {
+                            coverTexture = location
                         }
+                    }.onFailure {
+                        LOGGER.warn("[Spotify][GUI] Failed to upload album art from $url", it)
                     }
                 }
             }.onFailure {

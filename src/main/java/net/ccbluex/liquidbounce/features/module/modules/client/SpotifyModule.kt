@@ -49,7 +49,7 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     private var browserAuthFuture: CompletableFuture<SpotifyAccessToken>? = null
     private val credentialsFile = File(FileManager.dir, "spotify.json")
     private val quickClientId: String = SpotifyDefaults.quickConnectClientId.trim()
-    private val supportedAuthModes = SpotifyAuthMode.values()
+    private val supportedAuthModes = SpotifyAuthMode.entries
         .filter { it != SpotifyAuthMode.QUICK || quickClientId.isNotBlank() }
         .toTypedArray()
     private val defaultAuthMode = supportedAuthModes.firstOrNull() ?: SpotifyAuthMode.MANUAL
@@ -64,6 +64,14 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
     private val quickRefreshTokenValue = text("QuickRefreshToken", "").apply { hide() }
     private val pollIntervalValue = int("PollInterval", SpotifyDefaults.pollIntervalSeconds, 3..60, suffix = "s")
     private val autoReconnectValue = boolean("AutoReconnect", true)
+    private val openPlayerValue = boolean("OpenUI", false).apply {
+        onChange { _, newValue ->
+            if (newValue) {
+                mc.addScheduledTask { openPlayerScreen() }
+            }
+            false
+        }
+    }
     private val cachedTokens = EnumMap<SpotifyAuthMode, SpotifyAccessToken?>(SpotifyAuthMode::class.java)
 
     init {
@@ -151,9 +159,9 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
             return false
         }
 
-        clientIdValue.set(sanitized.clientId)
-        clientSecretValue.set(sanitized.clientSecret)
-        refreshTokenValue.set(sanitized.refreshToken)
+        sanitized.clientId?.let { clientIdValue.set(it) }
+        sanitized.clientSecret?.let { clientSecretValue.set(it) }
+        sanitized.refreshToken?.let { refreshTokenValue.set(it) }
         val saved = persistCredentials()
         cachedTokens[SpotifyAuthMode.MANUAL] = null
         if (state) {
@@ -547,7 +555,7 @@ object SpotifyModule : Module("Spotify", Category.CLIENT, defaultState = false) 
         MANUAL("Manual", "Custom App", SpotifyAuthFlow.CONFIDENTIAL_CLIENT);
 
         companion object {
-            fun fromStorage(value: String?): SpotifyAuthMode? = values().firstOrNull {
+            fun fromStorage(value: String?): SpotifyAuthMode? = SpotifyAuthMode.entries.firstOrNull {
                 it.storageValue.equals(value, true)
             }
         }

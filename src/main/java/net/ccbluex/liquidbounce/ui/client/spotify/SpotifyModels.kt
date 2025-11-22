@@ -24,8 +24,26 @@ data class SpotifyState(
     val track: SpotifyTrack?,
     val isPlaying: Boolean,
     val progressMs: Int,
+    val shuffleEnabled: Boolean,
+    val repeatMode: SpotifyRepeatMode,
+    val volumePercent: Int? = null,
     val updatedAt: Long = System.currentTimeMillis(),
 )
+
+enum class SpotifyRepeatMode(val apiValue: String) {
+    OFF("off"),
+    ALL("context"),
+    ONE("track");
+
+    companion object {
+        fun fromApi(value: String?): SpotifyRepeatMode {
+            if (value == null) {
+                return OFF
+            }
+            return SpotifyRepeatMode.entries.firstOrNull { it.apiValue.equals(value, ignoreCase = true) } ?: OFF
+        }
+    }
+}
 
 /**
  * Summarizes a Spotify playlist entry.
