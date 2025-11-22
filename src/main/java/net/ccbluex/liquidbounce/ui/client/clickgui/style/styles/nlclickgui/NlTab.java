@@ -1,6 +1,6 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
-import net.ccbluex.liquidbounce.features.module.Module;
+import net.ccbluex.liquidbounce.features.module.Category;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.BoolSetting;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.Numbersetting;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Direction;
@@ -13,7 +13,7 @@ import java.util.List;
 //单纯过渡使代码更加清晰
 public class NlTab {
 
-    public Module.Category type;
+    public Category type;
 
     public int x,y,w,h,y2;
 
@@ -21,21 +21,16 @@ public class NlTab {
 
 
 
-    public NlTab(Module.Category type,int y2){
+    public NlTab(Category type,int y2){
         this.type = type;
         this.y2 = y2;
 
-        int y3 = 0;
-
-        for (Module.Category.SubCategory subCategory: type.getSubCategories()){
-            nlSubList.add( new NlSub(subCategory,y2 + y3));
-            y3 += 18;
-        }
+        nlSubList.add(new NlSub(type, y2));
     }
 
     public void draw(int mx, int my){
 
-        Fonts.Nl_16.drawString(type.name(),x + 10,y  + y2,  NeverloseGui.getInstance().getLight() ? new Color(194,196,198).getRGB() : new Color(66,64,62).getRGB());
+        Fonts.Nl_16.drawString(type.getDisplayName(),x + 10,y  + y2,  NeverloseGui.getInstance().getLight() ? new Color(194,196,198).getRGB() : new Color(66,64,62).getRGB());
 
         for (NlSub nlSub : nlSubList){
             nlSub.x = x;
@@ -80,7 +75,7 @@ public class NlTab {
             //选择面板
             for (NlSub categoryRender : nlSubList) {
                 if (RenderUtil.isHovering(categoryRender.x + 7, categoryRender.y + categoryRender.y2 + 8, 76, 15,mx,my)) {
-                    NeverloseGui.getInstance().subCategory = categoryRender.subCategory;
+                    NeverloseGui.getInstance().selectedCategory = categoryRender.category;
                 }
             }
 

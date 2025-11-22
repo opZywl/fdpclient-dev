@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
 import net.ccbluex.liquidbounce.FDPClient;
-import net.ccbluex.liquidbounce.features.module.Module;
+import net.ccbluex.liquidbounce.features.module.Category;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Config.Configs;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Config.NeverloseConfigManager;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.BoolSetting;
@@ -45,7 +45,7 @@ public class NeverloseGui extends GuiScreen {
 
     public static Color neverlosecolor = new Color(28,133,192);
 
-    public Module.Category.SubCategory subCategory = null;
+    public Category selectedCategory = null;
 
     public List<NlTab> nlTabs = new ArrayList<>();
 
@@ -74,16 +74,8 @@ public class NeverloseGui extends GuiScreen {
 
          int y2 = 0;
          int u2 =0;
-        for (Module.Category type : Module.Category.values()){
-            if(type.name().equalsIgnoreCase("World") ||
-            type.name().equalsIgnoreCase("Interface")) continue;
-
+        for (Category type : Category.entries){
             nlTabs.add(new NlTab(type,u2 + y2 + 40));
-
-            for (Module.Category.SubCategory subCategory: type.getSubCategories()){
-                //计算所有sub间隔
-                u2 += 17;
-            }
 
             //与下一个Type的间隔
             y2 += 14;
@@ -127,7 +119,7 @@ public class NeverloseGui extends GuiScreen {
 
 
         if (Loader && !nlTabs.isEmpty()){
-            subCategory = nlTabs.get(0).nlSubList.get(0).subCategory;
+            selectedCategory = nlTabs.get(0).nlSubList.get(0).category;
             Loader = false;
         }
 
