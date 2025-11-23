@@ -123,22 +123,19 @@ class NeverloseGui : GuiScreen() {
             nlTab.draw(mouseX, mouseY)
         }
 
-        // FIX: Cálculo da animação corrigido para usar Double consistentemente
-        val closeButtonX = (x + w - 50 + (if (search || !searchanim.isDone()) (-83.0 * searchanim.getOutput()) else 0.0)).toFloat()
+        val searchProgress = searchanim.getOutput().toFloat()
+        val closeButtonOffset = if (search || !searchanim.isDone()) -83f * searchProgress else 0f
+        val closeButtonX = (x + w - 50 + closeButtonOffset).toFloat()
         Fonts.NlIcon.nlfont_20.nlfont_20.drawString("x", closeButtonX, (y + 17).toFloat(), if (settings) neverlosecolor.rgb else if (light) Color(95, 95, 95).rgb else -1)
 
         Fonts.NlIcon.nlfont_20.nlfont_20.drawString("j", (x + w - 30).toFloat(), (y + 18).toFloat(), if (search) neverlosecolor.rgb else if (light) Color(95, 95, 95).rgb else -1)
         searchanim.direction = if (search) Direction.FORWARDS else Direction.BACKWARDS
 
         if (search || !searchanim.isDone()) {
-            // FIX: Forçando operações Double
-            val searchBarX = (x + w - 30 - (85.0 * searchanim.getOutput())).toFloat()
-            val searchBarWidth = (80.0 * searchanim.getOutput()).toFloat()
-
-            RenderUtil.drawRoundedRect(searchBarX, (y + 12).toFloat(), searchBarWidth, 15f,
-                1F, if (light) Color(95, 95, 95).rgb else neverlosecolor.rgb)
-
-            val searchTextX = (x + w - 26 - (85.0 * searchanim.getOutput())).toFloat()
+            val searchBarX = (x + w - 30 - (85f * searchProgress)).toFloat()
+            val searchBarWidth = (80f * searchProgress).toFloat()
+            RoundedUtil.drawRound(searchBarX, (y + 12).toFloat(), searchBarWidth, 15f, 1f, if (light) Color(95, 95, 95) else neverlosecolor)
+            val searchTextX = (x + w - 26 - (85f * searchProgress)).toFloat()
             Fonts.Nl_16.drawString(searchText, searchTextX, (y + 15).toFloat(), if (light) Color(95, 95, 95).rgb else -1)
         }
         if (settings) {
@@ -178,8 +175,8 @@ class NeverloseGui : GuiScreen() {
                 }
             }
 
-            // FIX: Correção da lógica do hover do botão de fechar/settings (Mesmo problema de tipo do drawScreen)
-            val closeButtonX = (x + w - 50 + (if (search || !searchanim.isDone()) (-83.0 * searchanim.getOutput()) else 0.0)).toFloat()
+            val searchProgress = searchanim.getOutput().toFloat()
+            val closeButtonX = (x + w - 50 + (if (search || !searchanim.isDone()) (-83f * searchProgress) else 0f)).toFloat()
 
             if (RenderUtil.isHovering(closeButtonX, (y + 17).toFloat(), Fonts.NlIcon.nlfont_24.nlfont_24.stringWidth("x").toFloat(), Fonts.NlIcon.nlfont_24.nlfont_24.height.toFloat(), mouseX, mouseY)) {
                 settings = !settings
