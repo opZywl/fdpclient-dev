@@ -4,13 +4,13 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.fdpdropdown.util
 
 abstract class Animation @JvmOverloads constructor(
     var duration: Int,
-    var endPoint: Double, // Mudado para 'var' público para substituir get/setEndPoint manuais
-    direction: Direction = Direction.FORWARDS // Removido 'var' do construtor para definir a lógica no corpo da classe
+    var endPoint: Double,
+    direction: Direction = Direction.FORWARDS
 ) {
 
     val timerUtil = TimerUtil()
 
-    // A lógica de setDirection agora fica aqui dentro
+
     var direction: Direction = direction
         set(value) {
             if (field != value) {
@@ -33,12 +33,12 @@ abstract class Animation @JvmOverloads constructor(
     fun isDone(): Boolean = timerUtil.hasTimeElapsed(duration.toLong())
 
     fun changeDirection() {
-        // Ao atribuir valor aqui, o Kotlin chama automaticamente o bloco 'set' definido acima
+
         direction = direction.opposite()
     }
 
-    // Removidas as funções manuais getDirection, setDirection, getEndPoint, setEndPoint, setDuration
-    // para corrigir os conflitos de assinatura da JVM.
+
+
 
     protected open fun correctOutput(): Boolean = false
 

@@ -21,12 +21,12 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
         val mainx = NeverloseGui.getInstance().x
         val mainy = NeverloseGui.getInstance().y
 
-        // CORREÇÃO: trocado getY() por y
+
         val booly = (y + getScrollY()).toInt()
 
         Fonts.Nl_16.drawString(
             setting.name,
-            (mainx + 100 + x).toFloat(), // CORREÇÃO: trocado getX() por x
+            (mainx + 100 + x).toFloat(),
             (mainy + booly + 57).toFloat(),
             if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1
         )
@@ -35,14 +35,14 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
         val darkRectHover = RenderUtil.brighter(darkRectColor, .8f)
         val accentCircle = RenderUtil.darker(NeverloseGui.neverlosecolor, .5f)
 
-        // CORREÇÃO: trocado setDirection(...) por .direction = ... (por causa da mudança no Animation.kt)
+
         toggleAnimation.direction = if (setting.get()) Direction.FORWARDS else Direction.BACKWARDS
 
-        // CORREÇÃO: trocado setDirection(...) por .direction = ...
+
         hoveringAnimation.direction = if (
             RenderUtil.isHovering(
-                NeverloseGui.getInstance().x + 265 - 32 + x, // CORREÇÃO: x
-                (NeverloseGui.getInstance().y + (y + getScrollY()).toInt() + 57).toFloat(), // CORREÇÃO: y
+                NeverloseGui.getInstance().x + 265 - 32 + x,
+                (NeverloseGui.getInstance().y + (y + getScrollY()).toInt() + 57).toFloat(),
                 16f,
                 4.5f,
                 mouseX.toFloat().toInt(),
@@ -52,7 +52,7 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
 
 
         RoundedUtil.drawRound(
-            mainx + 265 - 32 + x, // CORREÇÃO: x
+            mainx + 265 - 32 + x,
             (mainy + booly + 57).toFloat(),
             16f,
             4.5f,
@@ -73,7 +73,7 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
         )
 
         RenderUtil.fakeCircleGlow(
-            (mainx + 265 + 3 - 32 + x + 11 * toggleAnimation.getOutput()).toFloat(), // CORREÇÃO: x
+            (mainx + 265 + 3 - 32 + x + 11 * toggleAnimation.getOutput()).toFloat(),
             (mainy + booly + 59).toFloat(),
             6f,
             Color.BLACK,
@@ -83,7 +83,7 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
         RenderUtil.resetColor()
 
         RoundedUtil.drawRound(
-            (mainx + 265 - 32 + x + 11 * toggleAnimation.getOutput()).toFloat(), // CORREÇÃO: x
+            (mainx + 265 - 32 + x + 11 * toggleAnimation.getOutput()).toFloat(),
             (mainy + booly + 56).toFloat(),
             6.5f,
             6.5f,
@@ -106,8 +106,8 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
         if (mouseButton == 0) {
             if (
                 RenderUtil.isHovering(
-                    NeverloseGui.getInstance().x + 265 - 32 + x, // CORREÇÃO: x
-                    (NeverloseGui.getInstance().y + (y + getScrollY()).toInt() + 57).toFloat(), // CORREÇÃO: y
+                    NeverloseGui.getInstance().x + 265 - 32 + x,
+                    (NeverloseGui.getInstance().y + (y + getScrollY()).toInt() + 57).toFloat(),
                     16f,
                     4.5f,
                     mouseX.toFloat().toInt(),
