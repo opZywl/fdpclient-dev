@@ -82,13 +82,21 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
 
         percent = max(0f, min(1f, (percent + (max(0.0, min(percentBar, 1.0)) - percent) * (0.2 / clamp)).toFloat()))
 
+        val (label, labelTruncated) = abbreviate(setting.name)
+        val labelX = (mainx + 100 + x).toFloat()
+        val labelY = (mainy + numbery + 57).toFloat()
+
         // Ajuste de fonte padronizado
         Fonts.Nl.Nl_16.Nl_16.drawString(
-            setting.name,
-            (mainx + 100 + x).toFloat(),
-            (mainy + numbery + 57).toFloat(),
+            label,
+            labelX,
+            labelY,
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )
+
+        if (labelTruncated && RenderUtil.isHovering(labelX, labelY - 3f, Fonts.Nl.Nl_16.Nl_16.stringWidth(label).toFloat(), 12f, mouseX, mouseY)) {
+            drawTooltip(setting.name, mouseX, mouseY)
+        }
 
         RoundedUtil.drawRound(
             (mainx + 170 + x),
@@ -253,5 +261,23 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         } else {
             decimalFormat.format(value)
         }
+    }
+
+    private fun abbreviate(value: String): Pair<String, Boolean> {
+        return if (value.length > 10) {
+            value.substring(0, 10) + "..." to true
+        } else {
+            value to false
+        }
+    }
+
+    private fun drawTooltip(text: String, mouseX: Int, mouseY: Int) {
+        val width = Fonts.Nl_15.stringWidth(text) + 6
+        val height = Fonts.Nl_15.height + 4
+        val renderX = (mouseX + 6).toFloat()
+        val renderY = (mouseY - height - 2).toFloat()
+
+        RenderUtil.drawRoundedRect(renderX, renderY, width.toFloat(), height.toFloat(), 2f, Color(0, 5, 19).rgb, 1f, Color(13, 24, 35).rgb)
+        Fonts.Nl_15.drawString(text, renderX + 3f, renderY + 2f, Color.WHITE.rgb)
     }
 }

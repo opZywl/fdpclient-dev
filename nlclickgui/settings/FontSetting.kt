@@ -23,19 +23,27 @@ class FontSetting(setting: FontValue, moduleRender: NlModule) : Downward<FontVal
         val mainy = gui.y
         val fontY = (y + getScrollY()).toInt()
 
+        val (label, labelTruncated) = abbreviate(setting.name)
+        val labelX = (mainx + 100 + x).toFloat()
+        val labelY = (mainy + fontY + 57).toFloat()
+
         // Ajuste da Fonte para evitar erro de referência (padronizado com NlModule)
         // Se der erro, tente remover o ".Nl_16" extra
         Fonts.Nl.Nl_16.Nl_16.drawString(
-            setting.name,
-            (mainx + 100 + x).toFloat(),
-            (mainy + fontY + 57).toFloat(),
+            label,
+            labelX,
+            labelY,
             if (gui.light) Color(95, 95, 95).rgb else -1
         )
+
+        if (labelTruncated && RenderUtil.isHovering(labelX, labelY - 3f, Fonts.Nl.Nl_16.Nl_16.stringWidth(label).toFloat(), 12f, mouseX, mouseY)) {
+            drawTooltip(setting.name, mouseX, mouseY)
+        }
 
         val (display, truncated) = abbreviate(setting.displayName)
         val rectWidth = calculateRectWidth(display)
 
-        val rectX = mainx + 150 + x
+        val rectX = mainx + 140 + x
         val rectY = mainy + fontY + 54
 
         RenderUtil.drawRoundedRect(
@@ -66,7 +74,7 @@ class FontSetting(setting: FontValue, moduleRender: NlModule) : Downward<FontVal
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
         val gui = NeverloseGui.getInstance()
-        val rectX = gui.x + 150 + x
+        val rectX = gui.x + 140 + x
         val rectY = gui.y + (y + getScrollY()).toInt() + 54
         val display = abbreviate(setting.displayName).first
 

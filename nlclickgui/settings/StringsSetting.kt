@@ -24,13 +24,21 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
         val mainy = NeverloseGui.getInstance().y
         val modey = (y + getScrollY()).toInt()
 
+        val (label, labelTruncated) = abbreviate(setting.name)
+        val labelX = (mainx + 100 + x).toFloat()
+        val labelY = (mainy + modey + 57).toFloat()
+
         // Nome da setting
         Fonts.Nl_16.drawString(
-            setting.name,
-            (mainx + 100 + x).toFloat(),
-            (mainy + modey + 57).toFloat(),
+            label,
+            labelX,
+            labelY,
             if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1
         )
+
+        if (labelTruncated && RenderUtil.isHovering(labelX, labelY - 3f, Fonts.Nl_16.stringWidth(label).toFloat(), 12f, mouseX, mouseY)) {
+            drawTooltip(setting.name, mouseX, mouseY)
+        }
 
         // Fundo do box (corrigido para Float)
         RenderUtil.drawRoundedRect(
