@@ -1,15 +1,20 @@
-package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings
+/*
+ * FDPClient Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/SkidderMC/FDPClient/
+ */
+package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.settings
 
 import net.ccbluex.liquidbounce.config.FontValue
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Downward
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil.drawRoundedRect
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil.isHovering
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import java.awt.Color
+import kotlin.math.max
 
-class FontSetting(setting: FontValue, moduleRender: net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule) :
-    Downward<FontValue>(setting, moduleRender) {
+class FontSetting(setting: FontValue, moduleRender: NlModule) : Downward<FontValue>(setting, moduleRender) {
 
     override fun draw(mouseX: Int, mouseY: Int) {
         val gui = NeverloseGui.getInstance()
@@ -17,20 +22,23 @@ class FontSetting(setting: FontValue, moduleRender: net.ccbluex.liquidbounce.ui.
         val mainy = gui.y
         val fontY = (y + getScrollY()).toInt()
 
-        Fonts.Nl_16.drawString(
+        // Ajuste da Fonte para evitar erro de referência (padronizado com NlModule)
+        // Se der erro, tente remover o ".Nl_16" extra
+        Fonts.Nl.Nl_16.Nl_16.drawString(
             setting.name,
-            (mainx + 100 + x).toFloat(),
+            (mainx + 100 + x),
             (mainy + fontY + 57).toFloat(),
             if (gui.light) Color(95, 95, 95).rgb else -1
         )
 
         val display = setting.displayName
-        val rectWidth = maxOf(100, Fonts.Nl_15.stringWidth(display) + 20)
+        val widthStr = Fonts.Nl_15.stringWidth(display)
+        val rectWidth = max(100, widthStr + 20)
 
         val rectX = mainx + 170 + x
         val rectY = mainy + fontY + 54
 
-        drawRoundedRect(
+        RenderUtil.drawRoundedRect(
             rectX,
             rectY.toFloat(),
             rectWidth.toFloat(),
@@ -57,9 +65,11 @@ class FontSetting(setting: FontValue, moduleRender: net.ccbluex.liquidbounce.ui.
         val rectX = gui.x + 170 + x
         val rectY = gui.y + (y + getScrollY()).toInt() + 54
         val display = setting.displayName
-        val rectWidth = maxOf(100, Fonts.Nl_15.stringWidth(display) + 20)
 
-        if (mouseButton == 0 && isHovering(rectX.toFloat(), rectY.toFloat(), rectWidth.toFloat(), 14f, mouseX, mouseY)) {
+        val widthStr = Fonts.Nl_15.stringWidth(display)
+        val rectWidth = max(100, widthStr + 20)
+
+        if (mouseButton == 0 && RenderUtil.isHovering(rectX, rectY.toFloat(), rectWidth.toFloat(), 14f, mouseX, mouseY)) {
             val relativeX = mouseX - rectX
             when {
                 relativeX < 20 -> setting.previous()
