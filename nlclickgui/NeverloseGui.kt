@@ -18,6 +18,7 @@ import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.shader.Framebuffer
 import net.minecraft.util.ChatAllowedCharacters
 import net.minecraft.util.ResourceLocation
+import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.io.IOException
@@ -39,6 +40,7 @@ class NeverloseGui : GuiScreen() {
     private var settings = false
     private var search = false
     private var searchText = ""
+    private var showShadowDebug = true
     private val defaultAvatar = ResourceLocation(FDPClient.CLIENT_NAME.lowercase(Locale.getDefault()) + "/64.png")
     private var avatarTexture: ResourceLocation = defaultAvatar
     private var avatarLoaded = false
@@ -144,6 +146,9 @@ class NeverloseGui : GuiScreen() {
         RoundedUtil.drawRoundOutline((x + 105).toFloat(), (y + 10).toFloat(), 55f, 21f, 2f, 0.1f, if (light) Color(245, 245, 245) else Color(13, 13, 11), if (RenderUtil.isHovering((x + 105).toFloat(), (y + 10).toFloat(), 55f, 21f, mouseX, mouseY)) neverlosecolor else Color(19, 19, 17))
         Fonts.Nl_18.drawString("Save", (x + 128).toFloat(), (y + 18).toFloat(), if (light) Color(18, 18, 19).rgb else -1)
         Fonts.NlIcon.nlfont_20.nlfont_20.drawString("K", (x + 110).toFloat(), (y + 19).toFloat(), if (light) Color(18, 18, 19).rgb else -1)
+        if (showShadowDebug) {
+            NlDebugOverlay.render(this)
+        }
         GL11.glPopMatrix()
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
@@ -208,6 +213,11 @@ class NeverloseGui : GuiScreen() {
 
     @Throws(IOException::class)
     override fun keyTyped(typedChar: Char, keyCode: Int) {
+        if (keyCode == Keyboard.KEY_F9) {
+            showShadowDebug = !showShadowDebug
+            NlDebugOverlay.enabled = showShadowDebug
+            return
+        }
         if (search) {
             when (keyCode) {
                 1 -> {
