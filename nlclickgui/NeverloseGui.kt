@@ -132,10 +132,10 @@ class NeverloseGui : GuiScreen() {
         searchanim.direction = if (search) Direction.FORWARDS else Direction.BACKWARDS
 
         if (search || !searchanim.isDone()) {
-            val searchBarX = (x + w - 30 - (85f * searchProgress)).toFloat()
-            val searchBarWidth = (80f * searchProgress).toFloat()
+            val searchBarX = (x + w - 30 - (85f * searchProgress))
+            val searchBarWidth = (80f * searchProgress)
             RoundedUtil.drawRound(searchBarX, (y + 12).toFloat(), searchBarWidth, 15f, 1f, if (light) Color(235, 235, 235) else neverlosecolor)
-            val searchTextX = (x + w - 26 - (85f * searchProgress)).toFloat()
+            val searchTextX = (x + w - 26 - (85f * searchProgress))
             Fonts.Nl_16.drawString(searchText, searchTextX, (y + 15).toFloat(), if (light) Color(18, 18, 19).rgb else -1)
         }
         if (settings) {
@@ -176,7 +176,7 @@ class NeverloseGui : GuiScreen() {
             }
 
             val searchProgress = searchanim.getOutput().toFloat()
-            val closeButtonX = (x + w - 50 + (if (search || !searchanim.isDone()) (-83f * searchProgress) else 0f)).toFloat()
+            val closeButtonX = (x + w - 50 + (if (search || !searchanim.isDone()) (-83f * searchProgress) else 0f))
 
             if (RenderUtil.isHovering(closeButtonX, (y + 17).toFloat(), Fonts.NlIcon.nlfont_24.nlfont_24.stringWidth("x").toFloat(), Fonts.NlIcon.nlfont_24.nlfont_24.height.toFloat(), mouseX, mouseY)) {
                 settings = !settings

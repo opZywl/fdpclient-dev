@@ -11,7 +11,6 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.anima
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.SmoothStepAnimation
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil.Companion.drawRound
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.attack.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.roundToHalf
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
@@ -22,7 +21,7 @@ import java.util.stream.Collectors
 import kotlin.math.max
 import kotlin.math.min
 
-class NlSub(private val parentCategory: Category?, var subCategory: SubCategory, var y2: Int) {
+class NlSub(parentCategory: Category?, var subCategory: SubCategory, var y2: Int) {
     var x: Int = 0
     var y: Int = 0
     var w: Int = 0

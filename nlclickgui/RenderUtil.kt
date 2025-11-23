@@ -2,7 +2,6 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui
 
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.fdpdropdown.utils.render.DrRenderUtils
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Animation
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.gl.GLClientState
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.tessellate.Tessellation
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.tessellate.Tessellation.Companion.createExpanding
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer
@@ -104,11 +103,6 @@ object RenderUtil {
         GL11.glEnd()
         stopRender()
     }
-
-    fun smoothAnimation(ani: Float, finalState: Float, speed: Float, scale: Float): Float {
-        return getAnimationState(ani, finalState, max(10.0f, abs(ani - finalState) * speed) * scale)
-    }
-
 
     fun drawFastRoundedRect(x0: Float, y0: Float, x1: Float, y1: Float, radius: Float, color: Int) {
         val f2 = (color shr 24 and 0xFF) / 255.0f
@@ -1954,28 +1948,6 @@ object RenderUtil {
         color2.getColorComponents(rgb2)
         val color3 = Color(rgb1[0] * r + rgb2[0] * ir, rgb1[1] * r + rgb2[1] * ir, rgb1[2] * r + rgb2[2] * ir)
         return color3
-    }
-
-    fun drawLine(x: Float, y: Float, x1: Float, y1: Float, width: Float) {
-        drawLine(x, y, 0.0f, x1, y1, 0.0f, width)
-    }
-
-    fun drawLine(x: Float, y: Float, z: Float, x1: Float, y1: Float, z1: Float, width: Float) {
-        GL11.glLineWidth(width)
-        setupRender(true)
-        setupClientState(GLClientState.VERTEX, true)
-        tessellator.addVertex(x, y, z).addVertex(x1, y1, z1).draw(3)
-        setupClientState(GLClientState.VERTEX, false)
-        setupRender(false)
-    }
-
-    fun setupClientState(state: GLClientState, enabled: Boolean) {
-        csBuffer.clear()
-        if (state.ordinal > 0) {
-            csBuffer.add(state.cap)
-        }
-        csBuffer.add(32884)
-        csBuffer.forEach(if (enabled) ENABLE_CLIENT_STATE else DISABLE_CLIENT_STATE)
     }
 
     fun resetColor() {
