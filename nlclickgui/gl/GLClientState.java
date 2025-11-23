@@ -13,7 +13,7 @@ public enum GLClientState implements GLenum {
    private final String name;
    private final int cap;
 
-   private GLClientState(String name, int cap) {
+   GLClientState(String name, int cap) {
       this.name = name;
       this.cap = cap;
    }

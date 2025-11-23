@@ -4,8 +4,8 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.gl;
 
 public interface GLenum {
-    public String getName();
+    String getName();
 
-    public int getCap();
+    int getCap();
 }
 

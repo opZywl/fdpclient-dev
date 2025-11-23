@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui;
 
-
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Animation;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.gl.GLClientState;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.tessellate.Tessellation;
@@ -27,8 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-
-import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.MathUtil.interpolateInt;
+import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.fdpdropdown.utils.render.DrRenderUtils.interpolateInt;
 import static net.minecraft.client.renderer.GlStateManager.disableBlend;
 import static net.minecraft.client.renderer.GlStateManager.enableTexture2D;
 import static org.lwjgl.opengl.GL11.*;
@@ -157,7 +155,7 @@ public class RenderUtil
         int j;
         for (j = 0; j <= 18; ++j) {
             final float f8 = j * 5.0f;
-            glVertex2f((float) (f6 + radius * MathHelper.cos((float) Math.toRadians(f8))), (float) (f7 - radius * MathHelper.sin((float) Math.toRadians(f8))));
+            glVertex2f(f6 + radius * MathHelper.cos((float) Math.toRadians(f8)), f7 - radius * MathHelper.sin((float) Math.toRadians(f8)));
         }
         glEnd();
         glBegin(6);
@@ -166,7 +164,8 @@ public class RenderUtil
         glVertex2f(f6, f7);
         for (j = 0; j <= 18; ++j) {
             final float f9 = j * 5.0f;
-            glVertex2f((float) (f6 - radius * MathHelper.cos((float) Math.toRadians(f9))), (float) (f7 - radius * MathHelper.sin((float) Math.toRadians(f9))));
+            glVertex2f(f6 - radius * MathHelper.cos((float) Math.toRadians(f9)),
+                    f7 - radius * MathHelper.sin((float) Math.toRadians(f9)));
         }
         glEnd();
         glBegin(6);
@@ -175,7 +174,7 @@ public class RenderUtil
         glVertex2f(f6, f7);
         for (j = 0; j <= 18; ++j) {
             final float f10 = j * 5.0f;
-            glVertex2f((float) (f6 - radius * MathHelper.cos((float) Math.toRadians(f10))), (float) (f7 + radius * MathHelper.sin((float) Math.toRadians(f10))));
+            glVertex2f(f6 - radius * MathHelper.cos((float) Math.toRadians(f10)), f7 + radius * MathHelper.sin((float) Math.toRadians(f10)));
         }
         glEnd();
         glBegin(6);
@@ -184,7 +183,7 @@ public class RenderUtil
         glVertex2f(f6, f7);
         for (j = 0; j <= 18; ++j) {
             final float f11 = j * 5.0f;
-            glVertex2f((float) (f6 + radius * MathHelper.cos((float) Math.toRadians(f11))), (float) (f7 + radius * MathHelper.sin((float) Math.toRadians(f11))));
+            glVertex2f(f6 + radius * MathHelper.cos((float) Math.toRadians(f11)), f7 + radius * MathHelper.sin((float) Math.toRadians(f11)));
         }
         glEnd();
         glEnable(3553);
@@ -323,10 +322,10 @@ public class RenderUtil
     }
     private static void draw(WorldRenderer renderer, int x, int y, int width, int height, int red, int green, int blue, int alpha) {
         renderer.begin(7, DefaultVertexFormats.POSITION_COLOR);
-        renderer.pos((double)(x + 0), (double)(y + 0), 0.0).color(red, green, blue, alpha).endVertex();
-        renderer.pos((double)(x + 0), (double)(y + height), 0.0).color(red, green, blue, alpha).endVertex();
-        renderer.pos((double)(x + width), (double)(y + height), 0.0).color(red, green, blue, alpha).endVertex();
-        renderer.pos((double)(x + width), (double)(y + 0), 0.0).color(red, green, blue, alpha).endVertex();
+        renderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex();
+        renderer.pos(x, y + height, 0.0).color(red, green, blue, alpha).endVertex();
+        renderer.pos(x + width, y + height, 0.0).color(red, green, blue, alpha).endVertex();
+        renderer.pos(x + width, y, 0.0).color(red, green, blue, alpha).endVertex();
         Tessellator.getInstance().draw();
     }
 
@@ -372,25 +371,25 @@ public class RenderUtil
         float f5 = (float) (col2 >> 16 & 255) / 255.0f;
         float f6 = (float) (col2 >> 8 & 255) / 255.0f;
         float f7 = (float) (col2 & 255) / 255.0f;
-        GL11.glEnable((int) 3042);
-        GL11.glDisable((int) 3553);
-        GL11.glBlendFunc((int) 770, (int) 771);
-        GL11.glEnable((int) 2848);
-        GL11.glShadeModel((int) 7425);
+        GL11.glEnable(3042);
+        GL11.glDisable(3553);
+        GL11.glBlendFunc(770, 771);
+        GL11.glEnable(2848);
+        GL11.glShadeModel(7425);
         GL11.glPushMatrix();
-        GL11.glBegin((int) 7);
-        GL11.glColor4f((float) f1, (float) f2, (float) f3, (float) f);
-        GL11.glVertex2d((double) left, (double) bottom);
-        GL11.glVertex2d((double) right, (double) bottom);
-        GL11.glColor4f((float) f5, (float) f6, (float) f7, (float) f4);
-        GL11.glVertex2d((double) right, (double) top);
-        GL11.glVertex2d((double) left, (double) top);
+        GL11.glBegin(7);
+        GL11.glColor4f(f1, f2, f3, f);
+        GL11.glVertex2d(left, bottom);
+        GL11.glVertex2d(right, bottom);
+        GL11.glColor4f(f5, f6, f7, f4);
+        GL11.glVertex2d(right, top);
+        GL11.glVertex2d(left, top);
         GL11.glEnd();
         GL11.glPopMatrix();
-        GL11.glEnable((int) 3553);
-        GL11.glDisable((int) 3042);
-        GL11.glDisable((int) 2848);
-        GL11.glShadeModel((int) 7424);
+        GL11.glEnable(3553);
+        GL11.glDisable(3042);
+        GL11.glDisable(2848);
+        GL11.glShadeModel(7424);
         Gui.drawRect(0, 0, 0, 0, 0);
     }
 
@@ -1010,7 +1009,7 @@ public class RenderUtil
         int r = color >> 16 & 0xFF;
         int g = color >> 8 & 0xFF;
         int b = color & 0xFF;
-        int a = (int) 255;
+        int a = 255;
         return (r & 0xFF) << 16 | (g & 0xFF) << 8 | b & 0xFF | (a & 0xFF) << 24;
     }
     public static int darker(int color, float factor) {
@@ -1476,16 +1475,16 @@ public class RenderUtil
     }
     public static void drawCustomImage(int x, int y, int width, int height, ResourceLocation image) {
         ScaledResolution scaledResolution = new ScaledResolution(Minecraft.getMinecraft());
-        GL11.glDisable((int)2929);
-        GL11.glEnable((int)3042);
-        GL11.glDepthMask((boolean)false);
-        OpenGlHelper.glBlendFunc((int)770, (int)771, (int)1, (int)0);
-        GL11.glColor4f((float)1.0f, (float)1.0f, (float)1.0f, (float)1.0f);
+        GL11.glDisable(2929);
+        GL11.glEnable(3042);
+        GL11.glDepthMask(false);
+        OpenGlHelper.glBlendFunc(770, 771, 1, 0);
+        GL11.glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
         Minecraft.getMinecraft().getTextureManager().bindTexture(image);
-        Gui.drawModalRectWithCustomSizedTexture((int)x, (int)y, (float)0.0f, (float)0.0f, (int)width, (int)height, (float)width, (float)height);
-        GL11.glDepthMask((boolean)true);
-        GL11.glDisable((int)3042);
-        GL11.glEnable((int)2929);
+        Gui.drawModalRectWithCustomSizedTexture(x, y, 0.0f, 0.0f, width, height, (float)width, (float)height);
+        GL11.glDepthMask(true);
+        GL11.glDisable(3042);
+        GL11.glEnable(2929);
     }
     public static void drawImage(ResourceLocation image, float x, float y, float width, float height, int color) {
         GlStateManager.disableDepth();
@@ -1510,10 +1509,10 @@ public class RenderUtil
         Tessellator tessellator = Tessellator.getInstance();
         WorldRenderer worldrenderer = tessellator.getWorldRenderer();
         worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX);
-        worldrenderer.pos((double)x, (double)(y + height), 0.0).tex((double)(u * f), (double)((v + height) * f1)).endVertex();
-        worldrenderer.pos((double)(x + width), (double)(y + height), 0.0).tex((double)((u + width) * f), (double)((v + height) * f1)).endVertex();
-        worldrenderer.pos((double)(x + width), (double)y, 0.0).tex((double)((u + width) * f), (double)(v * f1)).endVertex();
-        worldrenderer.pos((double)x, (double)y, 0.0).tex((double)(u * f), (double)(v * f1)).endVertex();
+        worldrenderer.pos(x, y + height, 0.0).tex(u * f, (v + height) * f1).endVertex();
+        worldrenderer.pos(x + width, y + height, 0.0).tex((u + width) * f, (v + height) * f1).endVertex();
+        worldrenderer.pos(x + width, y, 0.0).tex((u + width) * f, v * f1).endVertex();
+        worldrenderer.pos(x, y, 0.0).tex(u * f, v * f1).endVertex();
         tessellator.draw();
     }
 
@@ -1600,14 +1599,14 @@ public class RenderUtil
         GL11.glColor4f(f2, f3, f4, f);
         GL11.glLineWidth(l1);
         GL11.glBegin(1);
-        GL11.glVertex2d((double)x, (double)y);
-        GL11.glVertex2d((double)x, (double)y2);
-        GL11.glVertex2d((double)x2, (double)y2);
-        GL11.glVertex2d((double)x2, (double)y);
-        GL11.glVertex2d((double)x, (double)y);
-        GL11.glVertex2d((double)x2, (double)y);
-        GL11.glVertex2d((double)x, (double)y2);
-        GL11.glVertex2d((double)x2, (double)y2);
+        GL11.glVertex2d(x, y);
+        GL11.glVertex2d(x, y2);
+        GL11.glVertex2d(x2, y2);
+        GL11.glVertex2d(x2, y);
+        GL11.glVertex2d(x, y);
+        GL11.glVertex2d(x2, y);
+        GL11.glVertex2d(x, y2);
+        GL11.glVertex2d(x2, y2);
         GL11.glEnd();
         GL11.glPopMatrix();
         GL11.glEnable(3553);
@@ -1655,14 +1654,6 @@ public class RenderUtil
         color2.getColorComponents(rgb2);
         final Color color3 = new Color(rgb1[0] * r + rgb2[0] * ir, rgb1[1] * r + rgb2[1] * ir, rgb1[2] * r + rgb2[2] * ir);
         return color3;
-    }
-
-    public static void drawLine(final Vec2f start, final Vec2f end, final float width) {
-        drawLine(start.getX(), start.getY(), end.getX(), end.getY(), width);
-    }
-
-    public static void drawLine(final Vec3f start, final Vec3f end, final float width) {
-        drawLine((float)start.getX(), (float)start.getY(), (float)start.getZ(), (float)end.getX(), (float)end.getY(), (float)end.getZ(), width);
     }
 
     public static void drawLine(final float x, final float y, final float x1, final float y1, final float width) {

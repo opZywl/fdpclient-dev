@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui.neverlosecolor;
+import static net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt.roundToHalf;
 
 public class NlSub {
 
@@ -70,7 +71,7 @@ public class NlSub {
             double scrolll = getScroll();
             visibleModules = getVisibleModules();
             for (NlModule nlModule : visibleModules) {
-                nlModule.scrollY = (int) MathUtil.roundToHalf(scrolll);
+                nlModule.scrollY = (int) roundToHalf(scrolll);
             }
             onScroll(40);
 
@@ -98,7 +99,7 @@ public class NlSub {
 
         if (isSelected() && (subCategory == Category.SubCategory.CONFIGS)) {
             double scrolll = getScroll();
-            NeverloseGui.getInstance().configs.setScroll((int) MathUtil.roundToHalf(scrolll));
+            NeverloseGui.getInstance().configs.setScroll((int) roundToHalf(scrolll));
             NeverloseGui.getInstance().configs.setBounds(x + 90, y + 40, w - 110);
             onScroll(40);
             maxScroll = Math.max(0, NeverloseGui.getInstance().configs.getContentHeight() - (h - 40));

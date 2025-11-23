@@ -8,9 +8,8 @@ import net.minecraft.util.MathHelper;
 import java.awt.*;
 import java.util.regex.Pattern;
 
-import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.MathUtil.interpolateFloat;
-import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.MathUtil.interpolateInt;
-
+import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.fdpdropdown.utils.render.DrRenderUtils.interpolateInt;
+import static net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt.interpolateFloat;
 
 public class ColorUtils {
     public static int randomColor() {
@@ -108,7 +107,6 @@ public class ColorUtils {
         return new Color(resultColor.getRed(), resultColor.getGreen(), resultColor.getBlue(),
                 interpolateInt(color1.getAlpha(), color2.getAlpha(), amount));
     }
-
 
     public static Color rainbow(long offset, float fade) {
         float hue = (float)(System.nanoTime() + offset) / 1.0E10f % 1.0f;
@@ -251,4 +249,3 @@ public class ColorUtils {
         return ColorUtils.isDark(r, g, b);
     }
 }
-

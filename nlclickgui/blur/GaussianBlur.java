@@ -1,6 +1,5 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.blur;
 
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.MathUtil;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil;
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.ShaderUtil;
 import net.minecraft.client.renderer.GlStateManager;
@@ -11,6 +10,7 @@ import org.lwjgl.BufferUtils;
 import java.nio.FloatBuffer;
 
 import static net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil.mc;
+import static net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt.calculateGaussianValue;
 import static net.minecraft.client.renderer.OpenGlHelper.glUniform1;
 import static org.lwjgl.opengl.GL11.*;
 
@@ -29,15 +29,12 @@ public class GaussianBlur {
 
         final FloatBuffer weightBuffer = BufferUtils.createFloatBuffer(256);
         for (int i = 0; i <= radius; i++) {
-            weightBuffer.put(MathUtil.calculateGaussianValue(i, radius / 2));
+            weightBuffer.put(calculateGaussianValue(i, radius / 2));
         }
 
         weightBuffer.rewind();
         glUniform1(blurShader.getUniform("weights"), weightBuffer);
     }
-
-
-
 
     public static void renderBlur(float radius) {
         GlStateManager.enableBlend();
