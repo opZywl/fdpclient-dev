@@ -16,8 +16,10 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-class RangeSetting(setting: Value<*>, moduleRender: net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule) :
-    Downward<Value<*>>(setting, moduleRender) {
+class RangeSetting(
+    setting: Value<*>,
+    moduleRender: net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NlModule
+) : Downward<Value<*>>(setting, moduleRender) {
 
     private var draggingLeft = false
     private var draggingRight = false
@@ -31,19 +33,22 @@ class RangeSetting(setting: Value<*>, moduleRender: net.ccbluex.liquidbounce.ui.
         val barX = mainx + 170 + x
         val barY = (mainy + rangeY + 58).toFloat()
 
-        val (minimum, maximum, currentStart, currentEnd) = when (setting) {
-            is IntRangeValue -> Quadruple(
-                setting.minimum.toDouble(),
-                setting.maximum.toDouble(),
-                setting.get().first.toDouble(),
-                setting.get().last.toDouble()
+        val intRange = setting as? IntRangeValue
+        val floatRange = setting as? FloatRangeValue
+
+        val (minimum, maximum, currentStart, currentEnd) = when {
+            intRange != null -> Quadruple(
+                intRange.minimum.toDouble(),
+                intRange.maximum.toDouble(),
+                intRange.get().first.toDouble(),
+                intRange.get().last.toDouble()
             )
 
-            is FloatRangeValue -> Quadruple(
-                setting.minimum.toDouble(),
-                setting.maximum.toDouble(),
-                setting.get().start.toDouble(),
-                setting.get().endInclusive.toDouble()
+            floatRange != null -> Quadruple(
+                floatRange.minimum.toDouble(),
+                floatRange.maximum.toDouble(),
+                floatRange.get().start.toDouble(),
+                floatRange.get().endInclusive.toDouble()
             )
 
             else -> return
@@ -75,22 +80,20 @@ class RangeSetting(setting: Value<*>, moduleRender: net.ccbluex.liquidbounce.ui.
             val percent = ((mouseX.toFloat() - barX) / 60f).coerceIn(0f, 1f)
             val newValue = minimum + (maximum - minimum) * percent
 
-            when (setting) {
-                is IntRangeValue -> {
-                    if (draggingLeft) setting.setFirst(MathHelper.floor_double(newValue).coerceAtMost(setting.get().last), true)
-                    if (draggingRight) setting.setLast(MathHelper.floor_double(newValue).coerceAtLeast(setting.get().first), true)
-                }
+            intRange?.let {
+                if (draggingLeft) it.setFirst(MathHelper.floor_double(newValue).coerceAtMost(it.get().last), true)
+                if (draggingRight) it.setLast(MathHelper.floor_double(newValue).coerceAtLeast(it.get().first), true)
+            }
 
-                is FloatRangeValue -> {
-                    if (draggingLeft) setting.setFirst(newValue.toFloat().coerceAtMost(setting.get().endInclusive), true)
-                    if (draggingRight) setting.setLast(newValue.toFloat().coerceAtLeast(setting.get().start), true)
-                }
+            floatRange?.let {
+                if (draggingLeft) it.setFirst(newValue.toFloat().coerceAtMost(it.get().endInclusive), true)
+                if (draggingRight) it.setLast(newValue.toFloat().coerceAtLeast(it.get().start), true)
             }
         }
 
-        val valueString = when (setting) {
-            is IntRangeValue -> "${setting.get().first} - ${setting.get().last}${setting.suffix ?: ""}"
-            is FloatRangeValue -> "${"%.2f".format(setting.get().start)} - ${"%.2f".format(setting.get().endInclusive)}${setting.suffix ?: ""}"
+        val valueString = when {
+            intRange != null -> "${intRange.get().first} - ${intRange.get().last}${intRange.suffix ?: ""}"
+            floatRange != null -> "${"%.2f".format(floatRange.get().start)} - ${"%.2f".format(floatRange.get().endInclusive)}${floatRange.suffix ?: ""}"
             else -> ""
         }
 
@@ -119,17 +122,20 @@ class RangeSetting(setting: Value<*>, moduleRender: net.ccbluex.liquidbounce.ui.
         val barX = gui.x + 170 + x
         val barY = gui.y + (y + getScrollY()).toInt() + 58
 
+        val intRange = setting as? IntRangeValue
+        val floatRange = setting as? FloatRangeValue
+
         val percentStart: Double
         val percentEnd: Double
-        when (setting) {
-            is IntRangeValue -> {
-                percentStart = (setting.get().first - setting.minimum).toDouble() / (setting.maximum - setting.minimum)
-                percentEnd = (setting.get().last - setting.minimum).toDouble() / (setting.maximum - setting.minimum)
+        when {
+            intRange != null -> {
+                percentStart = (intRange.get().first - intRange.minimum).toDouble() / (intRange.maximum - intRange.minimum)
+                percentEnd = (intRange.get().last - intRange.minimum).toDouble() / (intRange.maximum - intRange.minimum)
             }
 
-            is FloatRangeValue -> {
-                percentStart = (setting.get().start - setting.minimum) / (setting.maximum - setting.minimum)
-                percentEnd = (setting.get().endInclusive - setting.minimum) / (setting.maximum - setting.minimum)
+            floatRange != null -> {
+                percentStart = (floatRange.get().start - floatRange.minimum) / (floatRange.maximum - floatRange.minimum)
+                percentEnd = (floatRange.get().endInclusive - floatRange.minimum) / (floatRange.maximum - floatRange.minimum)
             }
 
             else -> return
