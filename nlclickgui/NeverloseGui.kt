@@ -85,6 +85,13 @@ class NeverloseGui : GuiScreen() {
         val depthMaskBefore = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK)
 
         GlStateManager.disableDepth()
+
+        // Clear any leftover depth data from the world render so GUI passes never sample or
+        // interact with the stale depth buffer. This avoids the dark halo that appears while the
+        // window is dragged when another system re-enables depth later in the frame.
+        GlStateManager.depthMask(true)
+        GL11.glClear(GL11.GL_DEPTH_BUFFER_BIT)
+
         GlStateManager.depthMask(false)
         if (loader && nlTabs.isNotEmpty()) {
             selectedSub = nlTabs[0].nlSubList[0]
