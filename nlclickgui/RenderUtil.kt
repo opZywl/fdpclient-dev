@@ -356,6 +356,12 @@ object RenderUtil {
         GL11.glHint(3155, 4352)
     }
 
+    fun hasDepthAttachment(framebuffer: Framebuffer?): Boolean {
+        framebuffer ?: return false
+
+        return framebuffer.useDepth || framebuffer.depthBuffer > -1
+    }
+
     private fun draw(
         renderer: WorldRenderer,
         x: Int,
@@ -376,15 +382,17 @@ object RenderUtil {
     }
 
     fun createFrameBuffer(framebuffer: Framebuffer?): Framebuffer {
+        val hadDepthAttachment = hasDepthAttachment(framebuffer)
         val needsRebuild = framebuffer == null || framebuffer.framebufferWidth != mc.displayWidth ||
-            framebuffer.framebufferHeight != mc.displayHeight || framebuffer.useDepth || framebuffer.depthBuffer > -1
+                framebuffer.framebufferHeight != mc.displayHeight || hadDepthAttachment
 
         if (needsRebuild) {
             framebuffer?.deleteFramebuffer()
 
             // Depth buffers are not required for the GUI passes and enabling them leads to dark
             // artifacts around the window while it is dragged. Keep the framebuffer colour-only
-            // to avoid the unintended shadow.
+            // to avoid the unintended shadow. Record the rebuild for the debug overlay so issues
+            // are easier to diagnose on-device.
             return Framebuffer(mc.displayWidth, mc.displayHeight, false)
         }
         return framebuffer
