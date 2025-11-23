@@ -27,7 +27,7 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
         // Nome da setting
         Fonts.Nl_16.drawString(
             setting.name,
-            (mainx + 100 + x),
+            (mainx + 100 + x).toFloat(),
             (mainy + modey + 57).toFloat(),
             if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1
         )
@@ -50,7 +50,7 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
         // Texto do valor atual
         Fonts.Nl_16.drawString(
             displayValue,
-            (mainx + 173 + x),
+            (mainx + 173 + x).toFloat(),
             (mainy + modey + 59).toFloat(),
             if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1
         )
@@ -100,7 +100,7 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
                 val (optionDisplay, optionTruncated) = abbreviate(option)
                 Fonts.Nl_15.drawString(
                     optionDisplay,
-                    (mainx + 173 + x),
+                    (mainx + 173 + x).toFloat(),
                     (mainy + modey + 59 + 12 + optionIndex * 12).toFloat(),
                     if (option.equals(setting.get(), true)) NeverloseGui.neverlosecolor.rgb else if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1
                 )
@@ -158,6 +158,6 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
         val renderY = (mouseY - height - 2).toFloat()
 
         RenderUtil.drawRoundedRect(renderX, renderY, width.toFloat(), height.toFloat(), 2f, Color(0, 5, 19).rgb, 1f, Color(13, 24, 35).rgb)
-        Fonts.Nl_15.drawString(text, (renderX + 3).toInt(), renderY + 2, Color.WHITE.rgb)
+        Fonts.Nl_15.drawString(text, renderX + 3f, renderY + 2f, Color.WHITE.rgb)
     }
 }

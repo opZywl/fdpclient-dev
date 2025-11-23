@@ -81,7 +81,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         // Ajuste de fonte padronizado
         Fonts.Nl.Nl_16.Nl_16.drawString(
             setting.name,
-            mainx + 100 + x,
+            (mainx + 100 + x).toFloat(),
             (mainy + numbery + 57).toFloat(),
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )
@@ -136,7 +136,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
 
         Fonts.Nl_15.drawString(
             displayString,
-            mainx + 237 + x,
+            (mainx + 237 + x).toFloat(),
             (mainy + numbery + 58).toFloat(),
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )

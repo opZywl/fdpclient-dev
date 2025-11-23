@@ -27,7 +27,7 @@ class FontSetting(setting: FontValue, moduleRender: NlModule) : Downward<FontVal
         // Se der erro, tente remover o ".Nl_16" extra
         Fonts.Nl.Nl_16.Nl_16.drawString(
             setting.name,
-            (mainx + 100 + x),
+            (mainx + 100 + x).toFloat(),
             (mainy + fontY + 57).toFloat(),
             if (gui.light) Color(95, 95, 95).rgb else -1
         )
@@ -49,8 +49,8 @@ class FontSetting(setting: FontValue, moduleRender: NlModule) : Downward<FontVal
             Color(13, 24, 35).rgb
         )
 
-        Fonts.Nl_15.drawString("<", rectX + 4, (rectY + 5).toFloat(), if (gui.light) Color(95, 95, 95).rgb else -1)
-        Fonts.Nl_15.drawString(">", rectX + rectWidth - 9, (rectY + 5).toFloat(), if (gui.light) Color(95, 95, 95).rgb else -1)
+        Fonts.Nl_15.drawString("<", (rectX + 4).toFloat(), (rectY + 5).toFloat(), if (gui.light) Color(95, 95, 95).rgb else -1)
+        Fonts.Nl_15.drawString(">", (rectX + rectWidth - 9).toFloat(), (rectY + 5).toFloat(), if (gui.light) Color(95, 95, 95).rgb else -1)
 
         Fonts.Nl_15.drawCenteredString(
             display,
@@ -103,6 +103,6 @@ class FontSetting(setting: FontValue, moduleRender: NlModule) : Downward<FontVal
         val renderY = (mouseY - height - 2).toFloat()
 
         RenderUtil.drawRoundedRect(renderX, renderY, width.toFloat(), height.toFloat(), 2f, Color(0, 5, 19).rgb, 1f, Color(13, 24, 35).rgb)
-        Fonts.Nl_15.drawString(text, (renderX + 3).toInt(), renderY + 2, Color.WHITE.rgb)
+        Fonts.Nl_15.drawString(text, renderX + 3f, renderY + 2f, Color.WHITE.rgb)
     }
 }
