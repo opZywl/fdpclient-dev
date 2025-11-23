@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer
 import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.shader.Framebuffer
 import net.minecraft.util.ChatAllowedCharacters
 import net.minecraft.util.ResourceLocation
@@ -79,6 +80,12 @@ class NeverloseGui : GuiScreen() {
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         GL11.glPushMatrix()
+
+        val depthTestBefore = GL11.glIsEnabled(GL11.GL_DEPTH_TEST)
+        val depthMaskBefore = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK)
+
+        GlStateManager.disableDepth()
+        GlStateManager.depthMask(false)
         if (loader && nlTabs.isNotEmpty()) {
             selectedSub = nlTabs[0].nlSubList[0]
             loader = false
@@ -149,6 +156,14 @@ class NeverloseGui : GuiScreen() {
         if (showShadowDebug) {
             NlDebugOverlay.render(this)
         }
+
+        GlStateManager.depthMask(depthMaskBefore)
+        if (depthTestBefore) {
+            GlStateManager.enableDepth()
+        } else {
+            GlStateManager.disableDepth()
+        }
+
         GL11.glPopMatrix()
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
