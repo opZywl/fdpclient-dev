@@ -113,6 +113,7 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
 
     fun draw(mx: Int, my: Int) {
         posy = calcY()
+        height = calcHeight()
 
         drawRound(
             (x + 95 + posx).toFloat(),

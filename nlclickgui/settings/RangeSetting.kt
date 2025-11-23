@@ -162,20 +162,18 @@ class RangeSetting(
         val startKnob = startX - 3
         val endKnob = endX - 3
 
-        if (mouseButton == 0) {
+        if (mouseButton == 0 && RenderUtil.isHovering(barX - 6f, barY - 4f, 72f, 12f, mouseX, mouseY)) {
             val nearStart = abs(mouseX - startKnob) <= 6
             val nearEnd = abs(mouseX - endKnob) <= 6
 
-            if (nearStart || nearEnd || RenderUtil.isHovering(barX, barY, 60f, 6f, mouseX, mouseY)) {
-                if (nearStart && nearEnd) {
-                    if (abs(mouseX - startKnob) <= abs(mouseX - endKnob)) draggingLeft = true else draggingRight = true
-                } else if (nearStart) {
-                    draggingLeft = true
-                } else if (nearEnd) {
-                    draggingRight = true
-                } else {
-                    if (abs(mouseX - startKnob) < abs(mouseX - endKnob)) draggingLeft = true else draggingRight = true
-                }
+            if (nearStart && nearEnd) {
+                if (abs(mouseX - startKnob) <= abs(mouseX - endKnob)) draggingLeft = true else draggingRight = true
+            } else if (nearStart) {
+                draggingLeft = true
+            } else if (nearEnd) {
+                draggingRight = true
+            } else {
+                if (abs(mouseX - startKnob) < abs(mouseX - endKnob)) draggingLeft = true else draggingRight = true
             }
         }
     }
