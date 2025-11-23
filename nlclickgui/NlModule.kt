@@ -12,8 +12,11 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Rende
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil.resetColor
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.BoolSetting
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.ColorSetting
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.FontSetting
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.Numbersetting
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.RangeSetting
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.StringsSetting
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Settings.TextSetting
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Animation
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.Direction
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.animations.impl.DecelerateAnimation
@@ -57,11 +60,20 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
             if (setting is FloatValue || setting is IntValue) {
                 this.downwards.add(Numbersetting(setting, this))
             }
+            if (setting is FloatRangeValue || setting is IntRangeValue) {
+                this.downwards.add(RangeSetting(setting, this))
+            }
             if (setting is ListValue) {
                 this.downwards.add(StringsSetting(setting, this))
             }
             if (setting is ColorValue) {
                 this.downwards.add(ColorSetting(setting, this))
+            }
+            if (setting is TextValue) {
+                this.downwards.add(TextSetting(setting, this))
+            }
+            if (setting is FontValue) {
+                this.downwards.add(FontSetting(setting, this))
             }
         }
     }
