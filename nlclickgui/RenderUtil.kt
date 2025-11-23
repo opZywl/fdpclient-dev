@@ -376,11 +376,16 @@ object RenderUtil {
     }
 
     fun createFrameBuffer(framebuffer: Framebuffer?): Framebuffer {
-        if (framebuffer == null || framebuffer.framebufferWidth != mc.displayWidth || framebuffer.framebufferHeight != mc.displayHeight) {
-            if (framebuffer != null) {
-                framebuffer.deleteFramebuffer()
-            }
-            return Framebuffer(mc.displayWidth, mc.displayHeight, true)
+        val needsRebuild = framebuffer == null || framebuffer.framebufferWidth != mc.displayWidth ||
+            framebuffer.framebufferHeight != mc.displayHeight || framebuffer.useDepth || framebuffer.depthBuffer > -1
+
+        if (needsRebuild) {
+            framebuffer?.deleteFramebuffer()
+
+            // Depth buffers are not required for the GUI passes and enabling them leads to dark
+            // artifacts around the window while it is dragged. Keep the framebuffer colour-only
+            // to avoid the unintended shadow.
+            return Framebuffer(mc.displayWidth, mc.displayHeight, false)
         }
         return framebuffer
     }

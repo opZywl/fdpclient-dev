@@ -21,6 +21,11 @@ object BloomUtil {
     fun renderBlur(sourceTexture: Int, radius: Int, offset: Int) {
         framebuffer = RenderUtil.createFrameBuffer(framebuffer)
 
+        val depthEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST)
+        val depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK)
+
+        GlStateManager.disableDepth()
+        GlStateManager.depthMask(false)
         GlStateManager.enableAlpha()
         GlStateManager.alphaFunc(516, 0.0f)
         GlStateManager.enableBlend()
@@ -58,6 +63,13 @@ object BloomUtil {
         GlStateManager.alphaFunc(516, 0.1f)
         GlStateManager.enableAlpha()
         GlStateManager.bindTexture(0)
+
+        GlStateManager.depthMask(depthMask)
+        if (depthEnabled) {
+            GlStateManager.enableDepth()
+        } else {
+            GlStateManager.disableDepth()
+        }
     }
 
     fun setupUniforms(radius: Int, directionX: Int, directionY: Int, weights: FloatBuffer) {
