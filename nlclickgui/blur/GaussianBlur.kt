@@ -38,6 +38,11 @@ object GaussianBlur {
     }
 
     fun renderBlur(radius: Float) {
+        val depthEnabled = GL11.glIsEnabled(GL11.GL_DEPTH_TEST)
+        val depthMask = GL11.glGetBoolean(GL11.GL_DEPTH_WRITEMASK)
+
+        GlStateManager.disableDepth()
+        GlStateManager.depthMask(false)
         GlStateManager.enableBlend()
         GlStateManager.color(1f, 1f, 1f, 1f)
         OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
@@ -65,5 +70,12 @@ object GaussianBlur {
 
         RenderUtil.resetColor()
         GlStateManager.bindTexture(0)
+
+        GlStateManager.depthMask(depthMask)
+        if (depthEnabled) {
+            GlStateManager.enableDepth()
+        } else {
+            GlStateManager.disableDepth()
+        }
     }
 }
