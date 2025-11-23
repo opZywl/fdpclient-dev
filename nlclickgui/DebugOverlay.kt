@@ -66,7 +66,7 @@ object NlDebugOverlay {
         val font = Fonts.Nl_16
         val padding = 6f
         val lineHeight = font.height + 2
-        val panelWidth = lines.maxOf { font.getStringWidth(it) } + (padding * 2).toInt()
+        val panelWidth = lines.maxOf { font.stringWidth(it) } + (padding * 2).toInt()
         val panelHeight = lineHeight * lines.size + padding.toInt()
 
         val drawX = (gui.x + gui.w + 12).toFloat()
