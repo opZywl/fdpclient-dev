@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.settings
 
+import net.ccbluex.liquidbounce.config.BlockValue
 import net.ccbluex.liquidbounce.config.FloatValue
 import net.ccbluex.liquidbounce.config.IntValue
 import net.ccbluex.liquidbounce.config.Value
@@ -23,6 +24,9 @@ import net.minecraft.util.MathHelper
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.Locale
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -36,6 +40,10 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
     private var finalvalue: String? = null
 
     var HoveringAnimation: Animation = DecelerateAnimation(225, 1.0, Direction.BACKWARDS)
+
+    private val decimalFormat = DecimalFormat("#.##").also {
+        it.decimalFormatSymbols = DecimalFormatSymbols(Locale.US)
+    }
 
     override fun draw(mouseX: Int, mouseY: Int) {
         val mainx = getInstance().x
@@ -64,6 +72,9 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         } else if (setting is FloatValue) {
             minimum = (setting as FloatValue).minimum.toDouble()
             maximum = (setting as FloatValue).maximum.toDouble()
+        } else if (setting is BlockValue) {
+            minimum = (setting as BlockValue).minimum.toDouble()
+            maximum = (setting as BlockValue).maximum.toDouble()
         }
 
         val current = (setting.get() as Number).toDouble()
@@ -74,7 +85,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         // Ajuste de fonte padronizado
         Fonts.Nl.Nl_16.Nl_16.drawString(
             setting.name,
-            mainx + 100 + x,
+            (mainx + 100 + x).toFloat(),
             (mainy + numbery + 57).toFloat(),
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )
@@ -105,6 +116,8 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
                 (setting as IntValue).set(newValue.roundToInt(), true)
             } else if (setting is FloatValue) {
                 (setting as FloatValue).set(newValue.toFloat(), true)
+            } else if (setting is BlockValue) {
+                (setting as BlockValue).set(newValue.roundToInt(), true)
             }
         }
 
@@ -112,7 +125,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
             GL11.glTranslatef(0.0f, 0.0f, 2.0f)
         }
 
-        val displayString = if (isset) "${finalvalue ?: ""}_" else "$current"
+        val displayString = if (isset) "${finalvalue ?: ""}_" else formatNumber(current)
 
         val stringWidth = Fonts.Nl_15.stringWidth(displayString) + 4
 
@@ -129,7 +142,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
 
         Fonts.Nl_15.drawString(
             displayString,
-            mainx + 237 + x,
+            (mainx + 237 + x).toFloat(),
             (mainy + numbery + 58).toFloat(),
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )
@@ -156,7 +169,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
             }
         }
 
-        val displayString = if (isset) "${finalvalue ?: ""}_" else "$current"
+        val displayString = if (isset) "${finalvalue ?: ""}_" else formatNumber(current)
         val stringWidth = Fonts.Nl_15.stringWidth(displayString) + 4
 
         if (RenderUtil.isHovering(
@@ -169,7 +182,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
             )
         ) {
             if (mouseButton == 0) {
-                finalvalue = current.toString()
+                finalvalue = formatNumber(current)
                 isset = true
             }
         } else {
@@ -212,6 +225,12 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
                         val max = intSetting.maximum
                         val min = intSetting.minimum
                         intSetting.set(min(max(`val`, min), max), true)
+                    } else if (setting is BlockValue) {
+                        val blockSetting = setting as BlockValue
+                        val `val` = safeValue.toInt()
+                        val max = blockSetting.maximum
+                        val min = blockSetting.minimum
+                        blockSetting.set(min(max(`val`, min), max), true)
                     }
                 } catch (e: NumberFormatException) {
                 }
@@ -225,5 +244,14 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
 
     fun keynumbers(keyCode: Int): Boolean {
         return (keyCode == Keyboard.KEY_0 || keyCode == Keyboard.KEY_1 || keyCode == Keyboard.KEY_2 || keyCode == Keyboard.KEY_3 || keyCode == Keyboard.KEY_4 || keyCode == Keyboard.KEY_6 || keyCode == Keyboard.KEY_5 || keyCode == Keyboard.KEY_7 || keyCode == Keyboard.KEY_8 || keyCode == Keyboard.KEY_9 || keyCode == Keyboard.KEY_PERIOD || keyCode == Keyboard.KEY_MINUS)
+    }
+
+
+    private fun formatNumber(value: Double): String {
+        return if (setting is IntValue || setting is BlockValue) {
+            value.toInt().toString()
+        } else {
+            decimalFormat.format(value)
+        }
     }
 }

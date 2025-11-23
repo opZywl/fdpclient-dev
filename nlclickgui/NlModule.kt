@@ -57,7 +57,7 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
             if (setting is BoolValue) {
                 this.downwards.add(BoolSetting(setting, this))
             }
-            if (setting is FloatValue || setting is IntValue) {
+            if (setting is FloatValue || setting is IntValue || setting is BlockValue) {
                 this.downwards.add(Numbersetting(setting, this))
             }
             if (setting is FloatRangeValue || setting is IntRangeValue) {
@@ -123,12 +123,20 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
             if (getInstance().light) Color(245, 245, 245) else Color(3, 13, 26)
         )
 
+        val (moduleTitle, titleTruncated) = abbreviate(module.name)
+        val titleX = (x + 100 + posx).toFloat()
+        val titleY = (y + posy + 55 + scrollY).toFloat()
+
         Fonts.Nl.Nl_18.Nl_18.drawString(
-            module.name,
-            x + 100 + posx,
-            y + posy + 55 + scrollY,
+            moduleTitle,
+            titleX,
+            titleY,
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )
+
+        if (titleTruncated && isHovering((x + 95 + posx).toFloat(), (y + 50 + posy + scrollY).toFloat(), 160f, 14f, mx, my)) {
+            drawTooltip(module.name, mx, my)
+        }
 
         drawRound(
             (x + 100 + posx).toFloat(),
@@ -236,5 +244,23 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
         ) {
             module.toggle()
         }
+    }
+
+    private fun abbreviate(value: String): Pair<String, Boolean> {
+        return if (value.length > 10) {
+            value.substring(0, 10) + "..." to true
+        } else {
+            value to false
+        }
+    }
+
+    private fun drawTooltip(text: String, mouseX: Int, mouseY: Int) {
+        val width = Fonts.Nl_15.stringWidth(text) + 6
+        val height = Fonts.Nl_15.height + 4
+        val renderX = (mouseX + 6).toFloat()
+        val renderY = (mouseY - height - 2).toFloat()
+
+        RenderUtil.drawRoundedRect(renderX, renderY, width.toFloat(), height.toFloat(), 2f, Color(0, 5, 19).rgb, 1f, Color(13, 24, 35).rgb)
+        Fonts.Nl_15.drawString(text, renderX + 3f, renderY + 2f, Color.WHITE.rgb)
     }
 }
