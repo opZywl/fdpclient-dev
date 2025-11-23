@@ -28,7 +28,7 @@ class Configs {
     private var showLocalConfigs = false
     private val interactiveAreas: MutableList<ButtonArea> = ArrayList()
 
-    // Esta variável já gera um "getContentHeight()" automaticamente no bytecode
+
     var contentHeight = 0
 
     private var onlineConfigsCache: List<*>? = null
@@ -125,7 +125,7 @@ class Configs {
         }
     }
 
-    // A FUNÇÃO MANUAL 'getContentHeight' FOI REMOVIDA PARA EVITAR O CONFLITO DE JVM SIGNATURE
+
 
     private fun drawToggle(x: Int, y: Int, width: Int, height: Int, mx: Int, my: Int, active: Boolean) {
         val hovered = isHovering(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), mx.toFloat().toInt(),

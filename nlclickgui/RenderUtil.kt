@@ -39,9 +39,7 @@ object RenderUtil {
         return mouseX >= x && mouseX <= x2 && mouseY >= y && mouseY <= y2
     }
 
-    /**
-     * Sets up basic rendering parameters
-     */
+
     fun startRender() {
         GL11.glEnable(GL11.GL_BLEND)
         GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA)
@@ -50,9 +48,7 @@ object RenderUtil {
         GL11.glDisable(GL11.GL_CULL_FACE)
     }
 
-    /**
-     * Resets the rendering parameters
-     */
+
     fun stopRender() {
         GL11.glEnable(GL11.GL_CULL_FACE)
         GL11.glEnable(GL11.GL_ALPHA_TEST)
@@ -928,11 +924,7 @@ object RenderUtil {
         var b = color.getBlue()
         val alpha = color.getAlpha()
 
-        /* From 2D group:
-         * 1. black.brighter() should return grey
-         * 2. applying brighter to blue will always return blue, brighter
-         * 3. non pure color (non zero rgb) will eventually return white
-         */
+
         val i = (1.0 / (1.0 - FACTOR)).toInt()
         if (r == 0 && g == 0 && b == 0) {
             return Color(i, i, i, alpha)
@@ -993,16 +985,7 @@ object RenderUtil {
         })
     }
 
-    /**
-     *
-     * @param n X
-     * @param n2 Y
-     * @param n3 大小
-     * @param n4 颜色
-     * @param n5 起始点
-     * @param n6 圈
-     * @param n7
-     */
+
     fun drawArc(n: Float, n2: Float, n3: Double, n4: Int, n5: Int, n6: Double, n7: Int) {
         var n = n
         var n2 = n2
@@ -2024,11 +2007,7 @@ object RenderUtil {
         GlStateManager.depthMask(!start)
     }
 
-    /**
-     * Bind a texture using the specified integer refrence to the texture.
-     *
-     * @see org.lwjgl.opengl.GL13 for more information about texture bindings
-     */
+
     fun bindTexture(texture: Int) {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, texture)
     }

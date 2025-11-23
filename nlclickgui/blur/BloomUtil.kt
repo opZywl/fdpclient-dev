@@ -9,14 +9,13 @@ import net.minecraft.client.shader.Framebuffer
 import org.lwjgl.BufferUtils
 import org.lwjgl.opengl.GL11
 import org.lwjgl.opengl.GL13
-import org.lwjgl.opengl.GL20 // Importação necessária para glUniform1f
+import org.lwjgl.opengl.GL20
 import java.nio.FloatBuffer
 
 object BloomUtil {
     val gaussianBloom = ShaderUtil("fdpclient/shaders/bloom.frag")
     var framebuffer = Framebuffer(1, 1, false)
 
-    // Fix Performance: Buffer alocado apenas uma vez
     private val weightBuffer: FloatBuffer = BufferUtils.createFloatBuffer(256)
 
     fun renderBlur(sourceTexture: Int, radius: Int, offset: Int) {
@@ -27,7 +26,6 @@ object BloomUtil {
         GlStateManager.enableBlend()
         OpenGlHelper.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
 
-        // Limpa e preenche o buffer estático
         weightBuffer.clear()
         for (i in 0..radius) {
             weightBuffer.put(calculateGaussianValue(i.toFloat(), radius.toFloat()))
@@ -36,7 +34,6 @@ object BloomUtil {
 
         RenderUtil.setAlphaLimit(0.0f)
 
-        // Pass 1: Horizontal
         framebuffer.framebufferClear()
         framebuffer.bindFramebuffer(true)
         gaussianBloom.init()
@@ -46,7 +43,6 @@ object BloomUtil {
         gaussianBloom.unload()
         framebuffer.unbindFramebuffer()
 
-        // Pass 2: Vertical
         RenderUtil.mc.framebuffer.bindFramebuffer(true)
         gaussianBloom.init()
         setupUniforms(radius, 0, offset, weightBuffer)
@@ -68,7 +64,6 @@ object BloomUtil {
         gaussianBloom.setUniformi("inTexture", 0)
         gaussianBloom.setUniformi("textureToCheck", 16)
 
-        // FIX: Substituído setUniformf por GL20.glUniform1f direto
         GL20.glUniform1f(gaussianBloom.getUniform("radius"), radius.toFloat())
 
         gaussianBloom.setUniformf("texelSize", 1.0f / RenderUtil.mc.displayWidth, 1.0f / RenderUtil.mc.displayHeight)

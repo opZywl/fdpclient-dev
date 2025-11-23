@@ -24,7 +24,7 @@ import java.util.function.Consumer
 import java.util.stream.Collectors
 
 class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
-    // Estas variáveis geram automaticamente getX(), getY(), getHeight(), etc.
+
     var x: Int = 0
     var y: Int = 0
     var w: Int = 0
@@ -66,7 +66,7 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
         }
     }
 
-    // Renomeado para calcHeight para evitar conflito com 'var height'
+
     fun calcHeight(): Int {
         var h = 20
         for (s in module.values.stream().filter { obj: Value<*>? -> obj!!.shouldRender() }
@@ -79,7 +79,7 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
         return h
     }
 
-    // Renomeado para calcY para evitar conflito com 'var y'
+
     fun calcY(): Int {
         leftAdd = 0
         rightAdd = 0
@@ -89,9 +89,9 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
                 break
             } else {
                 if (tabModule!!.lef) {
-                    leftAdd += tabModule.calcHeight() + 10 // Atualizado chamada
+                    leftAdd += tabModule.calcHeight() + 10
                 } else {
-                    rightAdd += tabModule.calcHeight() + 10 // Atualizado chamada
+                    rightAdd += tabModule.calcHeight() + 10
                 }
             }
         }
@@ -100,13 +100,13 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
     }
 
     fun draw(mx: Int, my: Int) {
-        posy = calcY() // Atualizado chamada
+        posy = calcY()
 
         drawRound(
             (x + 95 + posx).toFloat(),
             (y + 50 + posy + scrollY).toFloat(),
             160f,
-            calcHeight().toFloat(), // Atualizado chamada
+            calcHeight().toFloat(),
             2f,
             if (getInstance().light) Color(245, 245, 245) else Color(3, 13, 26)
         )
@@ -127,7 +127,7 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
             if (getInstance().light) Color(213, 213, 213) else Color(9, 21, 34)
         )
 
-        // CORREÇÃO: Usando .direction = ...
+
         HoveringAnimation.direction = if (isHovering(
                 (x + 265 - 32 + posx).toFloat(),
                 (y + posy + scrollY + 56).toFloat(),
@@ -143,7 +143,7 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
         for (downward in downwards.stream().filter { s: Downward<*>? -> s!!.setting.shouldRender() }
             .collect(Collectors.toList())) {
             downward.setX(posx)
-            downward.setY(calcY() + cheigt) // Atualizado chamada
+            downward.setY(calcY() + cheigt)
             cheigt += 20
 
             downward.draw(mx, my)
@@ -167,7 +167,7 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
 
         val accentCircle = darker(NeverloseGui.Companion.neverlosecolor, .5f)
 
-        // CORREÇÃO: Usando .direction = ...
+
         toggleAnimation.direction = if (module.state) Direction.FORWARDS else Direction.BACKWARDS
 
         drawRound(

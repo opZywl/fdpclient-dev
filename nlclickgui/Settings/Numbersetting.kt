@@ -32,7 +32,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
 
     private var finalvalue: String? = null
 
-    // Nomes de variáveis devem começar com minúscula por convenção, mas mantive o seu
+
     var HoveringAnimation: Animation = DecelerateAnimation(225, 1.0, Direction.BACKWARDS)
 
 
@@ -40,11 +40,11 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         val mainx = getInstance().x
         val mainy = getInstance().y
 
-        // CORREÇÃO: trocado getY() por y
+
         val numbery = (y + getScrollY()).toInt()
 
-        // CORREÇÃO: .direction = ... (devido alteração no Animation.kt)
-        // CORREÇÃO: trocado getX()/getY() por x/y
+
+
         HoveringAnimation.direction = if (iloveyou || isHovering(
                 getInstance().x + 170 + x,
                 (getInstance().y + (y + getScrollY()).toInt() + 58).toFloat(),
@@ -76,13 +76,13 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
 
         Nl_16.drawString(
             setting.name,
-            mainx + 100 + x, // CORREÇÃO: x
+            mainx + 100 + x,
             (mainy + numbery + 57).toFloat(),
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )
 
         drawRound(
-            mainx + 170 + x, // CORREÇÃO: x
+            mainx + 170 + x,
             (mainy + numbery + 58).toFloat(),
             60f,
             2f,
@@ -90,17 +90,17 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
             if (getInstance().light) Color(230, 230, 230) else Color(5, 22, 41)
         )
 
-        drawRound(mainx + 170 + x, (mainy + numbery + 58).toFloat(), 60 * percent, 2f, 2f, Color(12, 100, 138)) // CORREÇÃO: x
+        drawRound(mainx + 170 + x, (mainy + numbery + 58).toFloat(), 60 * percent, 2f, 2f, Color(12, 100, 138))
 
         drawCircle(
-            mainx + 167 + x + (60 * percent), // CORREÇÃO: x
+            mainx + 167 + x + (60 * percent),
             (mainy + numbery + 56).toFloat(),
             (5.5f + (0.5f * HoveringAnimation.getOutput())).toFloat(),
             NeverloseGui.neverlosecolor
         )
 
         if (iloveyou) {
-            // CORREÇÃO: mouseX.toFloat() para corrigir erro de div/times e x
+
             val percentt = min(1f, max(0f, ((mouseX.toFloat() - (mainx + 170 + x)) / 99.0f) * 1.55f))
             val newValue = ((percentt * (maximum - minimum)) + minimum)
 
@@ -115,12 +115,12 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
             GL11.glTranslatef(0.0f, 0.0f, 2.0f)
         }
 
-        // CORREÇÃO: Uso de template string "${}" para evitar ambiguidade do compilador
+
         val displayString = if (isset) "${finalvalue ?: ""}_" else "$current"
         val stringWidth = Nl_15.stringWidth(displayString) + 4
 
         drawRoundedRect(
-            mainx + 235 + x, // CORREÇÃO: x
+            mainx + 235 + x,
             (mainy + numbery + 55).toFloat(),
             stringWidth.toFloat(),
             9f,
@@ -132,7 +132,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
 
         Nl_15.drawString(
             displayString,
-            mainx + 237 + x, // CORREÇÃO: x
+            mainx + 237 + x,
             (mainy + numbery + 58).toFloat(),
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )
@@ -145,7 +145,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
         val current = (setting.get() as Number).toDouble()
 
-        // CORREÇÃO: x e y
+
         if (isHovering(
                 getInstance().x + 170 + x,
                 (getInstance().y + (y + getScrollY()).toInt() + 58).toFloat(),
@@ -160,11 +160,11 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
             }
         }
 
-        // CORREÇÃO: Template string
+
         val displayString = if (isset) "${finalvalue ?: ""}_" else "$current"
         val stringWidth = Nl_15.stringWidth(displayString) + 4
 
-        // CORREÇÃO: x e y
+
         if (isHovering(
                 getInstance().x + 235 + x,
                 getInstance().y + (y + getScrollY()) + 55,
@@ -195,7 +195,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
                 isset = false
             } else if (keynumbers(keyCode)) {
                 if (!(keyCode == Keyboard.KEY_PERIOD && (finalvalue ?: "").contains("."))) {
-                    // CORREÇÃO: Template string para evitar erro de concatenação
+
                     finalvalue = "${finalvalue ?: ""}$typedChar"
                 }
             }

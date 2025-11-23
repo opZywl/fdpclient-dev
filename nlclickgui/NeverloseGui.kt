@@ -134,9 +134,9 @@ class NeverloseGui : GuiScreen() {
         if (search || !searchanim.isDone()) {
             val searchBarX = (x + w - 30 - (85f * searchProgress)).toFloat()
             val searchBarWidth = (80f * searchProgress).toFloat()
-            RoundedUtil.drawRound(searchBarX, (y + 12).toFloat(), searchBarWidth, 15f, 1f, if (light) Color(95, 95, 95) else neverlosecolor)
+            RoundedUtil.drawRound(searchBarX, (y + 12).toFloat(), searchBarWidth, 15f, 1f, if (light) Color(235, 235, 235) else neverlosecolor)
             val searchTextX = (x + w - 26 - (85f * searchProgress)).toFloat()
-            Fonts.Nl_16.drawString(searchText, searchTextX, (y + 15).toFloat(), if (light) Color(95, 95, 95).rgb else -1)
+            Fonts.Nl_16.drawString(searchText, searchTextX, (y + 15).toFloat(), if (light) Color(18, 18, 19).rgb else -1)
         }
         if (settings) {
             nlSetting.draw(mouseX, mouseY)
