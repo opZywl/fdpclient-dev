@@ -33,14 +33,14 @@ class NlSetting {
         } else {
             Fonts.NLBold_35.drawCenteredString(FDPClient.CLIENT_NAME, (x + 80).toFloat(), (y + 30).toFloat(), Color(51, 51, 51).rgb)
         }
-        var version = FDPClient.INSTANCE.clientVersionText
+        var version = FDPClient.clientVersionText
         if (version == "unknown") {
             version = FDPClient.CLIENT_VERSION
         }
         Fonts.Nl_18.drawString((if (!Light) ChatFormatting.WHITE else ChatFormatting.BLACK).toString() + "Version: " + ChatFormatting.RESET + version, (x + 10).toFloat(), (y + 65).toFloat(), NeverloseGui.neverlosecolor.rgb)
-        val buildType = if (FDPClient.IN_DEV) "Development" else "Release"
+        val buildType = "Development"
         Fonts.Nl_18.drawString((if (!Light) ChatFormatting.WHITE else ChatFormatting.BLACK).toString() + "Build Type: " + ChatFormatting.RESET + buildType, (x + 10).toFloat(), (y + 65 + Fonts.Nl_18.height + 5).toFloat(), NeverloseGui.neverlosecolor.rgb)
-        val gitInfo = ClientUpdate.INSTANCE.gitInfo
+        val gitInfo = ClientUpdate.gitInfo
         val rawBuildTime = gitInfo.getProperty("git.build.time", "Unknown")
         var formattedBuildTime = rawBuildTime
         try {

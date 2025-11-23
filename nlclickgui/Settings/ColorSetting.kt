@@ -13,7 +13,7 @@ class ColorSetting(setting: ColorValue, moduleRender: NlModule) : Downward<Color
     override fun draw(mouseX: Int, mouseY: Int) {
         val mainx = NeverloseGui.getInstance().x
         val mainy = NeverloseGui.getInstance().y
-        val colory = (y + scrollY).toInt()
+        val colory = (y + getScrollY()).toInt()
         Fonts.Nl_16.drawString(setting.name, (mainx + 100 + x).toFloat(), (mainy + colory + 57).toFloat(), if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1)
         val color = setting.selectedColor()
         RoundedUtil.drawRound((mainx + 100 + x + 138).toFloat(), (mainy + colory + 52).toFloat(), 16f, 10f, 2f, color)
@@ -21,8 +21,8 @@ class ColorSetting(setting: ColorValue, moduleRender: NlModule) : Downward<Color
     }
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
-        if (mouseButton == 1 && RenderUtil.isHovering((NeverloseGui.getInstance().x + 100 + x + 138).toFloat(), (NeverloseGui.getInstance().y + (y + scrollY).toInt() + 52).toFloat(), 16f, 10f, mouseX, mouseY)) {
-            setting.isRainbow = !setting.isRainbow
+        if (mouseButton == 1 && RenderUtil.isHovering((NeverloseGui.getInstance().x + 100 + x + 138).toFloat(), (NeverloseGui.getInstance().y + (y + getScrollY()).toInt() + 52).toFloat(), 16f, 10f, mouseX, mouseY)) {
+            setting.rainbow = !setting.rainbow
         }
     }
 

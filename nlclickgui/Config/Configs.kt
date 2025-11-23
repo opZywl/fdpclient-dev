@@ -3,8 +3,8 @@ package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.Conf
 import net.ccbluex.liquidbounce.FDPClient
 import net.ccbluex.liquidbounce.config.SettingsUtils
 import net.ccbluex.liquidbounce.handler.api.ClientApi
+import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.fdpdropdown.utils.render.DrRenderUtils.isHovering
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.NeverloseGui
-import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.RenderUtil
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.client.ClientUtils
@@ -16,6 +16,7 @@ import java.lang.reflect.Method
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.ArrayList
+import kotlin.math.ceil
 
 class Configs {
 
@@ -26,7 +27,9 @@ class Configs {
 
     private var showLocalConfigs = false
     private val interactiveAreas: MutableList<ButtonArea> = ArrayList()
-    private var contentHeight = 0
+
+    // Esta variável já gera um "getContentHeight()" automaticamente no bytecode
+    var contentHeight = 0
 
     private var onlineConfigsCache: List<*>? = null
     @Volatile
@@ -98,7 +101,7 @@ class Configs {
 
         Thread {
             try {
-                val configs = ClientApi.INSTANCE.getSettingsList("legacy")
+                val configs = ClientApi.getSettingsList("legacy")
                 synchronized(this) {
                     onlineConfigsCache = configs
                     isLoadingOnline = false
@@ -115,17 +118,19 @@ class Configs {
             return
         }
         for (area in interactiveAreas) {
-            if (RenderUtil.isHovering(area.x, area.y, area.width, area.height, mx.toFloat(), my.toFloat())) {
+            if (isHovering(area.x, area.y, area.width, area.height, mx.toFloat().toInt(), my.toFloat().toInt())) {
                 area.action.invoke()
                 break
             }
         }
     }
 
-    fun getContentHeight(): Int = contentHeight
+    // A FUNÇÃO MANUAL 'getContentHeight' FOI REMOVIDA PARA EVITAR O CONFLITO DE JVM SIGNATURE
 
     private fun drawToggle(x: Int, y: Int, width: Int, height: Int, mx: Int, my: Int, active: Boolean) {
-        val hovered = RenderUtil.isHovering(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), mx.toFloat(), my.toFloat())
+        val hovered = isHovering(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), mx.toFloat().toInt(),
+            my.toFloat().toInt()
+        )
         val base = if (NeverloseGui.getInstance().light) Color(220, 222, 225) else Color(50, 50, 50)
         val activeColor = Color(100, 150, 100)
         val hoverColor = if (NeverloseGui.getInstance().light) Color(200, 200, 205) else Color(70, 70, 70)
@@ -134,7 +139,9 @@ class Configs {
     }
 
     private fun drawButton(x: Int, y: Int, width: Int, height: Int, mx: Int, my: Int, light: Boolean, active: Boolean) {
-        val hovered = RenderUtil.isHovering(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), mx.toFloat(), my.toFloat())
+        val hovered = isHovering(x.toFloat(), y.toFloat(), width.toFloat(), height.toFloat(), mx.toFloat().toInt(),
+            my.toFloat().toInt()
+        )
         val base = if (light) Color(220, 222, 225) else Color(50, 50, 50)
         val hover = if (light) Color(200, 200, 205) else Color(70, 70, 70)
         val fill = if (active) Color(100, 150, 100) else if (hovered) hover else base
@@ -204,7 +211,7 @@ class Configs {
     }
 
     private fun drawConfigButton(mx: Int, my: Int, width: Float, height: Float, configX: Float, configY: Float, action: () -> Unit) {
-        val hovered = RenderUtil.isHovering(configX, configY, width, height, mx.toFloat(), my.toFloat())
+        val hovered = isHovering(configX, configY, width, height, mx.toFloat().toInt(), my.toFloat().toInt())
         val base = if (NeverloseGui.getInstance().light) Color(220, 222, 225) else Color(50, 50, 50)
         val hover = if (NeverloseGui.getInstance().light) Color(200, 200, 205) else Color(70, 70, 70)
         val fill = if (hovered) hover else base
@@ -225,7 +232,7 @@ class Configs {
             if (itemCount == 0) {
                 return rowHeight + 5
             }
-            val rows = Math.ceil(itemCount / 4.0).toInt()
+            val rows = ceil(itemCount / 4.0).toInt()
             return rows * rowHeight
         }
 
@@ -245,7 +252,7 @@ class Configs {
         Thread {
             try {
                 ClientUtils.displayChatMessage("Downloading configuration: $configName...")
-                val configScript = ClientApi.INSTANCE.getSettingsScript("legacy", settingId)
+                val configScript = ClientApi.getSettingsScript("legacy", settingId)
                 SettingsUtils.applyScript(configScript)
                 ClientUtils.displayChatMessage("Configuration $configName loaded successfully!")
             } catch (e: Exception) {

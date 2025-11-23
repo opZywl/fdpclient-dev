@@ -43,7 +43,7 @@ class NeverloseGui : GuiScreen() {
     private var avatarTexture: ResourceLocation = defaultAvatar
     private var avatarLoaded = false
     private var nlSetting: NlSetting = NlSetting()
-    private val searchanim: Animation = EaseInOutQuad(400.0, 1.0, Direction.BACKWARDS)
+    private val searchanim: Animation = EaseInOutQuad(400, 1.0, Direction.BACKWARDS)
     val configs = Configs()
     private val configManager = NeverloseConfigManager()
     private var bloomFramebuffer = Framebuffer(1, 1, false)
@@ -54,7 +54,7 @@ class NeverloseGui : GuiScreen() {
         var u2 = 0
         val orderedCategories: MutableList<Category> = ArrayList()
         orderedCategories.add(Category.CLIENT)
-        for (type in Category.values()) {
+        for (type in Category.entries) {
             if (!orderedCategories.contains(type)) {
                 orderedCategories.add(type)
             }
@@ -72,7 +72,7 @@ class NeverloseGui : GuiScreen() {
     override fun initGui() {
         super.initGui()
         configManager.refresh()
-        alphaani = EaseInOutQuad(300.0, 0.6, Direction.FORWARDS)
+        alphaani = EaseInOutQuad(300, 0.6, Direction.FORWARDS)
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
@@ -94,7 +94,7 @@ class NeverloseGui : GuiScreen() {
         StencilUtil.initStencilToWrite()
         RoundedUtil.drawRound(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), 4f, if (light) Color(240, 245, 248, 230) else Color(7, 13, 23, 230))
         StencilUtil.readStencilBuffer(1)
-        GaussianBlur.renderBlur(10)
+        GaussianBlur.renderBlur(10F)
         StencilUtil.uninitStencilBuffer()
         RoundedUtil.drawRound(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), 2f, if (light) Color(240, 245, 248, 230) else Color(7, 13, 23, 230))
         RoundedUtil.drawRound((x + 90).toFloat(), (y + 40).toFloat(), (w - 90).toFloat(), (h - 40).toFloat(), 1f, if (light) Color(255, 255, 255) else Color(9, 9, 9))
@@ -122,12 +122,24 @@ class NeverloseGui : GuiScreen() {
             nlTab.h = h
             nlTab.draw(mouseX, mouseY)
         }
-        Fonts.NlIcon.nlfont_20.nlfont_20.drawString("x", (x + w - 50 + if (search || !searchanim.isDone) (-83 * searchanim.output) else 0).toFloat(), (y + 17).toFloat(), if (settings) neverlosecolor.rgb else if (light) Color(95, 95, 95).rgb else -1)
+
+        // FIX: Cálculo da animação corrigido para usar Double consistentemente
+        val closeButtonX = (x + w - 50 + (if (search || !searchanim.isDone()) (-83.0 * searchanim.getOutput()) else 0.0)).toFloat()
+        Fonts.NlIcon.nlfont_20.nlfont_20.drawString("x", closeButtonX, (y + 17).toFloat(), if (settings) neverlosecolor.rgb else if (light) Color(95, 95, 95).rgb else -1)
+
         Fonts.NlIcon.nlfont_20.nlfont_20.drawString("j", (x + w - 30).toFloat(), (y + 18).toFloat(), if (search) neverlosecolor.rgb else if (light) Color(95, 95, 95).rgb else -1)
         searchanim.direction = if (search) Direction.FORWARDS else Direction.BACKWARDS
-        if (search || !searchanim.isDone) {
-            RenderUtil.drawRoundedRect((x + w - 30 - (85 * searchanim.output)).toFloat(), (y + 12).toFloat(), (80 * searchanim.output).toFloat(), 15f, 1, if (light) Color(95, 95, 95).rgb else neverlosecolor.rgb)
-            Fonts.Nl_16.drawString(searchText, (x + w - 26 - (85 * searchanim.output)).toFloat(), (y + 15).toFloat(), if (light) Color(95, 95, 95).rgb else -1)
+
+        if (search || !searchanim.isDone()) {
+            // FIX: Forçando operações Double
+            val searchBarX = (x + w - 30 - (85.0 * searchanim.getOutput())).toFloat()
+            val searchBarWidth = (80.0 * searchanim.getOutput()).toFloat()
+
+            RenderUtil.drawRoundedRect(searchBarX, (y + 12).toFloat(), searchBarWidth, 15f,
+                1F, if (light) Color(95, 95, 95).rgb else neverlosecolor.rgb)
+
+            val searchTextX = (x + w - 26 - (85.0 * searchanim.getOutput())).toFloat()
+            Fonts.Nl_16.drawString(searchText, searchTextX, (y + 15).toFloat(), if (light) Color(95, 95, 95).rgb else -1)
         }
         if (settings) {
             nlSetting.draw(mouseX, mouseY)
@@ -158,14 +170,18 @@ class NeverloseGui : GuiScreen() {
                 dragging = true
             }
             if (RenderUtil.isHovering((x + 105).toFloat(), (y + 10).toFloat(), 55f, 21f, mouseX, mouseY)) {
-                if (configManager.activeConfig != null) {
-                    configManager.saveConfig(configManager.activeConfig!!.name)
+                if (configManager.activeConfig() != null) {
+                    configManager.saveConfig(configManager.activeConfig()!!.name)
                 } else {
                     FDPClient.fileManager.saveAllConfigs()
                     configManager.refresh()
                 }
             }
-            if (RenderUtil.isHovering((x + w - 50 + if (search || !searchanim.isDone) (-83 * searchanim.output) else 0).toFloat(), (y + 17).toFloat(), Fonts.NlIcon.nlfont_24.nlfont_24.stringWidth("x").toFloat(), Fonts.NlIcon.nlfont_24.nlfont_24.height.toFloat(), mouseX, mouseY)) {
+
+            // FIX: Correção da lógica do hover do botão de fechar/settings (Mesmo problema de tipo do drawScreen)
+            val closeButtonX = (x + w - 50 + (if (search || !searchanim.isDone()) (-83.0 * searchanim.getOutput()) else 0.0)).toFloat()
+
+            if (RenderUtil.isHovering(closeButtonX, (y + 17).toFloat(), Fonts.NlIcon.nlfont_24.nlfont_24.stringWidth("x").toFloat(), Fonts.NlIcon.nlfont_24.nlfont_24.height.toFloat(), mouseX, mouseY)) {
                 settings = !settings
                 dragging = false
                 nlSetting.x = x + w + 20

@@ -14,18 +14,19 @@ import java.awt.Color
 
 class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s, moduleRender) {
 
-    private val toggleAnimation: Animation = DecelerateAnimation(225, 1.0, Direction.BACKWARDS)
+    val toggleAnimation: Animation = DecelerateAnimation(225, 1.0, Direction.BACKWARDS)
     private val hoveringAnimation: Animation = DecelerateAnimation(225, 1.0, Direction.BACKWARDS)
 
     override fun draw(mouseX: Int, mouseY: Int) {
         val mainx = NeverloseGui.getInstance().x
         val mainy = NeverloseGui.getInstance().y
 
-        val booly = (getY() + getScrollY()).toInt()
+        // CORREÇÃO: trocado getY() por y
+        val booly = (y + getScrollY()).toInt()
 
-        Fonts.nl_16.drawString(
+        Fonts.Nl_16.drawString(
             setting.name,
-            (mainx + 100 + getX()).toFloat(),
+            (mainx + 100 + x).toFloat(), // CORREÇÃO: trocado getX() por x
             (mainy + booly + 57).toFloat(),
             if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1
         )
@@ -33,24 +34,26 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
         val darkRectColor = Color(29, 29, 39, 255)
         val darkRectHover = RenderUtil.brighter(darkRectColor, .8f)
         val accentCircle = RenderUtil.darker(NeverloseGui.neverlosecolor, .5f)
-        toggleAnimation.setDirection(if (setting.get()) Direction.FORWARDS else Direction.BACKWARDS)
 
-        hoveringAnimation.setDirection(
-            if (
-                RenderUtil.isHovering(
-                    NeverloseGui.getInstance().x + 265 - 32 + getX(),
-                    NeverloseGui.getInstance().y + (getY() + getScrollY()).toInt() + 57,
-                    16f,
-                    4.5f,
-                    mouseX.toFloat(),
-                    mouseY.toFloat()
-                )
-            ) Direction.FORWARDS else Direction.BACKWARDS
-        )
+        // CORREÇÃO: trocado setDirection(...) por .direction = ... (por causa da mudança no Animation.kt)
+        toggleAnimation.direction = if (setting.get()) Direction.FORWARDS else Direction.BACKWARDS
+
+        // CORREÇÃO: trocado setDirection(...) por .direction = ...
+        hoveringAnimation.direction = if (
+            RenderUtil.isHovering(
+                NeverloseGui.getInstance().x + 265 - 32 + x, // CORREÇÃO: x
+                (NeverloseGui.getInstance().y + (y + getScrollY()).toInt() + 57).toFloat(), // CORREÇÃO: y
+                16f,
+                4.5f,
+                mouseX.toFloat().toInt(),
+                mouseY.toFloat().toInt()
+            )
+        ) Direction.FORWARDS else Direction.BACKWARDS
+
 
         RoundedUtil.drawRound(
-            mainx + 265 - 32 + getX(),
-            mainy + booly + 57,
+            mainx + 265 - 32 + x, // CORREÇÃO: x
+            (mainy + booly + 57).toFloat(),
             16f,
             4.5f,
             2f,
@@ -70,7 +73,7 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
         )
 
         RenderUtil.fakeCircleGlow(
-            (mainx + 265 + 3 - 32 + getX() + 11 * toggleAnimation.getOutput()).toFloat(),
+            (mainx + 265 + 3 - 32 + x + 11 * toggleAnimation.getOutput()).toFloat(), // CORREÇÃO: x
             (mainy + booly + 59).toFloat(),
             6f,
             Color.BLACK,
@@ -80,7 +83,7 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
         RenderUtil.resetColor()
 
         RoundedUtil.drawRound(
-            (mainx + 265 - 32 + getX() + 11 * toggleAnimation.getOutput()).toFloat(),
+            (mainx + 265 - 32 + x + 11 * toggleAnimation.getOutput()).toFloat(), // CORREÇÃO: x
             (mainy + booly + 56).toFloat(),
             6.5f,
             6.5f,
@@ -103,12 +106,12 @@ class BoolSetting(s: BoolValue, moduleRender: NlModule) : Downward<BoolValue>(s,
         if (mouseButton == 0) {
             if (
                 RenderUtil.isHovering(
-                    NeverloseGui.getInstance().x + 265 - 32 + getX(),
-                    NeverloseGui.getInstance().y + (getY() + getScrollY()).toInt() + 57,
+                    NeverloseGui.getInstance().x + 265 - 32 + x, // CORREÇÃO: x
+                    (NeverloseGui.getInstance().y + (y + getScrollY()).toInt() + 57).toFloat(), // CORREÇÃO: y
                     16f,
                     4.5f,
-                    mouseX.toFloat(),
-                    mouseY.toFloat()
+                    mouseX.toFloat().toInt(),
+                    mouseY.toFloat().toInt()
                 )
             ) {
                 setting.set(!setting.get(), true)

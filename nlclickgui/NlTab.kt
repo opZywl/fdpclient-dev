@@ -37,7 +37,7 @@ class NlTab(val type: Category, val y2: Int) {
             nlSub.w = w
             nlSub.h = h
 
-            if (!nlSub.isSelected()) {
+            if (!nlSub.isSelected) {
                 for (nlModule in nlSub.nlModules) {
                     for (nlSetting in nlModule.downwards) {
                         if (nlSetting is Numbersetting) {

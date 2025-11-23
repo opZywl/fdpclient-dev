@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.gl
 
-enum class GLClientState(override val name: String, override val cap: Int) : GLenum {
+// Fix: Renomeado 'name' para 'glName' para evitar conflito com a propriedade final 'Enum.name'
+enum class GLClientState(val glName: String, override val cap: Int) : GLenum {
     COLOR("GL_COLOR_ARRAY", '\u8076'.code),
     EDGE("GL_EDGE_FLAG_ARRAY", '\u8079'.code),
     FOG("GL_FOG_COORD_ARRAY", '\u8457'.code),
