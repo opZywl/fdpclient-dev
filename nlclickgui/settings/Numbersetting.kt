@@ -52,7 +52,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         val numbery = (y + getScrollY()).toInt()
 
         HoveringAnimation.direction = if (iloveyou || RenderUtil.isHovering(
-                (getInstance().x + 170 + x),
+                (getInstance().x + 150 + x),
                 (getInstance().y + (y + getScrollY()).toInt() + 58).toFloat(),
                 60f,
                 2f,
@@ -85,6 +85,8 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         val (label, labelTruncated) = abbreviate(setting.name)
         val labelX = (mainx + 100 + x).toFloat()
         val labelY = (mainy + numbery + 57).toFloat()
+        val sliderX = (mainx + 150 + x).toFloat()
+        val valueBoxX = (mainx + 215 + x).toFloat()
 
         // Ajuste de fonte padronizado
         Fonts.Nl.Nl_16.Nl_16.drawString(
@@ -99,7 +101,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         }
 
         RoundedUtil.drawRound(
-            (mainx + 170 + x),
+            sliderX,
             (mainy + numbery + 58).toFloat(),
             60f,
             2f,
@@ -107,17 +109,17 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
             if (getInstance().light) Color(230, 230, 230) else Color(5, 22, 41)
         )
 
-        RoundedUtil.drawRound((mainx + 170 + x), (mainy + numbery + 58).toFloat(), 60 * percent, 2f, 2f, Color(12, 100, 138))
+        RoundedUtil.drawRound(sliderX, (mainy + numbery + 58).toFloat(), 60 * percent, 2f, 2f, Color(12, 100, 138))
 
         RoundedUtil.drawCircle(
-            mainx + 167 + x + (60 * percent),
+            mainx + 147 + x + (60 * percent),
             (mainy + numbery + 56).toFloat(),
             (5.5f + (0.5f * HoveringAnimation.getOutput())).toFloat(),
             NeverloseGui.neverlosecolor
         )
 
         if (iloveyou) {
-            val percentt = min(1f, max(0f, ((mouseX.toFloat() - (mainx + 170 + x)) / 99.0f) * 1.55f))
+            val percentt = min(1f, max(0f, ((mouseX.toFloat() - sliderX) / 99.0f) * 1.55f))
             val newValue = ((percentt * (maximum - minimum)) + minimum)
 
             if (setting is IntValue) {
@@ -138,7 +140,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         val stringWidth = Fonts.Nl_15.stringWidth(displayString) + 4
 
         RenderUtil.drawRoundedRect(
-            (mainx + 235 + x),
+            valueBoxX,
             (mainy + numbery + 55).toFloat(),
             stringWidth.toFloat(),
             9f,
@@ -150,7 +152,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
 
         Fonts.Nl_15.drawString(
             displayString,
-            (mainx + 237 + x).toFloat(),
+            valueBoxX + 2f,
             (mainy + numbery + 58).toFloat(),
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )
@@ -162,9 +164,11 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
         val current = (setting.get() as Number).toDouble()
+        val sliderX = (getInstance().x + 150 + x).toFloat()
+        val valueBoxX = (getInstance().x + 215 + x).toFloat()
 
         if (RenderUtil.isHovering(
-                (getInstance().x + 170 + x),
+                sliderX,
                 (getInstance().y + (y + getScrollY()).toInt() + 58).toFloat(),
                 60f,
                 2f,
@@ -181,7 +185,7 @@ class Numbersetting(s: Value<*>, moduleRender: NlModule) : Downward<Value<*>>(s,
         val stringWidth = Fonts.Nl_15.stringWidth(displayString) + 4
 
         if (RenderUtil.isHovering(
-                (getInstance().x + 235 + x),
+                valueBoxX,
                 (getInstance().y + (y + getScrollY()) + 55),
                 stringWidth.toFloat(),
                 9f,
