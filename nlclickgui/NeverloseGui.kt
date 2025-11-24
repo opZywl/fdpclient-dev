@@ -169,11 +169,19 @@ class NeverloseGui : GuiScreen() {
         )
         var nextIconX = iconStartX
         headerIcons.forEach { icon ->
-            val hover = RenderUtil.isHovering(nextIconX - 2f, iconY - 2f, iconSize + 4f, iconSize + 4f, mouseX, mouseY)
-            val baseColor = if (light) Color(235, 235, 235) else Color(18, 18, 18)
-            RoundedUtil.drawRound(nextIconX - 2f, iconY - 2f, iconSize + 4f, iconSize + 4f, 4f, if (hover) neverlosecolor else baseColor)
+            val hover = RenderUtil.isHovering(nextIconX - 3f, iconY - 3f, iconSize + 6f, iconSize + 6f, mouseX, mouseY)
+            if (hover) {
+                RoundedUtil.drawRound(
+                    nextIconX - 3f,
+                    iconY - 3f,
+                    iconSize + 6f,
+                    iconSize + 6f,
+                    4f,
+                    Color(neverlosecolor.red, neverlosecolor.green, neverlosecolor.blue, 120)
+                )
+            }
             RenderUtil.drawImage(icon.location, nextIconX, iconY, iconSize, iconSize)
-            headerIconHitboxes.add(HeaderIconHitbox(nextIconX - 2f, iconY - 2f, iconSize + 4f, icon.onClick))
+            headerIconHitboxes.add(HeaderIconHitbox(nextIconX - 3f, iconY - 3f, iconSize + 6f, icon.onClick))
             nextIconX += iconSize + iconSpacing
         }
         GL11.glPopMatrix()
