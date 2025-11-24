@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.blur.
 import net.ccbluex.liquidbounce.ui.client.clickgui.style.styles.nlclickgui.round.RoundedUtil
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.shader.Framebuffer
 import net.minecraft.util.ChatAllowedCharacters
@@ -40,6 +41,10 @@ class NeverloseGui : GuiScreen() {
     private var search = false
     private var searchText = ""
     private val defaultAvatar = ResourceLocation(FDPClient.CLIENT_NAME.lowercase(Locale.getDefault()) + "/64.png")
+    private val customHudIcon = ResourceLocation(FDPClient.CLIENT_NAME.lowercase(Locale.getDefault()) + "/custom_hud_icon.png")
+    private val eyeIcon = ResourceLocation(FDPClient.CLIENT_NAME.lowercase(Locale.getDefault()) + "/texture/category/visual.png")
+    private val spotifyIcon = ResourceLocation(FDPClient.CLIENT_NAME.lowercase(Locale.getDefault()) + "/texture/spotify/spotify32.png")
+    private val headerIconHitboxes = mutableListOf<HeaderIconHitbox>()
     private var avatarTexture: ResourceLocation = defaultAvatar
     private var avatarLoaded = false
     private var nlSetting: NlSetting = NlSetting()
@@ -152,6 +157,25 @@ class NeverloseGui : GuiScreen() {
         RoundedUtil.drawRoundOutline((x + 105).toFloat(), (y + 10).toFloat(), 55f, 21f, 2f, 0.1f, if (light) Color(245, 245, 245) else Color(13, 13, 11), if (RenderUtil.isHovering((x + 105).toFloat(), (y + 10).toFloat(), 55f, 21f, mouseX, mouseY)) neverlosecolor else Color(19, 19, 17))
         Fonts.Nl_18.drawString("Save", (x + 128).toFloat(), (y + 18).toFloat(), if (light) Color(18, 18, 19).rgb else -1)
         Fonts.NlIcon.nlfont_20.nlfont_20.drawString("K", (x + 110).toFloat(), (y + 19).toFloat(), if (light) Color(18, 18, 19).rgb else -1)
+        val iconSize = 18f
+        val iconSpacing = 8f
+        val iconStartX = (x + 170).toFloat()
+        val iconY = (y + 11).toFloat()
+        headerIconHitboxes.clear()
+        val headerIcons = listOf(
+            HeaderIcon(customHudIcon) { mc.displayGuiScreen(GuiHudDesigner()) },
+            HeaderIcon(eyeIcon) {},
+            HeaderIcon(spotifyIcon) {}
+        )
+        var nextIconX = iconStartX
+        headerIcons.forEach { icon ->
+            val hover = RenderUtil.isHovering(nextIconX - 2f, iconY - 2f, iconSize + 4f, iconSize + 4f, mouseX, mouseY)
+            val baseColor = if (light) Color(235, 235, 235) else Color(18, 18, 18)
+            RoundedUtil.drawRound(nextIconX - 2f, iconY - 2f, iconSize + 4f, iconSize + 4f, 4f, if (hover) neverlosecolor else baseColor)
+            RenderUtil.drawImage(icon.location, nextIconX, iconY, iconSize, iconSize)
+            headerIconHitboxes.add(HeaderIconHitbox(nextIconX - 2f, iconY - 2f, iconSize + 4f, icon.onClick))
+            nextIconX += iconSize + iconSpacing
+        }
         GL11.glPopMatrix()
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
@@ -169,6 +193,9 @@ class NeverloseGui : GuiScreen() {
             nlSetting.click(mouseX, mouseY, mouseButton)
         }
         if (mouseButton == 0) {
+            if (handleHeaderIconClick(mouseX, mouseY)) {
+                return
+            }
             if (RenderUtil.isHovering((x + 110).toFloat(), y.toFloat(), (w - 110).toFloat(), (h - 300).toFloat(), mouseX, mouseY)) {
                 x2 = (x - mouseX)
                 y2 = (y - mouseY)
@@ -260,5 +287,19 @@ class NeverloseGui : GuiScreen() {
             fontRenderer.drawString(str, x, y - size, color2, false)
             fontRenderer.drawString(str, x, y, color, false)
         }
+    }
+
+    private data class HeaderIcon(val location: ResourceLocation, val onClick: () -> Unit)
+
+    private data class HeaderIconHitbox(val x: Float, val y: Float, val size: Float, val onClick: () -> Unit) {
+        fun isHovering(mouseX: Int, mouseY: Int): Boolean = RenderUtil.isHovering(x, y, size, size, mouseX, mouseY)
+    }
+
+    private fun handleHeaderIconClick(mouseX: Int, mouseY: Int): Boolean {
+        headerIconHitboxes.firstOrNull { it.isHovering(mouseX, mouseY) }?.let { hitbox ->
+            hitbox.onClick.invoke()
+            return true
+        }
+        return false
     }
 }
