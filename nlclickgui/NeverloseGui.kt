@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.fontmanager.api.FontRenderer
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.shader.Framebuffer
 import net.minecraft.util.ChatAllowedCharacters
 import net.minecraft.util.ResourceLocation
@@ -168,6 +169,10 @@ class NeverloseGui : GuiScreen() {
             HeaderIcon(spotifyIcon) {}
         )
         var nextIconX = iconStartX
+        GlStateManager.enableTexture2D()
+        GlStateManager.enableBlend()
+        GlStateManager.enableAlpha()
+        GlStateManager.color(1f, 1f, 1f, 1f)
         headerIcons.forEach { icon ->
             val hover = RenderUtil.isHovering(nextIconX - 3f, iconY - 3f, iconSize + 6f, iconSize + 6f, mouseX, mouseY)
             if (hover) {
@@ -177,13 +182,14 @@ class NeverloseGui : GuiScreen() {
                     iconSize + 6f,
                     iconSize + 6f,
                     4f,
-                    Color(neverlosecolor.red, neverlosecolor.green, neverlosecolor.blue, 120)
+                    Color(neverlosecolor.red, neverlosecolor.green, neverlosecolor.blue, if (light) 80 else 120)
                 )
             }
             RenderUtil.drawImage(icon.location, nextIconX, iconY, iconSize, iconSize)
             headerIconHitboxes.add(HeaderIconHitbox(nextIconX - 3f, iconY - 3f, iconSize + 6f, icon.onClick))
             nextIconX += iconSize + iconSpacing
         }
+        GlStateManager.resetColor()
         GL11.glPopMatrix()
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
