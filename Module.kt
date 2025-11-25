@@ -70,7 +70,7 @@ open class Module(
             saveConfig(modulesConfig)
         }
 
-    var isHidden: Boolean by boolean("Hide", defaultHidden).subjective().onChanged {
+    var isHidden: Boolean by boolean("Hide", defaultHidden).subjective().hide().onChanged {
         saveConfig(modulesConfig)
     }
 
