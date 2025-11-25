@@ -107,6 +107,11 @@ class NeverloseGui : GuiScreen() {
         super.onGuiClosed()
     }
 
+    override fun onGuiClosed() {
+        mc.gameSettings.showDebugInfo = previousDebugInfoState
+        super.onGuiClosed()
+    }
+
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         GL11.glPushMatrix()
         if (loader && nlTabs.isNotEmpty()) {
