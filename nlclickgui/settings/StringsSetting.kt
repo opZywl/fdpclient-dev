@@ -24,21 +24,15 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
         val mainy = NeverloseGui.getInstance().y
         val modey = (y + getScrollY()).toInt()
 
-        val (label, labelTruncated) = abbreviate(setting.name)
-        val labelX = (mainx + 100 + x).toFloat()
-        val labelY = (mainy + modey + 57).toFloat()
-
+        // Nome da setting
         Fonts.Nl_16.drawString(
-            label,
-            labelX,
-            labelY,
+            setting.name,
+            (mainx + 100 + x),
+            (mainy + modey + 57).toFloat(),
             if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1
         )
 
-        if (labelTruncated && RenderUtil.isHovering(labelX, labelY - 3f, Fonts.Nl_16.stringWidth(label).toFloat(), 12f, mouseX, mouseY)) {
-            drawTooltip(setting.name, mouseX, mouseY)
-        }
-
+        // Fundo do box (corrigido para Float)
         RenderUtil.drawRoundedRect(
             (mainx + 170 + x).toFloat(),
             (mainy + modey + 54).toFloat(),
@@ -50,20 +44,15 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
             Color(13, 24, 35).rgb
         )
 
-        val (displayValue, truncatedCurrent) = abbreviate(setting.get())
-        var pendingTooltip: String? = null
-
+        // Texto do valor atual
         Fonts.Nl_16.drawString(
-            displayValue,
-            (mainx + 173 + x).toFloat(),
+            setting.get(),
+            (mainx + 173 + x),
             (mainy + modey + 59).toFloat(),
             if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1
         )
 
-        if (truncatedCurrent && RenderUtil.isHovering((mainx + 170 + x).toFloat(), (mainy + modey + 54).toFloat(), 80f, 14f, mouseX, mouseY)) {
-            pendingTooltip = setting.get()
-        }
-
+        // Animação da seta
         val valFps = Minecraft.getDebugFPS() / 8.3
         if (setting.openList && length > -3) {
             length -= 3 / valFps
@@ -84,6 +73,7 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
             length
         )
 
+        // Dropdown aberto
         if (setting.openList) {
             GL11.glTranslatef(0f, 0f, 2f)
 
@@ -100,25 +90,19 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
 
             for (option in setting.values) {
                 val optionIndex = getIndex(option)
-                val (optionDisplay, optionTruncated) = abbreviate(option)
                 Fonts.Nl_15.drawString(
-                    optionDisplay,
-                    (mainx + 173 + x).toFloat(),
+                    option,
+                    (mainx + 173 + x),
                     (mainy + modey + 59 + 12 + optionIndex * 12).toFloat(),
                     if (option.equals(setting.get(), true)) NeverloseGui.neverlosecolor.rgb else if (NeverloseGui.getInstance().light) Color(95, 95, 95).rgb else -1
                 )
-
-                if (optionTruncated && RenderUtil.isHovering((NeverloseGui.getInstance().x + 170 + x).toFloat(), (NeverloseGui.getInstance().y + (y + getScrollY()).toInt() + 59 + 12 + optionIndex * 12).toFloat(), 80f, 12f, mouseX, mouseY)) {
-                    pendingTooltip = option
-                }
             }
             GL11.glTranslatef(0f, 0f, -2f)
         }
-
-        pendingTooltip?.let { drawTooltip(it, mouseX, mouseY) }
     }
 
     override fun mouseClicked(mouseX: Int, mouseY: Int, mouseButton: Int) {
+        // Correção de Int para Float no isHovering
         if (mouseButton == 1 && RenderUtil.isHovering((NeverloseGui.getInstance().x + 170 + x).toFloat(), (NeverloseGui.getInstance().y + (y + getScrollY()).toInt() + 54).toFloat(), 80f, 14f, mouseX, mouseY)) {
             setting.openList = !setting.openList
         }
@@ -143,23 +127,5 @@ class StringsSetting(setting: ListValue, moduleRender: NlModule) : Downward<List
             }
         }
         return 0
-    }
-
-    private fun abbreviate(value: String): Pair<String, Boolean> {
-        return if (value.length > 10) {
-            value.substring(0, 10) + "..." to true
-        } else {
-            value to false
-        }
-    }
-
-    private fun drawTooltip(text: String, mouseX: Int, mouseY: Int) {
-        val width = Fonts.Nl_15.stringWidth(text) + 6
-        val height = Fonts.Nl_15.height + 4
-        val renderX = (mouseX + 6).toFloat()
-        val renderY = (mouseY - height - 2).toFloat()
-
-        RenderUtil.drawRoundedRect(renderX, renderY, width.toFloat(), height.toFloat(), 2f, Color(0, 5, 19).rgb, 1f, Color(13, 24, 35).rgb)
-        Fonts.Nl_15.drawString(text, renderX + 3f, renderY + 2f, Color.WHITE.rgb)
     }
 }
