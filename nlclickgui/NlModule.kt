@@ -119,14 +119,12 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
         height = calcHeight()
 
         val cardStartX = (x + 95 + posx).toFloat()
-        val cardStartY = y + posy + scrollY + NeverloseGui.HEADER_HEIGHT + 10
-
         toggleXPosition = cardStartX + cardWidth - 22f
-        toggleYPosition = (cardStartY + 6).toFloat()
+        toggleYPosition = (y + posy + scrollY + 56).toFloat()
 
         drawRound(
             cardStartX,
-            cardStartY.toFloat(),
+            (y + 50 + posy + scrollY).toFloat(),
             cardWidth,
             calcHeight().toFloat(),
             2f,
@@ -136,13 +134,13 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
         Fonts.Nl.Nl_18.Nl_18.drawString(
             module.name,
             (cardStartX + 5f),
-            (cardStartY + 5).toFloat(),
+            (y + posy + 55 + scrollY).toFloat(),
             if (getInstance().light) Color(95, 95, 95).rgb else -1
         )
 
         drawRound(
             (cardStartX + 5f),
-            (cardStartY + 15).toFloat(),
+            (y + 65 + posy + scrollY).toFloat(),
             cardWidth - 10f,
             0.7f,
             0f,
@@ -179,7 +177,7 @@ class NlModule(var NlSub: NlSub, var module: Module, var lef: Boolean) {
             Fonts.Nl.Nl_22.Nl_22!!.drawString(
                 "No settings.",
                 x + 100 + posx,
-                y + posy + scrollY + NeverloseGui.HEADER_HEIGHT + 32,
+                y + posy + scrollY + 72,
                 if (getInstance().light) Color(95, 95, 95).rgb else -1
             )
         }
