@@ -129,9 +129,9 @@ class NeverloseGui : GuiScreen() {
         GaussianBlur.renderBlur(10F)
         StencilUtil.uninitStencilBuffer()
         RoundedUtil.drawRound(x.toFloat(), y.toFloat(), w.toFloat(), h.toFloat(), 2f, if (light) Color(240, 245, 248, 230) else Color(7, 13, 23, 230))
-        RoundedUtil.drawRound((x + 90).toFloat(), (y + 40).toFloat(), (w - 90).toFloat(), (h - 40).toFloat(), 1f, if (light) Color(255, 255, 255) else Color(9, 9, 9))
-        RoundedUtil.drawRound((x + 90).toFloat(), y.toFloat(), (w - 90).toFloat(), (h - 300).toFloat(), 1f, if (light) Color(255, 255, 255) else Color(9, 9, 9))
-        RoundedUtil.drawRound((x + 90).toFloat(), (y + 39).toFloat(), (w - 90).toFloat(), 1f, 0f, if (light) Color(213, 213, 213) else Color(26, 26, 26))
+        RoundedUtil.drawRound((x + 90).toFloat(), (y + HEADER_HEIGHT).toFloat(), (w - 90).toFloat(), (h - HEADER_HEIGHT).toFloat(), 1f, if (light) Color(255, 255, 255) else Color(9, 9, 9))
+        RoundedUtil.drawRound((x + 90).toFloat(), y.toFloat(), (w - 90).toFloat(), HEADER_HEIGHT.toFloat(), 1f, if (light) Color(255, 255, 255) else Color(9, 9, 9))
+        RoundedUtil.drawRound((x + 90).toFloat(), (y + HEADER_HEIGHT - 1).toFloat(), (w - 90).toFloat(), 1f, 0f, if (light) Color(213, 213, 213) else Color(26, 26, 26))
         RoundedUtil.drawRound((x + 89).toFloat(), y.toFloat(), 1f, h.toFloat(), 0f, if (light) Color(213, 213, 213) else Color(26, 26, 26))
         GL11.glEnable(GL11.GL_BLEND)
         ensureAvatarTexture()
@@ -359,6 +359,7 @@ class NeverloseGui : GuiScreen() {
     companion object {
         lateinit var INSTANCE: NeverloseGui
         var neverlosecolor = Color(28, 133, 192)
+        const val HEADER_HEIGHT = 64
 
         fun getInstance(): NeverloseGui = INSTANCE
 
