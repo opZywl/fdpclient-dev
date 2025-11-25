@@ -16,6 +16,7 @@ import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.util.*
+import java.util.Locale.getDefault
 import java.util.function.Consumer
 import java.util.stream.Collectors
 import kotlin.math.max
@@ -32,7 +33,7 @@ class NlSub(parentCategory: Category?, var subCategory: SubCategory, var y2: Int
 
     var alphaani: Animation = EaseInOutQuad(150, 1.0, Direction.BACKWARDS)
 
-    private var maxScroll = Float.Companion.MAX_VALUE
+    private var maxScroll = Float.MAX_VALUE
     private val minScroll = 0f
     private var rawScroll = 0f
 
@@ -74,29 +75,30 @@ class NlSub(parentCategory: Category?, var subCategory: SubCategory, var y2: Int
             this.icon,
             x + 10,
             y + y2 + 14,
-            NeverloseGui.Companion.neverlosecolor.getRGB()
+            NeverloseGui.neverlosecolor.rgb
         )
 
         Fonts.Nl.Nl_18.Nl_18.drawString(
             subCategory.toString(), x + 10 + Fonts.NlIcon.nlfont_20.nlfont_20.stringWidth(
                 this.icon
-            ) + 8, y + y2 + 13, if (getInstance().light) Color(18, 18, 19).getRGB() else -1
+            ) + 8, y + y2 + 13, if (getInstance().light) Color(18, 18, 19).rgb else -1
         )
 
         if (this.isSelected && subCategory != SubCategory.CONFIGS) {
             val scrolll = getScroll().toDouble()
             visibleModules = getVisibleModules()
+            val moduleLayouts = layoutModules(visibleModules)
             for (nlModule in visibleModules) {
                 nlModule.scrollY = roundToHalf(scrolll).toInt()
+                moduleLayouts[nlModule]?.let { layout ->
+                    nlModule.setLayout(layout.startX, layout.yOffset, layout.cardWidth, x)
+                }
             }
             onScroll(40)
 
-            if (!visibleModules.isEmpty()) {
-                val lastModule = visibleModules.get(visibleModules.size - 1)
-                maxScroll = max(0, lastModule.y + 50 + lastModule.posy + lastModule.height).toFloat()
-            } else {
-                maxScroll = 0f
-            }
+            val tallestColumnHeight = (moduleLayouts.values.maxOfOrNull { it.yOffset + it.heightWithGap } ?: 0) - MODULE_VERTICAL_GAP
+            val contentHeight = max(0, tallestColumnHeight) + 50
+            maxScroll = max(0f, (contentHeight - (h - 40)).toFloat())
 
             for (nlModule in visibleModules) {
                 nlModule.x = x
@@ -159,17 +161,45 @@ class NlSub(parentCategory: Category?, var subCategory: SubCategory, var y2: Int
     val isSelected: Boolean
         get() = getInstance().selectedSub == this
 
-    val layoutModules: MutableList<NlModule?>?
-        get() = (if (visibleModules.isEmpty() && getInstance().isSearching) visibleModules else (if (visibleModules.isEmpty()) nlModules else visibleModules)) as MutableList<NlModule?>?
-
     private fun getVisibleModules(): MutableList<NlModule> {
         if (!getInstance().isSearching) {
             return nlModules
         }
-        val query: String = getInstance().searchTextContent.toLowerCase()
+
+        val query: String = getInstance().searchTextContent.lowercase(getDefault())
         return nlModules.stream()
-            .filter { module: NlModule? -> module!!.module.name.lowercase(Locale.getDefault()).contains(query) }
+            .filter { module: NlModule? -> module!!.module.name.lowercase(getDefault()).contains(query) }
             .collect(Collectors.toList())
+    }
+
+    private fun layoutModules(modules: List<NlModule>): Map<NlModule, ModuleLayout> {
+        val contentWidth = (w - 90).toFloat()
+        val contentStart = (x + 90).toFloat()
+        val horizontalGap = 12f
+        val minCardWidth = 175f
+        val columns = max(2, ((contentWidth + horizontalGap) / (minCardWidth + horizontalGap)).toInt())
+        val cardWidth = (contentWidth - horizontalGap * (columns + 1)) / columns
+        val columnHeights = MutableList(columns) { 0 }
+
+        val moduleLayouts = HashMap<NlModule, ModuleLayout>()
+
+        for (module in modules) {
+            val column = columnHeights.indices.minByOrNull { columnHeights[it] } ?: 0
+            val startX = contentStart + horizontalGap + column * (cardWidth + horizontalGap)
+            val yOffset = columnHeights[column]
+            val moduleHeight = module.calcHeight()
+
+            moduleLayouts[module] = ModuleLayout(startX, yOffset, cardWidth, moduleHeight + MODULE_VERTICAL_GAP)
+            columnHeights[column] = yOffset + moduleHeight + MODULE_VERTICAL_GAP
+        }
+
+        return moduleLayouts
+    }
+
+    private data class ModuleLayout(val startX: Float, val yOffset: Int, val cardWidth: Float, val heightWithGap: Int)
+
+    companion object {
+        private const val MODULE_VERTICAL_GAP = 12
     }
 
     private val icon: String
